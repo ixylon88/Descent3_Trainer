@@ -1,0 +1,50 @@
+DESCENT 3 SAVEGAME EDITOR - WINDOWS 98
+Quelltextbasierte Vorschauversion 1.0 / d3-historical
+
+START
+D3EDIT98.EXE starten. Keine Installation und kein .NET notwendig.
+Die Oberflaeche benoetigt mindestens 800 x 600.
+
+1. In Descent 3 speichern und das Spiel beenden.
+2. Im Editor Oeffnen waehlen und saveg000 bis saveg007 oeffnen.
+3. Werte und Haken einstellen; Aenderungen pruefen.
+4. Speichern + Backup waehlen. Anschliessend im Spiel neu laden.
+
+FUNKTIONSUMFANG
+Alle Primaer- und Sekundaerwaffen, aktive Waffenauswahl,
+Munition, Energie, Schild, Nachbrennerladung, Leben, Punkte,
+God-Mode, Tarnung, Kuehler, Konverter, Quad-Laser und volle Karte.
+
+MAXIMA
+Energie und Schild: normal jeweils 200.
+Nachbrenner: normal 5 Sekunden.
+Max bei Munition nutzt geladene Schiffslimits, sonst 65535.
+Schiffslimits laden liest Table.gam oder d3.hog aus deiner Installation.
+65535 ist das technische Speichermaximum, keine normale Spielgrenze.
+Erneuern setzt God-Mode/Tarnung auf eine sehr lange Restdauer.
+Levelwechsel, Tod und Skripte koennen Zustaende zuruecksetzen.
+
+BACKUPS
+Vor jedem Ueberschreiben entsteht eine datierte .bak-Datei.
+Auf FAT erfolgt der Austausch ueber Umbenennungen und ist nicht
+transaktional. Bei Stromausfall kann der Slotname fehlen; dann
+das Original-Backup wieder unter savegNNN kopieren.
+Kopien mit .edited fuer das Spiel passend in savegNNN umbenennen.
+
+KOMPATIBILITAET
+Historischer 32-Bit-Spielerblock: 496 Byte, Speicherformat 0 bis 2.
+ANSI-Zielpfade maximal 200 Zeichen; Spielstaende maximal 32 MiB.
+Die EXE braucht nur klassische Windows-System-DLLs.
+
+299 Daten-/Dateipruefungen und eine Pruefung der EXE-Importe bestanden.
+Noch KEIN echter Windows-98-Start, KEIN Test der nativen Oberflaeche
+und KEIN Ingame-Test mit echtem Spielstand.
+
+WEITERARBEITEN
+README.md und TESTS.md enthalten Details.
+PROJEKTSTAND-Descent3.md haelt Quellen, Layouts, Entscheidungen,
+Tests und offene Punkte fuer spaetere Korrekturen fest.
+Vorgaenger-Windows10.zip enthaelt die vorige Version samt C#-Quelltext.
+Vollstaendiger nativer C-Quelltext: src. Tests: tests.
+
+GPL-3.0-or-later, siehe LICENSE. Keine proprietaeren Spielinhalte.

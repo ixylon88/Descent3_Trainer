@@ -1,0 +1,10 @@
+# Generated executables and build output
+*.exe
+*.dll
+*.pdb
+*.mdb
+*.obj
+*.o
+**/test-output/
+**/__pycache__/
+.DS_Store

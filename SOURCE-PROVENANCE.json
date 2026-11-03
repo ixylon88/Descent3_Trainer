@@ -1,0 +1,171 @@
+{
+  "packaged_on": "2026-10-24",
+  "archives": {
+    "D3SaveEditor-Win98.zip": "4f9aa2b2fe5563d5c529fb83044bdee469c92214fd52344cff3b700c6ff13482",
+    "D3SaveEditor-Windows.zip": "4ccf9916ef4ab31644c2344c9e61c22dbb957de08d3d55190fd544ebd32ca3fa"
+  },
+  "unchanged_files": [
+    {
+      "path": "windows98/LIESMICH.TXT",
+      "original_archive": "D3SaveEditor-Win98.zip",
+      "original_member": "LIESMICH.TXT",
+      "sha256": "897ea0001f51ac2ad03033041cd3ab6663b624862651cb37c3aef44804a8be41"
+    },
+    {
+      "path": "windows98/TESTS.md",
+      "original_archive": "D3SaveEditor-Win98.zip",
+      "original_member": "TESTS.md",
+      "sha256": "0ed371c318e7bde889ba24f07712f8e97b350d2517067401d227c4e09d2aa71f"
+    },
+    {
+      "path": "windows98/build.cmd",
+      "original_archive": "D3SaveEditor-Win98.zip",
+      "original_member": "build.cmd",
+      "sha256": "410b03699e5f605a81e7e6bd43531f17c8a2b799ad1705c424bdf4cf8d00d91a"
+    },
+    {
+      "path": "windows98/build.sh",
+      "original_archive": "D3SaveEditor-Win98.zip",
+      "original_member": "build.sh",
+      "sha256": "06c2b09375d8ae4c14e0a5fd9933fadaf899f3646bec5dbfedfa79fdfd8c21fb"
+    },
+    {
+      "path": "windows98/src/d3core.c",
+      "original_archive": "D3SaveEditor-Win98.zip",
+      "original_member": "src/d3core.c",
+      "sha256": "bc3313f4158db8cd3e1fc6601ba1fb5d2272bc848baeecb8e08502ea3d9cb635"
+    },
+    {
+      "path": "windows98/src/d3core.h",
+      "original_archive": "D3SaveEditor-Win98.zip",
+      "original_member": "src/d3core.h",
+      "sha256": "5286dd01c2c5998887c1bd5eb35050505bb6d73b7dd634f80facf04550124201"
+    },
+    {
+      "path": "windows98/src/d3files.c",
+      "original_archive": "D3SaveEditor-Win98.zip",
+      "original_member": "src/d3files.c",
+      "sha256": "bb8e18e91c86fb80aa2c12982b3e637c56b2ec8e672c9d15c005abfcd7d95fd9"
+    },
+    {
+      "path": "windows98/src/d3files.h",
+      "original_archive": "D3SaveEditor-Win98.zip",
+      "original_member": "src/d3files.h",
+      "sha256": "79592a29279897dc901dba8c106cbe387aa9eec3cbeead7ff12a7ffa5ba766cb"
+    },
+    {
+      "path": "windows98/src/sha256.c",
+      "original_archive": "D3SaveEditor-Win98.zip",
+      "original_member": "src/sha256.c",
+      "sha256": "a44f7caeb7ec5f6314bed9f17af199e020fd66050a48d059722b4ef13c2f14e9"
+    },
+    {
+      "path": "windows98/src/win98.c",
+      "original_archive": "D3SaveEditor-Win98.zip",
+      "original_member": "src/win98.c",
+      "sha256": "43315a2b978851e1c85b8078e116b835a67e8dda3df9c12ccd275ac5d2cda034"
+    },
+    {
+      "path": "windows98/tests/Golden.cs",
+      "original_archive": "D3SaveEditor-Win98.zip",
+      "original_member": "tests/Golden.cs",
+      "sha256": "7e11fa7af998e9db36c1c9f5f546b86add3233567442cbbcc6e09af6f16c4fb0"
+    },
+    {
+      "path": "windows98/tests/make_historical_fixtures.cpp",
+      "original_archive": "D3SaveEditor-Win98.zip",
+      "original_member": "tests/make_historical_fixtures.cpp",
+      "sha256": "033ba1db82ee5948fe7b9eb14f4db69a158a61fb7c9bb131b1adf2e238ba2e91"
+    },
+    {
+      "path": "windows98/tests/pe_audit.py",
+      "original_archive": "D3SaveEditor-Win98.zip",
+      "original_member": "tests/pe_audit.py",
+      "sha256": "d19069936a8e5d412997a135338500633d3fbd371909cdcb592ce9e666464cb5"
+    },
+    {
+      "path": "windows98/tests/run-tests.sh",
+      "original_archive": "D3SaveEditor-Win98.zip",
+      "original_member": "tests/run-tests.sh",
+      "sha256": "cc99fb97674aaa242996dfa0f98ef0c737129e919dc4fbc9f2c7467cf4782816"
+    },
+    {
+      "path": "windows98/tests/test_core.c",
+      "original_archive": "D3SaveEditor-Win98.zip",
+      "original_member": "tests/test_core.c",
+      "sha256": "a72e62275d0d804182cfbcde9a2780c197eb1c0f2d3fd7621c15be8ec28d83ce"
+    },
+    {
+      "path": "windows10/D3SaveEditor.exe.config",
+      "original_archive": "D3SaveEditor-Windows.zip",
+      "original_member": "D3SaveEditor/D3SaveEditor.exe.config",
+      "sha256": "c628db74964689203139a39e848026fbe72767d415121b53dda46e56f31d8303"
+    },
+    {
+      "path": "windows10/TESTS.md",
+      "original_archive": "D3SaveEditor-Windows.zip",
+      "original_member": "D3SaveEditor/TESTS.md",
+      "sha256": "1098e78407d3a680f14f9722bc2e6871e3abe0f489584cef82918fcdbdcba51e"
+    },
+    {
+      "path": "windows10/build.cmd",
+      "original_archive": "D3SaveEditor-Windows.zip",
+      "original_member": "D3SaveEditor/build.cmd",
+      "sha256": "e489c73658944878f627bc2271711bae8d80196ab0c7f5205a339cd0854c9bb8"
+    },
+    {
+      "path": "windows10/src/AssemblyInfo.cs",
+      "original_archive": "D3SaveEditor-Windows.zip",
+      "original_member": "D3SaveEditor/src/AssemblyInfo.cs",
+      "sha256": "2eb0c754110504aa4562214911155ea1bf8e984106a2508a23d9b79274ad6ecd"
+    },
+    {
+      "path": "windows10/src/Program.cs",
+      "original_archive": "D3SaveEditor-Windows.zip",
+      "original_member": "D3SaveEditor/src/Program.cs",
+      "sha256": "18c41de21dfd56ef1b1b7daa6ccd35dfcc68c759c83d6bcc5e9690aadbe31e00"
+    },
+    {
+      "path": "windows10/src/SaveGame.cs",
+      "original_archive": "D3SaveEditor-Windows.zip",
+      "original_member": "D3SaveEditor/src/SaveGame.cs",
+      "sha256": "b57b2626922be5b5873e5df3bcefdbf682c6e16ce34ca2b4344688c062040677"
+    },
+    {
+      "path": "windows10/src/ShipLimits.cs",
+      "original_archive": "D3SaveEditor-Windows.zip",
+      "original_member": "D3SaveEditor/src/ShipLimits.cs",
+      "sha256": "dfcf41df693fb63e13a68358c052b1053fbb4c93d3cda828d598164acc607615"
+    },
+    {
+      "path": "windows10/src/app.manifest",
+      "original_archive": "D3SaveEditor-Windows.zip",
+      "original_member": "D3SaveEditor/src/app.manifest",
+      "sha256": "ef94b2b64d47d2d8429ffba8c64b5815f0bd89a00abc438fb2111bb3b2346bd4"
+    },
+    {
+      "path": "windows10/tests/TestRunner.cs",
+      "original_archive": "D3SaveEditor-Windows.zip",
+      "original_member": "D3SaveEditor/tests/TestRunner.cs",
+      "sha256": "ad8d52cc5d0d1fe39adfddb0cb4703b752bb90cad814c0d91faa4abaf168f8ac"
+    },
+    {
+      "path": "windows10/tests/UiTests.cs",
+      "original_archive": "D3SaveEditor-Windows.zip",
+      "original_member": "D3SaveEditor/tests/UiTests.cs",
+      "sha256": "70669ac76312c51e168bf80d98d89848af807f57d60582cec608085692b74a50"
+    },
+    {
+      "path": "windows10/tests/make_fixtures.cpp",
+      "original_archive": "D3SaveEditor-Windows.zip",
+      "original_member": "D3SaveEditor/tests/make_fixtures.cpp",
+      "sha256": "45b1c1f85ca96f43038633e47f44b23fc9ff8752a3f2734dba0ded9f192df44e"
+    },
+    {
+      "path": "windows10/tests/run-tests.sh",
+      "original_archive": "D3SaveEditor-Windows.zip",
+      "original_member": "D3SaveEditor/tests/run-tests.sh",
+      "sha256": "d3f4e3df13827182495987f3ae113763a5a84138b958d6247e30cfa5ba491f57"
+    }
+  ]
+}
