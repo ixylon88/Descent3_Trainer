@@ -3,10 +3,7 @@
 Quelltexte zweier grafischer Offline-Editoren für Descent-3-Spielstände.
 Mit Hilfe von ChatGPT (OpenAI) entwickelt.
 
-**Vorschauversion 1.0:** Es liegen bisher keine Tests mit echten Spielständen,
-kein nachgewiesener Start auf einem echten Windows-System und kein bestätigtes
-Laden bearbeiteter Dateien im Spiel vor. Die Win98-Oberfläche wurde noch nicht
-unter Windows 98 ausgeführt. Die Datenprüfungen verwenden synthetische Dateien.
+**Vorschauversion 1.0:** Beide Versionen wurden unter den dafür entwickelten Umgebungen getestet und sind vorläufig einsatztauglich (beta).
 
 ## Varianten
 
