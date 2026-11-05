@@ -1,0 +1,13 @@
+{
+  "folders": [
+    {
+      "path": ".",
+      "name": "Descent3_Trainer"
+    }
+  ],
+  "settings": {},
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [ ]
+  }
+}
