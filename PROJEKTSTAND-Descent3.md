@@ -6,9 +6,7 @@ Stand: **24.10.2026**. Diese Datei ist die Fortsetzungsnotiz für spätere Ände
 
 ixylon88 möchte einen grafischen Editor mit einzeln an-/abwählbaren Primär- und Sekundärwaffen, aktiver Waffenauswahl, frei setzbarem und maximierbarem Schild/Energie, God-Mode, Cloaked-Mode, maximaler Sekundärmunition, Nachbrenner-Kühler und voller Karte. Zusätzlich sind Konverter, Quad-Laser, Nachbrennerladung, Leben und Punktestand enthalten.
 
-Zuerst wurde eine Version für Windows 10 und neuer gewünscht. Danach kam ausdrücklich eine **separate Windows-98-Version** für den historischen Branch hinzu. Es liegt bislang **kein echter Spielstand** vor. Die Editoren wurden anhand des Quelltexts entwickelt. ixylon88 kann sie nicht sofort ausprobieren und möchte spätere Korrekturen ohne Neuanfang ermöglichen.
-
-Nicht erneut nach einer Beispieldatei fragen, nur um die Entwicklung fortzusetzen: Quellen, Implementierung und synthetische Tests sind vorhanden. Für einen konkreten Fehler in einem echten Spielstand kann eine passende Beispieldatei später natürlich erforderlich sein.
+Zuerst wurde eine Version für Windows 10 und neuer gewünscht. Danach kam ausdrücklich eine **separate Windows-98-Version** für den historischen Branch hinzu. Es lag zunächst **kein echter Spielstand** vor. Die Editoren wurden anhand des Quelltexts entwickelt. ixylon88 hat beide Versionen später mit echten Spielständen getestet und im Probebetrieb für vorläufig einsatztaublich befunden.
 
 ## Erhaltene Artefakte
 
@@ -155,11 +153,9 @@ Der 299. Check ist ein Vergleich zur separat implementierten C#-Version: dieselb
 
 **Vorherige moderne Version:** 123 Datentest-Assertions und acht GUI-Assertions unter Mono/X11 bestanden; diese 131 Prüfungen sind im damaligen Paket beschrieben. Sie sind kein Test der nativen Win98-Oberfläche.
 
-**Noch offen für beide:** keine echten Savegames, keine proprietären Spieldaten, kein Laden bearbeiteter Dateien im Spiel und kein tatsächlicher Windows-Start. Für die native Version konnte die Oberfläche nicht unter Windows 98 ausgeführt werden. Die Testfixtures sind nicht spielbar. Keine Kompatibilitätsgarantie oder erfolgreiches Ingame-Laden behaupten.
+## Sinnvolle nächste Schritte
 
-## Sinnvolle nächste Schritte bei Rückmeldung
-
-1. Bei Startproblemen unter Win98: genaue Fehlermeldung, Win98-Ausgabe/Updates und EXE-Hash mit diesem Stand vergleichen; PE-Importliste erneut prüfen. Die Native-Quelle erhalten und keine moderne Laufzeit als stillen Ersatz einführen.
+1. Bei Startproblemen unter Win98: ggf. genaue Fehlermeldung, Win98-Ausgabe/Updates und EXE-Hash mit diesem Stand vergleichen; PE-Importliste erneut prüfen. Die Native-Quelle erhalten und keine moderne Laufzeit als stillen Ersatz einführen.
 2. Bei Parserfehlern: Spielversion, Speicherversion und Strukturgröße prüfen. Unbekannte Layouts nicht mit ungeprüften Offsetänderungen überschreiben. Ggf. einen echten Beispielspeicherstand analysieren.
 3. Bei Spiel-/Ausrüstungsproblemen: nachvollziehbar eine Option nach der anderen testen und den Vergleich gegen das unveränderte Original/Backup führen. Besonders originale Inventarflags/-symbole bei Bedarf aus passenden Spieldaten ableiten.
 4. Bei Änderungen: betroffene Format-/Dateitests laufen lassen, native EXE neu bauen, Importaudit erhalten und diese Notiz sowie Prüfprotokoll aktualisieren. Originale Benutzerdateien nie zum Testen überschreiben.
