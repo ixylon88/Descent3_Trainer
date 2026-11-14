@@ -72,9 +72,11 @@ sich auch manuell über **Run workflow** starten.
 | Windows 98 | MinGW-w64-Build auf Ubuntu, native Datentests mit ASan/UBSan und Prüfung der Win98-Importe | `Descent3_Trainer-Win98` mit `D3EDIT98.EXE` |
 | Windows 10 and 11 | Datentests und WinForms-Oberflächentest mit Mono auf Ubuntu, Build mit dem .NET-Framework-Compiler unter Windows | `Descent3_Trainer-Win10-Win11` mit `D3SaveEditor.exe` und `D3SaveEditor.exe.config` |
 
-Nach einem erfolgreichen Lauf findest du das ZIP auf der Seite des Laufs. Jedes
-ZIP enthält auch Quelltext, Buildskripte und Lizenz. `SOURCE.txt` verlinkt den
-gebauten Commit. `SHA256SUMS.txt` enthält die Prüfsummen der Programmdateien.
+Nach einem erfolgreichen Lauf findest du das Programm-ZIP auf der Seite des
+Laufs. Es enthält die Programmdateien, eine Kurzanleitung und die Lizenzhinweise.
+`SOURCE.txt` verlinkt ein separates GitHub-Archiv mit dem vollständigen
+Quelltext und den Buildskripten des gebauten Commits. `SHA256SUMS.txt` enthält
+die Prüfsummen der Programmdateien.
 
 ## Kompilieren
 

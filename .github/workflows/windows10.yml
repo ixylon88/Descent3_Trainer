@@ -63,16 +63,18 @@ jobs:
         run: |
           $package = Join-Path $env:RUNNER_TEMP 'Descent3_Trainer-Win10-Win11'
           New-Item -Path $package -ItemType Directory -Force | Out-Null
-          Copy-Item -LiteralPath D3SaveEditor.exe, D3SaveEditor.exe.config, LICENSE, build.cmd, src -Destination $package -Recurse
-          $source = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/tree/$env:GITHUB_SHA/windows10"
+          Copy-Item -LiteralPath D3SaveEditor.exe, D3SaveEditor.exe.config, LICENSE, ../NOTICE.md -Destination $package
+          $repository = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY"
           @(
             'Descent 3 Savegame Editor for Windows 10 and 11'
             'Extract the ZIP and keep D3SaveEditor.exe.config next to D3SaveEditor.exe.'
             'Run D3SaveEditor.exe and open a Descent 3 save file.'
-            'To rebuild from the included source, run build.cmd.'
-            "Manual: $source/README.md"
+            "Manual: $repository/blob/$env:GITHUB_SHA/windows10/README.md"
           ) | Set-Content -LiteralPath (Join-Path $package 'README.txt') -Encoding ascii
-          Set-Content -LiteralPath (Join-Path $package 'SOURCE.txt') -Value $source -Encoding ascii
+          @(
+            'Corresponding source (including build scripts):'
+            "$repository/archive/$env:GITHUB_SHA.zip"
+          ) | Set-Content -LiteralPath (Join-Path $package 'SOURCE.txt') -Encoding ascii
           Get-FileHash -LiteralPath D3SaveEditor.exe, D3SaveEditor.exe.config -Algorithm SHA256 |
             ForEach-Object { '{0}  {1}' -f $_.Hash.ToLowerInvariant(), (Split-Path -Leaf $_.Path) } |
             Set-Content -LiteralPath (Join-Path $package 'SHA256SUMS.txt') -Encoding ascii

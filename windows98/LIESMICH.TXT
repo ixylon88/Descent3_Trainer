@@ -44,10 +44,10 @@ erprobt. Der Ingame-Test der neuen Inventar- und Schiffsfunktionen
 steht aus.
 
 WEITERARBEITEN
-Der C-Quelltext steht in src. Auf einem modernen Rechner mit einem
-i686-MinGW-w64-Compiler kann der Editor mit build.cmd unter Windows
-oder mit sh build.sh unter Linux gebaut werden.
-Handbuch und Tests stehen im Repository:
+Das GitHub-Artefakt verweist in SOURCE.txt auf das passende Quellarchiv.
+Auf einem modernen Rechner mit i686-MinGW-w64 kann der Editor aus
+dem Ordner windows98 mit build.cmd oder sh build.sh gebaut werden.
+Handbuch und Tests stehen im Repository unter
 https://github.com/ixylon88/Descent3_Trainer
 
 GPL-3.0-or-later, siehe LICENSE. Keine proprietaeren Spielinhalte.
