@@ -1,0 +1,85 @@
+name: Windows 10 and 11
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test save files and editor UI
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+        working-directory: windows10
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Mono and test tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            g++ mono-mcs mono-runtime libmono-i18n-west4.0-cil \
+            libmono-system-windows-forms4.0-cil libgdiplus xauth xvfb
+
+      - name: Run data tests
+        run: sh tests/run-tests.sh
+
+      - name: Test the WinForms UI with Mono
+        timeout-minutes: 2
+        run: |
+          mcs -target:exe -main:UiTests -out:test-output/UiTests.exe \
+            -r:System.Windows.Forms -r:System.Drawing src/*.cs tests/UiTests.cs
+          xvfb-run -a -s '-screen 0 1280x900x24' mono test-output/UiTests.exe "$PWD/test-output/fixture32-loadout"
+
+  build:
+    name: Build Windows 10 and 11
+    needs: test
+    runs-on: windows-2025
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: windows10
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build with the .NET Framework compiler
+        shell: cmd
+        run: call build.cmd
+
+      - name: Prepare download
+        shell: pwsh
+        run: |
+          $package = Join-Path $env:RUNNER_TEMP 'Descent3_Trainer-Win10-Win11'
+          New-Item -Path $package -ItemType Directory -Force | Out-Null
+          Copy-Item -LiteralPath D3SaveEditor.exe, D3SaveEditor.exe.config, LICENSE, build.cmd, src -Destination $package -Recurse
+          $source = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/tree/$env:GITHUB_SHA/windows10"
+          @(
+            'Descent 3 Savegame Editor for Windows 10 and 11'
+            'Extract the ZIP and keep D3SaveEditor.exe.config next to D3SaveEditor.exe.'
+            'Run D3SaveEditor.exe and open a Descent 3 save file.'
+            'To rebuild from the included source, run build.cmd.'
+            "Manual: $source/README.md"
+          ) | Set-Content -LiteralPath (Join-Path $package 'README.txt') -Encoding ascii
+          Set-Content -LiteralPath (Join-Path $package 'SOURCE.txt') -Value $source -Encoding ascii
+          Get-FileHash -LiteralPath D3SaveEditor.exe, D3SaveEditor.exe.config -Algorithm SHA256 |
+            ForEach-Object { '{0}  {1}' -f $_.Hash.ToLowerInvariant(), (Split-Path -Leaf $_.Path) } |
+            Set-Content -LiteralPath (Join-Path $package 'SHA256SUMS.txt') -Encoding ascii
+
+      - name: Upload Windows 10 and 11 artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: Descent3_Trainer-Win10-Win11
+          path: ${{ runner.temp }}/Descent3_Trainer-Win10-Win11/
+          if-no-files-found: error

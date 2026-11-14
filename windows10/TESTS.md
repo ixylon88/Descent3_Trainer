@@ -1,6 +1,12 @@
 # Prüfprotokoll · 24.10.2026
 
-**Ergebnis: 123 Datentest-Assertions und 8 Oberflächentest-Assertions bestanden.**
+**Ergebnis vom 24.10.2026: 123 Datentest-Assertions und 8 Oberflächentest-Assertions bestanden.**
+
+**Inventar und Schiffsfreigaben, 14.11.2026.** 155 Datentest-Assertions und
+13 Oberflächentest-Assertions bestanden unter Linux mit Mono 6.12 und Xvfb.
+Zusätzliche 32- und 64-Bit-Testdateien prüfen gleichzeitige Änderungen beider
+Listen, Auswahlindizes, Mengenlimits, fehlende Aufsammeldefinitionen und
+Schiffserlaubnisse bei Lücken in der Schiffstabelle.
 
 Die fertige EXE wurde als Windows-GUI-Anwendung für AnyCPU kompiliert. Verwendet werden ausschließlich .NET-Framework-Bibliotheken; keine zusätzlichen Bibliotheken oder Spieldaten werden ausgeliefert.
 

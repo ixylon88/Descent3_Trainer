@@ -12,6 +12,22 @@ void d3_free(void *p) { free(p); }
 #endif
 
 const char *d3_weapon_names[20]={"Laser","Vauss","Microwave","Plasma","Fusion","Super Laser","Mass Driver","Napalm","EMD Gun","Omega","Concussion","Homing","Impact Mortar","Smart","Mega","Frag","Guided","Napalm Rocket","Cyclone","Black Shark"};
+const D3Supply d3_cargo_items[D3_CARGO_TYPES] = {
+    {"Forcewall", "Force Wall", 0, 1000000},
+    {"GoWingNut", "Go Wingnut", 0, 1000000}
+};
+/* Weapon and pickup names and regular carry limits from multisafe.cpp. */
+const D3Supply d3_countermeasure_types[D3_COUNTERMEASURE_TYPES] = {
+    {"Chaff", "Chaff", "Chaff", 12},
+    {"Betty", "Bouncing Betty", "Betty4Pack", 12},
+    {"SeekerMine", "Seeker Mine", "Seeker3Pack", 12},
+    {"GunBoy", "Gunboy", "GunboyPowerup", 4},
+    {"ProxMine", "Proximity Mine", "ProxMinePowerup", 12}
+};
+const char *const d3_standard_ships[D3_STANDARD_SHIPS] = {"Pyro-GL", "Phoenix", "Magnum-AHT"};
+
+enum {OBJ_WEAPON = 5, OBJ_POWERUP = 7, SHIP_PERMISSIONS_OFFSET = 468};
+enum {MAX_OBJECT_IDS = 910, MAX_WEAPONS = 200, MAX_SHIPS = 30};
 void d3_zero(void *p,D3U32 n) { D3U8 *d=(D3U8*)p;while(n--)*d++=0; }
 void d3_copy(void *dest,const void *source,D3U32 n) { D3U8 *d=(D3U8*)dest;const D3U8 *s=(const D3U8*)source;while(n--)*d++=*s++; }
 int d3_equal(const void *a,const void *b,D3U32 n) { const D3U8 *x=(const D3U8*)a,*y=(const D3U8*)b;while(n--)if(*x++!=*y++)return 0;return 1; }
@@ -85,17 +101,29 @@ static int snapshot(Reader *r){
     return r->ok;
 }
 static int header(D3Game *g){
-    Reader r=reader(g->data,g->size,0);char text[512];int table,n,i,index,doors,active,weather;float time;
+    Reader r=reader(g->data,g->size,0);char text[512];int table,n,i,j,index,doors,active,weather;float time;
     for(i=0;i<32;i++)if(g->data[i]==0)break;if(i==32)return 0;
     d3_string(g->description,32,(const char*)g->data);skip(&r,32);g->version=i16(&r);if(g->version<0 || g->version>2)return 0;
     if(boolean(&r) && !snapshot(&r))return 0;
     g->cooler_id=g->converter_id=g->quad_id=-1;
+    for(j=0;j<D3_CARGO_TYPES;j++)g->cargo_ids[j]=-1;
+    for(j=0;j<D3_COUNTERMEASURE_TYPES;j++)g->countermeasure_ids[j]=g->countermeasure_pickups[j]=-1;
     for(table=0;table<6;table++){
         n=i16(&r);if(n<0 || n>16384 || (table==3 && n>128))return 0;
         if(table==3)g->ship_count=n;
         for(i=0;i<n;i++){
             if(!z(&r,text,512))return 0;
             if(table==0){if(d3_string_iequal(text,"Afterburner"))g->cooler_id=i;if(d3_string_iequal(text,"Converter"))g->converter_id=i;if(d3_string_iequal(text,"QuadLaser"))g->quad_id=i;}
+            if(table==0 && i<MAX_OBJECT_IDS) {
+                for (j=0; j<D3_CARGO_TYPES; j++)
+                    if (g->cargo_ids[j]<0 && d3_string_iequal(text,d3_cargo_items[j].key)) g->cargo_ids[j]=i;
+                for (j=0; j<D3_COUNTERMEASURE_TYPES; j++)
+                    if (g->countermeasure_pickups[j]<0 && d3_string_iequal(text,d3_countermeasure_types[j].pickup)) g->countermeasure_pickups[j]=i;
+            }
+            if(table==4 && i<MAX_WEAPONS) {
+                for (j=0; j<D3_COUNTERMEASURE_TYPES; j++)
+                    if (g->countermeasure_ids[j]<0 && d3_string_iequal(text,d3_countermeasure_types[j].key)) g->countermeasure_ids[j]=i;
+            }
             if(table==3){if(d3_length(text)>=128)return 0;d3_string(g->ships[i],128,text);}
         }
     }
@@ -145,7 +173,28 @@ int d3_parse(D3Game *g,const D3U8 *data,D3U32 size){
     g->player=best_player;g->object=best;d3_string(g->callsign,20,(const char*)data+best_player+64);g->error=0;return 1;
 }
 const char *d3_ship(const D3Game *g){return g->ships[d3_u32(g->data+g->player+60)];}
-int d3_has_item(const D3Game *g,int id){int i;if(id<0)return 0;for(i=0;i<g->inventory.count;i++)if(g->inventory.items[i].type==7 && g->inventory.items[i].id==id)return 1;return 0;}
+D3U32 d3_ship_permissions(const D3Game *g){return d3_u32(g->data+g->player+SHIP_PERMISSIONS_OFFSET);}
+D3U32 d3_ship_permission_bit(const D3Game *g,const char *name) {
+    int i;
+    for (i=0; i<g->ship_count && i<MAX_SHIPS; i++)
+        if (d3_string_iequal(g->ships[i],name)) return 1u<<i;
+    return 0;
+}
+static int find_item(const D3Inventory *inventory,int type,int id) {
+    int i;
+    if (id<0) return -1;
+    for (i=0; i<inventory->count; i++)
+        if (inventory->items[i].type==type && inventory->items[i].id==id) return i;
+    return -1;
+}
+int d3_has_item(const D3Game *g,int id){return find_item(&g->inventory,OBJ_POWERUP,id)>=0;}
+int d3_supply_count(const D3Game *g,int countermeasure,int index) {
+    const D3Inventory *inventory=countermeasure ? &g->countermeasures : &g->inventory;
+    int id=countermeasure ? g->countermeasure_ids[index] : g->cargo_ids[index];
+    int entry=find_item(inventory,countermeasure ? OBJ_WEAPON : OBJ_POWERUP,id);
+    if (entry>=0) return inventory->items[entry].count;
+    return id<0 || (countermeasure && g->countermeasure_pickups[index]<0) ? -1 : 0;
+}
 int d3_god(const D3Game *g){return (d3_u32(g->data+g->player+84)&1)!=0;}
 int d3_cloak(const D3Game *g){return g->object.has_effect && (d3_u32(g->data+g->object.effect)&1025)!=0;}
 int d3_quad(const D3Game *g){return g->object.batteries==21 && (d3_u32(g->data+g->object.battery+104)&16)!=0;}
@@ -156,21 +205,79 @@ void d3_current(const D3Game *g,D3Options *o){
     o->primary=(D3I32)d3_u32(g->data+g->player+216);o->secondary=(D3I32)d3_u32(g->data+g->player+228);
     mask=d3_u32(g->data+g->player+168);for(i=0;i<20;i++){o->owned[i]=(D3U8)((mask>>i)&1);o->ammo[i]=d3_u16(g->data+g->player+172+2*i);}
     o->god=o->cloak=o->cooler=o->converter=o->quad=-1;
+    for(i=0;i<D3_CARGO_TYPES;i++)o->cargo_counts[i]=-1;
+    for(i=0;i<D3_COUNTERMEASURE_TYPES;i++)o->countermeasure_counts[i]=-1;
 }
 
 typedef struct {D3U32 start,length,size;const D3U8 *bytes;} Patch;
 static void add_patch(Patch *p,int *n,D3U32 start,D3U32 length,const D3U8 *bytes,D3U32 size){p[*n].start=start;p[*n].length=length;p[*n].bytes=bytes;p[*n].size=size;(*n)++;}
-static int equipment(D3Inventory *inv,int id,const char *name,int flags,int request){
-    int i,j;if(request<0)return 1;if(id<0)return 0;
-    for(i=0;i<inv->count;i++)if(inv->items[i].type==7 && inv->items[i].id==id)break;
-    if(request && i==inv->count){
-        D3Item *x;if(inv->count==10)return 0;x=&inv->items[inv->count++];d3_zero(x,sizeof(*x));
-        x->type=x->original_type=7;x->id=x->original_id=id;x->count=1;x->iflags=flags;d3_string(x->name,512,name);
-    }else if(!request && i<inv->count){
-        if(inv->selected==i)inv->selected=0;else if(inv->selected>i)inv->selected--;
-        for(j=i;j+1<inv->count;j++)d3_copy(&inv->items[j],&inv->items[j+1],sizeof(D3Item));inv->count--;
+static void remove_item(D3Inventory *inv,int type,int id) {
+    int read,write=0,selected=0;
+    for (read=0; read<inv->count; read++) {
+        const D3Item *item=&inv->items[read];
+        if (item->type==type && item->id==id) continue;
+        if (read==inv->selected) selected=write;
+        if (write!=read) d3_copy(&inv->items[write],item,sizeof(*item));
+        write++;
     }
+    inv->count=write;
+    inv->selected=selected;
+}
+static int add_item(D3Inventory *inv,int type,int id,int pickup,int count,int flags,const char *name,const char *description) {
+    D3Item *item;
+    if (inv->count==D3_MAX_ITEMS) return 0;
+    item=&inv->items[inv->count++];
+    d3_zero(item,sizeof(*item));
+    item->type=type;
+    item->id=id;
+    item->original_type=OBJ_POWERUP;
+    item->original_id=pickup;
+    item->count=count;
+    item->iflags=flags;
+    d3_string(item->name,D3_STRING,name);
+    d3_string(item->description,D3_STRING,description);
     return 1;
+}
+static int equipment(D3Inventory *inv,int id,const char *name,int flags,int request,int removing) {
+    int index;
+    if (request<0 || (request==0)!=removing) return 1;
+    if (id<0) return 0;
+    index=find_item(inv,OBJ_POWERUP,id);
+    if (removing && index>=0) remove_item(inv,OBJ_POWERUP,id);
+    if (!removing && index<0) return add_item(inv,OBJ_POWERUP,id,id,1,flags,name,"");
+    return 1;
+}
+static const char *set_supplies(const D3Game *g,const D3Options *options,D3Inventory *inv,int countermeasure,int removing) {
+    const D3Supply *items=countermeasure ? d3_countermeasure_types : d3_cargo_items;
+    const int *ids=countermeasure ? g->countermeasure_ids : g->cargo_ids;
+    const int *counts=countermeasure ? options->countermeasure_counts : options->cargo_counts;
+    int size=countermeasure ? D3_COUNTERMEASURE_TYPES : D3_CARGO_TYPES;
+    int type=countermeasure ? OBJ_WEAPON : OBJ_POWERUP;
+    enum {SELECTABLE=0x03, MISSION_ITEM=0x04, TIMEOUT_ON_SPEW=0x80};
+    int flags=SELECTABLE | TIMEOUT_ON_SPEW | (countermeasure ? MISSION_ITEM : 0);
+    int i;
+    for (i=0; i<size; i++) {
+        int count=counts[i];
+        int id=ids[i];
+        int index,old_count;
+        if (count==-1 || (count==0)!=removing) continue;
+        if (id<0) return "Die Gegenstands- oder Gegenmassnahmendefinition fehlt im Spielstand.";
+        index=find_item(inv,type,id);
+        old_count=index<0 ? 0 : inv->items[index].count;
+        if (count==old_count) continue;
+        if (count<0 || (count>items[i].maximum && count>old_count)) return "Ungueltige Inventarmenge. Bitte das angezeigte Limit beachten.";
+        if (count==0) {
+            remove_item(inv,type,id);
+        } else if (index>=0) {
+            inv->items[index].count=count;
+        } else {
+            int pickup=countermeasure ? g->countermeasure_pickups[i] : id;
+            if (pickup<0) return "Die Aufsammeldefinition der Gegenmassnahme fehlt im Spielstand.";
+            if (!add_item(inv,type,id,pickup,count,flags,items[i].key,items[i].name))
+                return "Inventar voll (maximal 10 Arten pro Liste).";
+        }
+    }
+    return 0;
 }
 static void write32(D3U8 *bytes,D3U32 *p,D3U32 value){d3_put32(bytes+*p,value);*p+=4;}
 static void write_z(D3U8 *bytes,D3U32 *p,const char *text){D3U32 n=d3_length(text)+1;d3_copy(bytes+*p,text,n);*p+=n;}
@@ -181,33 +288,61 @@ static D3U32 inventory_bytes(const D3Inventory *inv,D3U8 *dest){
         write_z(dest,&p,x->description);write_z(dest,&p,x->icon);write_z(dest,&p,x->name);write32(dest,&p,(D3U32)x->iflags);
     }write32(dest,&p,(D3U32)inv->selected);return p;
 }
+/* List count and selection, plus seven integers and three strings per entry. */
+#define D3_INVENTORY_BYTES (8+D3_MAX_ITEMS*(7*4+3*D3_STRING))
+static void patch_inventory(const D3Game *g,const D3Inventory *inv,D3U8 *raw_count,D3U8 *bytes,Patch *patches,int *n) {
+    D3U32 size=inventory_bytes(inv,bytes);
+    D3U32 original_size=inv->end-inv->start;
+    d3_put32(raw_count,(D3U32)inv->count);
+    if (size!=original_size || !d3_equal(bytes,g->data+inv->start,size))
+        add_patch(patches,n,inv->start,original_size,bytes,size);
+}
 int d3_edit(D3Game *g,const D3Options *o,D3Buffer *out){
-    D3U8 raw[496],shield[4],effect[167],quad0[4],quad5[4];D3U8 *inv_bytes=0,*map=0;D3Inventory *inv=0;D3Game *verify=0;
-    Patch patches[8],temp;int n=0,i,j,primary,secondary,primaries=0;D3U32 mask,oldmask,flags,inv_size,total,source_pos,dest_pos;
+    D3U8 raw[496],shield[4],effect[167],quad0[4],quad5[4];D3U8 *inv_bytes=0,*map=0;D3Inventory *lists=0;D3Game *verify=0;
+    Patch patches[8],temp;int n=0,i,j,primary,secondary,primaries=0,removing;D3U32 mask,oldmask,flags,permissions,total,source_pos,dest_pos;
     const char *error=0;out->data=0;out->size=0;
     if(!d3_finite(o->energy) || o->energy<0 || o->energy>1e9f || !d3_finite(o->shields) || o->shields<0 || o->shields>1e9f || !d3_finite(o->afterburner) || o->afterburner<0 || o->afterburner>1e6f || o->lives<0 || o->lives>255)return fail(g,"Ungueltiger Spielerwert.");
     oldmask=d3_u32(g->data+g->player+168);for(i=0;i<10;i++)if(o->owned[i])primaries++;
     if(!primaries && (oldmask&1023))return fail(g,"Mindestens eine Primaerwaffe muss vorhanden bleiben.");
-    inv=(D3Inventory*)d3_alloc(sizeof(*inv));inv_bytes=(D3U8*)d3_alloc(16384);verify=(D3Game*)d3_alloc(sizeof(*verify));
-    if(!inv || !inv_bytes || !verify){error="Nicht genug Arbeitsspeicher.";goto cleanup;}
-    d3_copy(inv,&g->inventory,sizeof(*inv));
-    if(!equipment(inv,g->cooler_id,"AB Cooler",128,o->cooler) || !equipment(inv,g->converter_id,"Energy to Shield Converter",131,o->converter)){
-        error="Ausruestungsdefinition fehlt oder Inventar ist voll (maximal 10 Arten).";goto cleanup;
+    permissions=d3_ship_permissions(g);
+    for (i=0; i<D3_STANDARD_SHIPS; i++) {
+        D3U32 bit;
+        if (!o->unlock_ships[i]) continue;
+        bit=d3_ship_permission_bit(g,d3_standard_ships[i]);
+        if (!bit) return fail(g,"Die Schiffsdefinition fehlt im Spielstand.");
+        permissions|=bit;
+    }
+    if(o->quad>=0 && g->object.batteries!=21) return fail(g,"Quad-Laser nicht zuweisbar: Waffenbatterien fehlen.");
+    lists=(D3Inventory*)d3_alloc(2*sizeof(*lists));inv_bytes=(D3U8*)d3_alloc(2*D3_INVENTORY_BYTES);verify=(D3Game*)d3_alloc(sizeof(*verify));
+    if(!lists || !inv_bytes || !verify){error="Nicht genug Arbeitsspeicher.";goto cleanup;}
+    d3_copy(&lists[0],&g->inventory,sizeof(*lists));
+    d3_copy(&lists[1],&g->countermeasures,sizeof(*lists));
+    /* Remove first to allow replacements in a full inventory. */
+    for (removing=1; removing>=0; removing--) {
+        if (!equipment(&lists[0],g->cooler_id,"AB Cooler",128,o->cooler,removing) ||
+            !equipment(&lists[0],g->converter_id,"Energy to Shield Converter",131,o->converter,removing) ||
+            !equipment(&lists[0],g->quad_id,"Quad Laser",132,o->quad,removing)) {
+            error="Ausruestungsdefinition fehlt oder Inventar ist voll (maximal 10 Arten).";goto cleanup;
+        }
+        error=set_supplies(g,o,&lists[0],0,removing);
+        if (error) goto cleanup;
+        error=set_supplies(g,o,&lists[1],1,removing);
+        if (error) goto cleanup;
     }
     if(o->quad>=0){
-        if(g->object.batteries!=21 || !equipment(inv,g->quad_id,"Quad Laser",132,o->quad)){error="Quad-Laser nicht zuweisbar: Definition/Batterien fehlen oder Inventar voll.";goto cleanup;}
         flags=d3_u32(g->data+g->object.battery+104)&~16u;if(o->quad)flags|=16;d3_put32(quad0,flags);add_patch(patches,&n,g->object.battery+104,4,quad0,4);
         flags=d3_u32(g->data+g->object.battery+5*108+104)&~16u;if(o->quad)flags|=16;d3_put32(quad5,flags);add_patch(patches,&n,g->object.battery+5*108+104,4,quad5,4);
     }
     d3_copy(raw,g->data+g->player,496);d3_put_float(raw+104,o->energy);d3_put_float(raw+348,o->afterburner);d3_put32(raw+88,(D3U32)o->score);raw[108]=(D3U8)o->lives;
+    d3_put32(raw+SHIP_PERMISSIONS_OFFSET,permissions);
     mask=oldmask&~0xfffffu;for(i=0;i<20;i++){if(o->owned[i])mask|=1u<<i;d3_put16(raw+172+2*i,o->ammo[i]);}d3_put32(raw+168,mask);
     primary=o->primary;secondary=o->secondary;
     if(primary<0 || primary>9 || (!o->owned[primary] && (mask!=oldmask || primary!=(D3I32)d3_u32(raw+216)))){for(primary=0;primary<10;primary++)if(o->owned[primary])break;if(primary==10)primary=0;}
     if(secondary<10 || secondary>19 || (!o->owned[secondary] && (mask!=oldmask || secondary!=(D3I32)d3_u32(raw+228)))){for(secondary=10;secondary<20;secondary++)if(o->owned[secondary])break;if(secondary==20)secondary=10;}
     d3_put32(raw+216,(D3U32)primary);d3_put32(raw+228,(D3U32)secondary);
     if(o->god>=0){flags=d3_u32(raw+84)&~(1u|(1u<<22));if(o->god)flags|=1;d3_put32(raw+84,flags);d3_put_float(raw+116,o->god?1e9f:0);}
-    d3_put32(raw+312,(D3U32)inv->count);inv_size=inventory_bytes(inv,inv_bytes);
-    if(inv_size!=g->inventory.end-g->inventory.start || !d3_equal(inv_bytes,g->data+g->inventory.start,inv_size))add_patch(patches,&n,g->inventory.start,g->inventory.end-g->inventory.start,inv_bytes,inv_size);
+    patch_inventory(g,&lists[0],raw+312,inv_bytes,patches,&n);
+    patch_inventory(g,&lists[1],raw+324,inv_bytes+D3_INVENTORY_BYTES,patches,&n);
     if(o->cloak>=0 && (g->object.has_effect || o->cloak)){
         d3_zero(effect,167);effect[0]=1;d3_put16(effect+1,164);
         if(g->object.has_effect)d3_copy(effect+3,g->data+g->object.effect,164);
@@ -231,7 +366,7 @@ int d3_edit(D3Game *g,const D3Options *o,D3Buffer *out){
     }d3_copy(out->data+dest_pos,g->data+source_pos,g->size-source_pos);
     if(!d3_parse(verify,out->data,out->size)){error="Bearbeitete Ausgabe konnte nicht erneut eingelesen werden.";goto cleanup;}
 cleanup:
-    d3_free(inv);d3_free(inv_bytes);d3_free(verify);d3_free(map);
+    d3_free(lists);d3_free(inv_bytes);d3_free(verify);d3_free(map);
     if(error){d3_free(out->data);out->data=0;out->size=0;return fail(g,error);}g->error=0;return 1;
 }
 

@@ -28,11 +28,25 @@ internal static class UiTests {
             Get<NumericUpDown>(form,"energy").Value=200;Get<NumericUpDown>(form,"shields").Value=200;
             Get<NumericUpDown>(form,"afterburner").Value=5;Get<NumericUpDown>(form,"lives").Value=50;Get<NumericUpDown>(form,"score").Value=999;
             foreach(string field in new[]{"god","cloak","cooler","quad","fullMap"})Get<CheckBox>(form,field).Checked=true;
-            Get<CheckBox>(form,"converter").Checked=false;Get<Button>(form,"save").PerformClick();Application.DoEvents();
+            Get<CheckBox>(form,"converter").Checked=false;
+            form.ShowTab(3);Application.DoEvents();
+            var cargo=Get<NumericUpDown[]>(form,"cargoCounts");
+            var measures=Get<NumericUpDown[]>(form,"countermeasureCounts");
+            var ships=Get<CheckBox[]>(form,"unlockShips");
+            var inventory=Get<ListBox>(form,"savedInventory");
+            Check(cargo[0].Visible && cargo[0].Value==2 && measures[0].Value==2 && measures[3].Maximum==4,"GUI shows both inventories and countermeasure limits");
+            Check(inventory.Items.Cast<string>().Any(item=>item.Contains("Mission cargo")),"GUI shows the saved mission inventory");
+            Check(ships[0].Checked && !ships[0].Enabled && ships[1].Enabled && !ships[1].Checked,"GUI distinguishes allowed and unlockable ships");
+            cargo[0].Value=4;measures[0].Value=12;measures[1].Value=0;ships[1].Checked=true;
+            Get<Button>(form,"save").PerformClick();Application.DoEvents();
             var saved=SaveFiles.Open(source);var options=saved.CurrentOptions();
             Check(saved.Energy==200 && saved.Shields==200 && options.Lives==50 && options.Score==999,"GUI save writes edited player values");
             Check(options.Primary==4 && options.Secondary==19 && options.Ammo[19]==65535,"GUI save writes selected weapons and maximum ammo");
             Check(saved.Invulnerable && saved.IsCloaked && saved.HasEquipment("Afterburner") && saved.HasQuad && !saved.HasEquipment("Converter"),"GUI save writes requested effects and equipment");
+            Check(saved.InventoryItems.Any(item=>item.Name=="Force Wall" && item.Count==4) &&
+                saved.CountermeasureItems.Any(item=>item.Name=="Saved Chaff" && item.Count==12) &&
+                saved.CountermeasureItems.All(item=>item.Name!="Saved Betty"),"GUI save writes addition and removal counts");
+            Check(saved.ShipPermissions==0x40000023u && saved.ShipName=="Pyro-GL","GUI saves permissions by name");
             Check(Directory.GetFiles(root,"*.bak-*").Length==1,"GUI save creates backup");
             byte[] before=File.ReadAllBytes(source);Get<Button>(form,"save").PerformClick();Application.DoEvents();
             Check(before.SequenceEqual(File.ReadAllBytes(source)),"GUI unchanged resave preserves exact bytes");

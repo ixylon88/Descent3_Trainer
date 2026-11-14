@@ -302,16 +302,32 @@ void object_record(int index,int version,bool effects) {
   u8(effects?1:0);
   if(effects){i16(sizeof(effect_info_s));effect_info_s fx{};fx.alpha=0.625f;fx.type_flags=256;fx.freeze_scalar=1;fx.sound_handle=-1;write(fx);}
 }
+void inventory_item(int type,int original_type,int id,int original_id,int count,
+                    const char *name,const char *icon,int flags) {
+  i32(type); i32(original_type); i32(id); i32(original_id); i32(0x20); i32(count);
+  z("Saved description"); z(icon); z(name); i32(flags);
+}
+
 int main(int argc,char**argv) {
   if(argc<2)return 2;
   int version=argc>2?std::atoi(argv[2]):2;
   bool effect=argc<=3 || std::atoi(argv[3])!=0;
   bool guided=argc>4 && std::atoi(argv[4])!=0;
   bool snapshot=argc>5 && std::atoi(argv[5])!=0;
+  bool loadout=argc>6 && std::atoi(argv[6])!=0;
   char description[32]="Synthetic parser fixture";for(auto c:description)u8(c);i16(version);u8(snapshot?1:0);
   if(snapshot){u8(0);u8(0);u8(122);z("test.ogf");u8(1);zeros(9);i16(2);i16(2);u8(32);u8(40);u8(4);i16(0x7fff);}
-  i16(4);z("Afterburner");z("Converter");z("QuadLaser");z("Robot");
-  i16(1);z("ship.pof");i16(0);i16(1);z("Pyro-GL");i16(0);i16(0); // remaining five xlate tables
+  i16(loadout?11:4); z("Afterburner"); z("Converter"); z("QuadLaser"); z("Robot");
+  if(loadout) {
+    z("Forcewall"); z("GoWingNut"); z("Chaff"); z("Betty4Pack");
+    z("Seeker3Pack"); z("GunboyPowerup"); z("ProxMinePowerup");
+  }
+  i16(1); z("ship.pof"); i16(0);
+  i16(loadout?6:1); z("Pyro-GL");
+  if(loadout) { z("Black Pyro"); z(""); z("Magnum-AHT"); z(""); z("Phoenix"); }
+  i16(loadout?7:0);
+  if(loadout) { z(""); z("Betty"); z("Chaff"); z(""); z("ProxMine"); z("SeekerMine"); z("GunBoy"); }
+  i16(0);
   i16(-1);z("");i16(1);z("fixture.mn3");i32(0x55);f32(123.5f);i32(100);i32(-1);i16(0);
   i32(4);zeros(4);i32(1);i32(0);i32(-1); // weather and doors
   i16(1);i16(400);u8(1);zeros(399); // map
@@ -327,9 +343,28 @@ int main(int argc,char**argv) {
   pl.counter_measures.count=0;pl.afterburn_time_left=3.125f;pl.guided_obj=guided?1234:0;
   pl.movement_scalar=pl.damage_scalar=pl.armor_scalar=pl.turn_scalar=pl.weapon_recharge_scalar=pl.weapon_speed_scalar=1.0f;
   pl.controller_bitflags=0x1234;pl.ship_permissions=7;
+  if(loadout) {
+    pl.ship_permissions=0x40000003;
+    pl.inventory.count=3;
+    pl.counter_measures.count=3;
+    pl.counter_measures.root=5678;
+    pl.counter_measures.pos=5678;
+  }
   i16(sizeof(player));write(pl);if(guided)i32(0x1001);
-  i32(1);i32(7);i32(7);i32(1);i32(1);i32(0x20);i32(1);z("Converter description");z("Converter icon");z("Converter");i32(131);i32(0);
-  i32(0);i32(0); // countermeasures
+  i32(pl.inventory.count);
+  i32(7);i32(7);i32(1);i32(1);i32(0x20);i32(1);z("Converter description");z("Converter icon");z("Converter");i32(131);
+  if(loadout) {
+    inventory_item(7,7,4,4,2,"Force Wall","force.ogf",0x193);
+    inventory_item(0x1001,2,-1,3,1,"Mission cargo","",0x63);
+  }
+  i32(loadout?2:0);
+  i32(pl.counter_measures.count);
+  if(loadout) {
+    inventory_item(5,7,2,6,2,"Saved Chaff","chaff.ogf",0x187);
+    inventory_item(5,7,1,7,3,"Saved Betty","betty.ogf",0x87);
+    inventory_item(5,7,0,10,1,"Custom countermeasure","",0x87);
+  }
+  i32(loadout?1:0);
   i32(0); // matcens, then an opaque tail that must survive byte for byte
   z("OPAQUE-OSIRIS-TAIL");for(int i=0;i<257;i++)u8((i*73)%256);
   std::ofstream file(argv[1],std::ios::binary);file.write(reinterpret_cast<const char*>(out.data()),out.size());

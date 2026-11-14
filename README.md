@@ -20,12 +20,61 @@ verschiedene Eigenschaften. Die Editoren konvertieren keine Speicherformate.
 - Primär- und Sekundärwaffen einzeln hinzufügen/entfernen und aktive Waffen auswählen.
 - Schild, Energie, Munition, Nachbrennerladung, Leben und Punktestand bearbeiten.
 - God-Mode, Tarnung, Nachbrenner-Kühler, Konverter und Quad-Laser setzen.
+- Gegenstände und Gegenmaßnahmen im Spielstand einsehen. Mengen für Force Wall,
+  Go Wingnut sowie die fünf Standard-Gegenmaßnahmen bearbeiten, sofern die
+  passenden Definitionen im Spielstand vorhanden sind.
+- Pyro-GL, Phoenix und Magnum-AHT für die Schiffsauswahl der Kampagne freischalten.
 - Gespeicherte Kartensichtbarkeit vollständig aufdecken.
 - Normale Munitionslimits aus eigenen Spieldaten lesen; alternativ 65.535 als technisches Maximum setzen.
 - Geplante Ausgabe prüfen und beim Überschreiben Backups anlegen.
 
 Die genauen Voraussetzungen, Grenzen und Bedienhinweise stehen in den jeweiligen
 README-Dateien. Proprietäre Spieldaten und echte Spielstände sind nicht enthalten.
+
+## Inventar und Schiffsfreigaben
+
+Im Reiter **Inventar / Schiffe** zeigt die Liste die gespeicherten Einträge
+beider Inventare an. Für die bearbeitbaren Einträge entfernt die Menge `0` den
+jeweiligen Eintrag. In der Standardausrüstung tragen Chaff, Bouncing Betty,
+Seeker Mine und Proximity Mine jeweils bis zu 12 Stück. Beim Gunboy sind es 4.
+Die Originalbeschreibungen, Symbole und Flags vorhandener Einträge bleiben bei
+Mengenänderungen erhalten. Neu angelegte Einträge erhalten einen Textnamen und
+ein leeres Symbolfeld.
+
+Force Wall und Go Wingnut stammen aus den allgemeinen Spielskripten. Ob sie
+als Spieler-Gegenstände verfügbar sind und welche Wirkung sie haben, hängt
+von der Spielversion und den Spieldaten ab. Die Liste zeigt auch Guide-Bot und
+Missionsgegenstände an. Deren Zustand kann an Levelobjekte und Skripte gekoppelt
+sein.
+
+Die Häkchen ergänzen die Schiffserlaubnisse im geladenen Spielstand. Das Schiff
+wählst du beim nächsten Briefing mit Schiffsauswahl im Spiel. Das Pilotenprofil
+speichert seine Freigaben pro Kampagne weiterhin über den normalen Spielfortschritt.
+
+Das reguläre Einzelspielermenü in `main` und `d3-historical` bietet die drei
+Standardschiffe an. In Mercenary schaltet das Level-2-Skript den Black Pyro frei
+und sperrt den Phoenix. Für den Black Pyro in der Hauptkampagne gibt es die
+historische Mod [Black Pyro Justice](https://www.descentforum.net/Pyromania/files/).
+
+Quelltextstellen für das Format und die Spielregeln
+
+- Spielerdaten und beide Inventare in [`main`](https://github.com/DescentDevelopers/Descent3/blob/de4bebf5f2d2523261956d0f28603e426eb88c63/Descent3/gamesave.cpp#L962-L975) und [`d3-historical`](https://github.com/DescentDevelopers/Descent3/blob/84e25b0b411284bad57b34f50fd976f1a8a2367f/Descent3/gamesave.cpp#L1014-L1030).
+- [Aufsammeldefinitionen und Mengenbegrenzungen](https://github.com/DescentDevelopers/Descent3/blob/de4bebf5f2d2523261956d0f28603e426eb88c63/Descent3/multisafe.cpp#L2800-L2981).
+- [TelCom-Auswahl](https://github.com/DescentDevelopers/Descent3/blob/de4bebf5f2d2523261956d0f28603e426eb88c63/Descent3/TelCom.cpp#L3603-L3633), [zugelassene Standardnamen](https://github.com/DescentDevelopers/Descent3/blob/de4bebf5f2d2523261956d0f28603e426eb88c63/Descent3/ship.cpp#L124-L129) und [Mercenary-Skript](https://github.com/DescentDevelopers/Descent3/blob/de4bebf5f2d2523261956d0f28603e426eb88c63/scripts/Merc02.cpp#L5095-L5104).
+
+## Builds auf GitHub
+
+Beide Workflows starten bei einem Push auf `dev`. Unter **Actions** lassen sie
+sich auch manuell über **Run workflow** starten.
+
+| Workflow | Prüfungen und Build | ZIP unter **Artifacts** |
+| --- | --- | --- |
+| Windows 98 | MinGW-w64-Build auf Ubuntu, native Datentests mit ASan/UBSan und Prüfung der Win98-Importe | `Descent3_Trainer-Win98` mit `D3EDIT98.EXE` |
+| Windows 10 and 11 | Datentests und WinForms-Oberflächentest mit Mono auf Ubuntu, Build mit dem .NET-Framework-Compiler unter Windows | `Descent3_Trainer-Win10-Win11` mit `D3SaveEditor.exe` und `D3SaveEditor.exe.config` |
+
+Nach einem erfolgreichen Lauf findest du das ZIP auf der Seite des Laufs. Jedes
+ZIP enthält auch Quelltext, Buildskripte und Lizenz. `SOURCE.txt` verlinkt den
+gebauten Commit. `SHA256SUMS.txt` enthält die Prüfsummen der Programmdateien.
 
 ## Kompilieren
 
@@ -58,10 +107,8 @@ Schritt prüft die **zuvor gebaute** `D3EDIT98.EXE`.
 Details und die historischen Prüfergebnisse stehen in `windows10/TESTS.md`
 und `windows98/TESTS.md`.
 
-Die C/C#-Quellen, Tests, Buildskripte und Laufzeitkonfiguration wurden beim
-Erstellen dieses Pakets nicht verändert. SHA-256 und Herkunft jedes dieser
-Dateien sind in `SOURCE-PROVENANCE.json` festgehalten. Eine Vollständigkeits-
-und Byteprüfung ist keine erneute Ausführung der früheren Anwendungstests.
+`SOURCE-PROVENANCE.json` dokumentiert die Dateihashes und Herkunft des
+ursprünglich importierten Quelltextpakets.
 
 ## Lizenz und Herkunft
 

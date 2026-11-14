@@ -17,6 +17,14 @@ typedef char D3AssertFloat[(sizeof(float)==4) ? 1 : -1];
 #define D3_MAX_ITEMS 10
 #define D3_STRING 512
 #define D3_PLAYER_SIZE 496
+#define D3_CARGO_TYPES 2
+#define D3_COUNTERMEASURE_TYPES 5
+#define D3_STANDARD_SHIPS 3
+
+typedef struct {
+    const char *key, *name, *pickup;
+    int maximum;
+} D3Supply;
 
 typedef struct {
     D3I32 type, original_type, id, original_id, flags, count, iflags;
@@ -36,6 +44,8 @@ typedef struct {
     D3U32 size, player, map, map_count;
     int version, level, highest_room, ship_count;
     int cooler_id, converter_id, quad_id;
+    int cargo_ids[D3_CARGO_TYPES];
+    int countermeasure_ids[D3_COUNTERMEASURE_TYPES], countermeasure_pickups[D3_COUNTERMEASURE_TYPES];
     char description[32], mission[D3_STRING], callsign[20];
     char ships[128][128];
     D3Object object;
@@ -50,6 +60,9 @@ typedef struct {
     D3U16 ammo[20];
     /* -1 keep existing; 0 disable; 1 enable with a long timer. */
     int god, cloak, cooler, converter, quad, reveal_map;
+    /* -1 keeps the saved count, 0 removes the entry. */
+    int cargo_counts[D3_CARGO_TYPES], countermeasure_counts[D3_COUNTERMEASURE_TYPES];
+    D3U8 unlock_ships[D3_STANDARD_SHIPS];
 } D3Options;
 typedef struct {
     D3U8 *data;
@@ -57,6 +70,9 @@ typedef struct {
 } D3Buffer;
 
 extern const char *d3_weapon_names[20];
+extern const D3Supply d3_cargo_items[D3_CARGO_TYPES];
+extern const D3Supply d3_countermeasure_types[D3_COUNTERMEASURE_TYPES];
+extern const char *const d3_standard_ships[D3_STANDARD_SHIPS];
 void *d3_alloc(D3U32 bytes);
 void d3_free(void *pointer);
 void d3_zero(void *pointer,D3U32 bytes);
@@ -77,7 +93,11 @@ int d3_finite(float value);
 int d3_parse(D3Game *game,const D3U8 *data,D3U32 size);
 void d3_current(const D3Game *game,D3Options *options);
 int d3_has_item(const D3Game *game,int id);
+/* Returns -1 if the required definition is missing. */
+int d3_supply_count(const D3Game *game,int countermeasure,int index);
 const char *d3_ship(const D3Game *game);
+D3U32 d3_ship_permissions(const D3Game *game);
+D3U32 d3_ship_permission_bit(const D3Game *game,const char *name);
 int d3_god(const D3Game *game);
 int d3_cloak(const D3Game *game);
 int d3_quad(const D3Game *game);

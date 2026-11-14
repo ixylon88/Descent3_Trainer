@@ -4,7 +4,7 @@
 
 Nach dem Neubau ist `D3EDIT98.EXE` eine eigenständige, native 32-Bit-Win32-Anwendung mit deutschen Beschriftungen. Sie braucht **kein .NET, MFC, KernelEx oder zusätzliches Visual-C++-Laufzeitpaket**. Es werden ausschließlich klassische Windows-Systembibliotheken importiert. Die Oberfläche ist für **800 × 600 oder größer** ausgelegt.
 
-Die EXE wurde gezielt für den klassischen Windows-Loader gebaut: PE32/x86, Betriebssystem- und Subsystemversion 4.0, ANSI-APIs, eigener Programmeinstieg ohne CRT, keine Unicode-Schicht, kein .NET-Header und keine neueren Initialisierungsroutinen. **Ein tatsächlicher Start unter Windows 98 und das Laden eines bearbeiteten Spielstands im Spiel sind noch nicht getestet.** Eine statische Prüfung ist kein Ersatz für diesen Praxistest.
+Die EXE wurde gezielt für den klassischen Windows-Loader gebaut. Sie nutzt PE32/x86, Betriebssystem- und Subsystemversion 4.0, ANSI-APIs und einen eigenen Programmeinstieg ohne CRT.
 
 ## Verwenden
 
@@ -27,11 +27,15 @@ Windows 98 verwendet hier ANSI-Dateipfade. Verwendet werden maximal 200 Zeichen 
 | Versorgung | Schild und Energie setzen oder jeweils auf 200 maximieren; Nachbrenner auf 5 Sekunden auffüllen |
 | Effekte | God-Mode und Cloaked-Mode aktivieren/deaktivieren und Restdauer erneuern |
 | Ausrüstung | Nachbrenner-Kühler, Energie-Schild-Konverter und Quad-Laser hinzufügen/entfernen |
+| Inventar / Schiffe | Gespeicherte Einträge ansehen, unterstützte Gegenstände und Gegenmaßnahmen bearbeiten, Standardschiffe für ein späteres Briefing freischalten |
 | Karte | Gespeicherte Kartensichtbarkeit vollständig aufdecken |
 | Weitere Werte | Leben und Punktestand ändern |
 | Dateiverwaltung | Ausgabe prüfen, Kopie schreiben, Original sichern, nachträglich geändertes Original erkennen |
 
 Eine vorhandene letzte Primärwaffe kann nicht entfernt werden. **Keine Sekundaerwaffe** entfernt sämtliche Sekundärwaffen samt Munition. Abgewählte Waffen erhalten in der Oberfläche Munition 0. Aktive Waffen werden bei Bedarf auf vorhandene Waffen zurückgesetzt. Flare, zusätzliche Besitzbits und die sonstigen Daten bleiben erhalten.
+
+Die Bedienung des Reiters **Inventar / Schiffe** steht in der
+[gemeinsamen Anleitung](../README.md#inventar-und-schiffsfreigaben).
 
 ## Maximale Munition
 
@@ -63,9 +67,7 @@ Grundlage ist der gewünschte [Branch `d3-historical`](https://github.com/Descen
 
 Unterstützt werden das dortige Little-Endian-Speicherformat 0–2 und der **historische 32-Bit-Spielerblock mit 496 Byte**. Moderne 64-Bit-Spielerblöcke werden absichtlich abgelehnt. Das Speicherlayout wird nicht in andere Spielversionen konvertiert.
 
-**299 Daten- und Dateiprüfungen sind bestanden**, darunter ein bytegenauer Vergleich mit der getrennten C#-Implementierung, SHA-256-Testvektoren, sechs historische Testvarianten und künstlich ausgelöste Fehler beim Austausch und Zurücksetzen. Adress- und Undefined-Behavior-Sanitizer waren aktiv. Die fertige EXE wurde zusätzlich auf PE-Header und sämtliche 49 importierten Funktionen geprüft. Details in `TESTS.md`.
-
-Es lagen **keine echten Spielstände und keine proprietären Spieldaten** vor. Die Testdateien wurden aus den historischen C++-Deklarationen erzeugt; sie sind nicht spielbar und werden nicht als Spielstände ausgeliefert. Die native Oberfläche und das Laden im Spiel benötigen weiterhin einen echten Windows-98-Praxistest.
+Der ursprüngliche Editor wurde vom Projektinhaber mit echten Spielständen unter Windows 98 erprobt. Der aktuelle Build wurde mit synthetischen Dateien und auf PE-Header sowie alle 49 importierten Funktionen geprüft. Der Ingame-Test der neuen Funktionen steht noch aus. Details stehen in `TESTS.md`.
 
 ## Weiterarbeiten und Neubau
 

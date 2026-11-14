@@ -13,7 +13,8 @@ ID_ENERGY=120,ID_SHIELDS,ID_AB,ID_LIVES,ID_SCORE,ID_ENERGY_MAX,ID_SHIELD_MAX,ID_
 ID_GOD=140,ID_CLOAK,ID_COOLER,ID_CONVERTER,ID_QUAD,ID_MAP,ID_GOD_RENEW,ID_CLOAK_RENEW,
 ID_PRIMARY=160,ID_SECONDARY,ID_CHECK,
 ID_ALL_PRI=170,ID_NONE_PRI,ID_CAP_PRI,ID_STORE_PRI,ID_ALL_SEC,ID_NONE_SEC,ID_CAP_SEC,ID_STORE_SEC,
-ID_OWN=200,ID_AMMO=240,ID_MAX=280};
+ID_OWN=200,ID_AMMO=240,ID_MAX=280,
+ID_CARGO_COUNT=320,ID_COUNTERMEASURE_COUNT=330,ID_SHIP_UNLOCK=340};
 typedef struct {HWND hwnd;int page,needs_file;} Widget;
 static HINSTANCE instance;
 static HWND main_window,tab,info,status,hint,review;
@@ -21,6 +22,8 @@ static HFONT font,title_font;
 static Widget widgets[256];static int widget_count,selected_page,loading,dirty;
 static HWND energy,shields,afterburner,lives,score,god,cloak,cooler,converter,quad,full_map,god_time,cloak_time,map_info;
 static HWND owned[20],ammo[20],max_buttons[20],cap_labels[20],primary,secondary;
+static HWND cargo_counts[D3_CARGO_TYPES],countermeasure_counts[D3_COUNTERMEASURE_TYPES];
+static HWND unlock_ships[D3_STANDARD_SHIPS],saved_inventory;
 static D3Game *game;
 static D3Buffer opened;
 static D3U8 original_hash[32];
@@ -76,7 +79,60 @@ static void file_report(char *out,D3U32 cap){
     for(i=0;i<32;i++){hash[2*i]=hex[original_hash[i]>>4];hash[2*i+1]=hex[original_hash[i]&15];}hash[64]=0;
     d3_string(out,cap,"DATEI\r\n");d3_append(out,cap,opened_path);d3_append(out,cap,"\r\n\r\nSHA-256: ");d3_append(out,cap,hash);
     d3_append(out,cap,"\r\nFormat: ");append_number(out,cap,(D3U32)game->version);d3_append(out,cap,"; historischer Spielerblock: 496 Byte\r\nSpieler: ");d3_append(out,cap,game->callsign);
-    d3_append(out,cap,"\r\nSchiff: ");d3_append(out,cap,d3_ship(game));d3_append(out,cap,"\r\nInventararten: ");append_number(out,cap,(D3U32)game->inventory.count);d3_append(out,cap,"\r\n");
+    d3_append(out,cap,"\r\nSchiff: ");d3_append(out,cap,d3_ship(game));
+    d3_append(out,cap,"\r\nInventararten: ");append_number(out,cap,(D3U32)game->inventory.count);
+    d3_append(out,cap," | Gegenmassnahmen: ");append_number(out,cap,(D3U32)game->countermeasures.count);d3_append(out,cap," Arten\r\n");
+}
+static void load_supply_counts(HWND *inputs,int countermeasure,int size) {
+    int i,count;
+    char value[24];
+    for (i=0; i<size; i++) {
+        count=d3_supply_count(game,countermeasure,i);
+        EnableWindow(inputs[i],count>=0);
+        if (count<0) text(inputs[i],"-");
+        else {
+            d3_format_u32(value,(D3U32)count);
+            text(inputs[i],value);
+        }
+    }
+}
+static void add_inventory_rows(const D3Inventory *inventory,const char *group_name) {
+    int i;
+    for (i=0; i<inventory->count; i++) {
+        const D3Item *item=&inventory->items[i];
+        char row[600],id[24];
+        d3_string(row,sizeof(row),group_name);
+        if (item->name[0]) d3_append(row,sizeof(row),item->name);
+        else {
+            d3_append(row,sizeof(row),"ID ");
+            d3_format_i32(id,item->id<0 ? item->original_id : item->id);
+            d3_append(row,sizeof(row),id);
+        }
+        d3_append(row,sizeof(row)," x ");
+        append_number(row,sizeof(row),(D3U32)item->count);
+        SendMessageA(saved_inventory,LB_ADDSTRING,0,(LPARAM)row);
+    }
+}
+static void load_inventory_values(void) {
+    int i,allowed;
+    D3U32 bit,permissions=d3_ship_permissions(game);
+    char name[64];
+    load_supply_counts(cargo_counts,0,D3_CARGO_TYPES);
+    load_supply_counts(countermeasure_counts,1,D3_COUNTERMEASURE_TYPES);
+    for (i=0; i<D3_STANDARD_SHIPS; i++) {
+        bit=d3_ship_permission_bit(game,d3_standard_ships[i]);
+        allowed=(permissions & bit)!=0;
+        check(unlock_ships[i],allowed);
+        EnableWindow(unlock_ships[i],bit!=0 && !allowed);
+        d3_string(name,sizeof(name),d3_standard_ships[i]);
+        if (!bit) d3_append(name,sizeof(name)," (fehlt)");
+        text(unlock_ships[i],name);
+    }
+    SendMessageA(saved_inventory,LB_RESETCONTENT,0,0);
+    add_inventory_rows(&game->inventory,"Inventar: ");
+    add_inventory_rows(&game->countermeasures,"Gegenmassnahme: ");
+    if (!game->inventory.count && !game->countermeasures.count)
+        SendMessageA(saved_inventory,LB_ADDSTRING,0,(LPARAM)"Inventar und Gegenmassnahmen sind leer.");
 }
 static void load_values(void){
     D3Options o;int i,visible=0,has_second=0;char s[1400],n[48];
@@ -85,6 +141,7 @@ static void load_values(void){
     d3_format_u32(n,(D3U32)o.lives);text(lives,n);d3_format_i32(n,o.score);text(score,n);
     check(god,d3_god(game));check(cloak,d3_cloak(game));check(cooler,d3_has_item(game,game->cooler_id));check(converter,d3_has_item(game,game->converter_id));check(quad,d3_quad(game));check(full_map,0);
     EnableWindow(cooler,game->cooler_id>=0);EnableWindow(converter,game->converter_id>=0);EnableWindow(quad,game->quad_id>=0 && game->object.batteries==21);
+    load_inventory_values();
     for(i=0;i<20;i++){check(owned[i],o.owned[i]);d3_format_u32(n,o.ammo[i]);text(ammo[i],n);if(i>=10 && o.owned[i])has_second=1;}
     SendMessageA(primary,CB_SETCURSEL,o.primary,0);SendMessageA(secondary,CB_SETCURSEL,has_second?(WPARAM)(o.secondary-9):0,0);
     effect_label(god_time,d3_god(game),d3_float(game->data+game->player+116));effect_label(cloak_time,d3_cloak(game),game->object.has_effect?d3_float(game->data+game->object.effect+12):0);
@@ -113,17 +170,45 @@ static int dialog_path(char path[260],int save,const char *title,const char *fil
 }
 static void choose_open(void){char path[260];path[0]=0;if(dialog_path(path,0,"Descent-3-Spielstand oeffnen (z.B. saveg000)","Spielstaende (saveg*)\0saveg*\0Alle Dateien\0*.*\0\0"))load_path(path,1);}
 static int read_float(HWND h,const char *initial,float original,float *value){char s[64];get_text(h,s,64);if(d3_string_equal(s,initial)){*value=original;return 1;}return d3_number(s,value);}
+static int read_supply_counts(HWND *inputs,int countermeasure,const D3Supply *items,int size,int *counts) {
+    int i,current,maximum;
+    D3I32 value;
+    char input[24];
+    for (i=0; i<size; i++) {
+        current=d3_supply_count(game,countermeasure,i);
+        if (current<0) continue;
+        maximum=current>items[i].maximum ? current : items[i].maximum;
+        get_text(inputs[i],input,sizeof(input));
+        if (!d3_integer(input,0,maximum,&value)) return 0;
+        if (value!=current) counts[i]=value;
+    }
+    return 1;
+}
 static int read_options(D3Options *o){
-    char s[64];D3I32 n;int i;d3_current(game,o);
+    char s[64];D3I32 n;D3U32 bit;int i;d3_current(game,o);
     if(!read_float(energy,energy_text,o->energy,&o->energy) || !read_float(shields,shield_text,o->shields,&o->shields) || !read_float(afterburner,ab_text,o->afterburner,&o->afterburner))return 0;
     get_text(lives,s,64);if(!d3_integer(s,0,255,&n))return 0;o->lives=n;get_text(score,s,64);if(!d3_integer(s,(-2147483647-1),2147483647,&n))return 0;o->score=n;
     for(i=0;i<20;i++){o->owned[i]=(D3U8)checked(owned[i]);get_text(ammo[i],s,64);if(!d3_integer(s,0,65535,&n))return 0;o->ammo[i]=(D3U16)n;}
+    if (!read_supply_counts(cargo_counts,0,d3_cargo_items,D3_CARGO_TYPES,o->cargo_counts) ||
+        !read_supply_counts(countermeasure_counts,1,d3_countermeasure_types,D3_COUNTERMEASURE_TYPES,o->countermeasure_counts)) return 0;
+    for (i=0; i<D3_STANDARD_SHIPS; i++) {
+        bit=d3_ship_permission_bit(game,d3_standard_ships[i]);
+        o->unlock_ships[i]=(D3U8)(bit!=0 && (d3_ship_permissions(game) & bit)==0 && checked(unlock_ships[i]));
+    }
     o->primary=(int)SendMessageA(primary,CB_GETCURSEL,0,0);i=(int)SendMessageA(secondary,CB_GETCURSEL,0,0);if(i>0)o->secondary=i+9;
     o->god=god_request;o->cloak=cloak_request;o->cooler=cooler_request;o->converter=converter_request;o->quad=quad_request;o->reveal_map=checked(full_map);return 1;
 }
+static void report_supply_counts(char *report,D3U32 size,const D3Supply *items,const int *counts,int length) {
+    int i;
+    for (i=0; i<length; i++) {
+        if (counts[i]<0) continue;
+        d3_append(report,size,items[i].name);d3_append(report,size,": ");
+        append_number(report,size,(D3U32)counts[i]);d3_append(report,size,"\r\n");
+    }
+}
 static int build_output(D3Buffer *out){
     D3Options o;char s[4096],n[48];int i;
-    if(!game)return 0;if(!read_options(&o)){error_box("Ungueltige Zahl. Dezimalpunkt oder -komma ist erlaubt; Munition 0 bis 65535, Leben 0 bis 255.");return 0;}
+    if(!game)return 0;if(!read_options(&o)){error_box("Ungueltige Zahl. Bitte Spielerwerte, Munition und Inventarmengen pruefen.");return 0;}
     if(!d3_edit(game,&o,out)){error_box(game->error);return 0;}
     file_report(s,4096);d3_append(s,4096,"\r\nGEPRUEFTE AUSGABE\r\nGroesse: ");append_number(s,4096,game->size);d3_append(s,4096," -> ");append_number(s,4096,out->size);d3_append(s,4096," Byte\r\n");
     if(out->size==game->size && d3_equal(out->data,game->data,out->size))d3_append(s,4096,"Keine Aenderung. Ausgabe ist byte-identisch.\r\n");
@@ -135,8 +220,14 @@ static int build_output(D3Buffer *out){
         if(o.cooler>=0)d3_append(s,4096,o.cooler?"Kuehler hinzufuegen\r\n":"Kuehler entfernen\r\n");
         if(o.converter>=0)d3_append(s,4096,o.converter?"Konverter hinzufuegen\r\n":"Konverter entfernen\r\n");
         if(o.quad>=0)d3_append(s,4096,o.quad?"Quad-Laser an\r\n":"Quad-Laser aus\r\n");if(o.reveal_map)d3_append(s,4096,"Karte vollstaendig aufdecken\r\n");
+        report_supply_counts(s,sizeof(s),d3_cargo_items,o.cargo_counts,D3_CARGO_TYPES);
+        report_supply_counts(s,sizeof(s),d3_countermeasure_types,o.countermeasure_counts,D3_COUNTERMEASURE_TYPES);
+        for (i=0; i<D3_STANDARD_SHIPS; i++) {
+            if (!o.unlock_ships[i]) continue;
+            d3_append(s,sizeof(s),d3_standard_ships[i]);d3_append(s,sizeof(s)," freischalten\r\n");
+        }
     }
-    d3_append(s,4096,"\r\nAusgabe wurde erneut erfolgreich eingelesen.\r\nNoch kein Ingame-Test mit echtem Spielstand.");text(review,s);set_status("Pruefung bestanden. Ausgabe konnte erneut gelesen werden.");return 1;
+    d3_append(s,4096,"\r\nAusgabe wurde erneut erfolgreich eingelesen.");text(review,s);set_status("Pruefung bestanden. Ausgabe konnte erneut gelesen werden.");return 1;
 }
 static void save_game(int copy){
     char path[260],s[900];D3Buffer out;D3WriteReport report;
@@ -158,7 +249,7 @@ static void maximum_one(int i,int storage){char s[24];d3_format_u32(s,(!storage 
 static void select_all(int first,int on){int i;for(i=first;i<first+10;i++){check(owned[i],on);if(!on)text(ammo[i],"0");}refresh_weapons(1);changed();}
 static void max_all(int first,int storage){int i;if(!storage && !use_caps()){error_box("Bitte zuerst passende Schiffslimits aus Table.gam / d3.hog laden.");return;}for(i=first;i<first+10;i++)if(checked(owned[i]) && uses_ammo(i))maximum_one(i,storage);}
 static void help(void){
-    MessageBoxA(main_window,"Descent 3 Savegame Editor - Windows 98\r\n\r\n1. Im Spiel speichern und das Spiel beenden.\r\n2. saveg000 bis saveg007 im Ordner savegame oeffnen.\r\n3. Werte aendern und Speichern + Backup waehlen.\r\n4. Im Spiel neu laden.\r\n\r\nJede ueberschriebene Datei wird zuvor als .bak gesichert.\r\nKopien mit .edited zum Laden passend in savegNNN umbenennen.\r\nAuf FAT ist der Austausch nicht transaktional: Bei Stromausfall\r\ndas Backup ggf. wieder unter den Slotnamen kopieren.\r\n\r\nMax: geladene Schiffslimits, sonst Speichermaximum 65.535.\r\nErneuern: God-Mode / Tarnung mit 1.000.000.000 s Restdauer.\r\nLevelwechsel und Skripte koennen Effekte aufheben.\r\n\r\nGrundlage: d3-historical, Spielerblock 496 Byte, Format 0-2.\r\nNative ANSI-Anwendung ohne .NET oder zusaetzliche Runtime.\r\nNoch nicht unter echtem Windows 98 oder im Spiel erprobt.\r\n\r\nGPL-3.0-or-later. Quelltext und Fortsetzungsnotiz im Paket.","Anleitung",MB_OK|MB_ICONINFORMATION);
+    MessageBoxA(main_window,"Descent 3 Savegame Editor - Windows 98\r\n\r\n1. Im Spiel speichern und das Spiel beenden.\r\n2. saveg000 bis saveg007 im Ordner savegame oeffnen.\r\n3. Werte aendern und Speichern + Backup waehlen.\r\n4. Im Spiel neu laden.\r\n\r\nJede ueberschriebene Datei wird zuvor als .bak gesichert.\r\nKopien mit .edited zum Laden passend in savegNNN umbenennen.\r\nBei unterbrochenem Dateiaustausch das Backup unter den Slotnamen kopieren.\r\n\r\nInventar / Schiffe bearbeitet Bestaende und Freigaben fuer das Briefing.\r\nMax nutzt das geladene Schiffslimit, sonst 65.535.\r\nErneuern setzt 1.000.000.000 s Restdauer fuer God-Mode und Tarnung.\r\n\r\nGrundlage: d3-historical, Spielerblock 496 Byte, Format 0-2.\r\nGPL-3.0-or-later. Quelltext und Anleitung stehen im Repository.","Anleitung",MB_OK|MB_ICONINFORMATION);
 }
 static void player_page(void){
     group("Versorgung",24,146,338,181,0);
@@ -186,19 +277,50 @@ static void weapon_page(int first,int page){
     button("Alle auswaehlen",28,437,130,first?ID_ALL_SEC:ID_ALL_PRI,page,1);button("Alle abwaehlen",166,437,130,first?ID_NONE_SEC:ID_NONE_PRI,page,1);
     button("Vorhandene: Schiff-Max",304,437,204,first?ID_CAP_SEC:ID_CAP_PRI,page,1);button("Vorhandene: 65.535",516,437,204,first?ID_STORE_SEC:ID_STORE_PRI,page,1);
 }
+static void inventory_page(int page) {
+    int i,y;
+    char name[60];
+    group("Gegenstaende",24,146,218,166,page);
+    for (i=0; i<D3_CARGO_TYPES; i++) {
+        y=172+i*25;
+        label(d3_cargo_items[i].name,36,y+2,115,18,page);
+        cargo_counts[i]=edit(153,y,77,ID_CARGO_COUNT+i,page,1);
+        SendMessageA(cargo_counts[i],EM_LIMITTEXT,7,0);
+    }
+    label("Kuehler, Konverter und Quad-Laser\r\nstehen im Spieler-Tab.",36,231,194,34,page);
+    group("Gegenmassnahmen (Limit)",249,146,256,166,page);
+    for (i=0; i<D3_COUNTERMEASURE_TYPES; i++) {
+        y=172+i*25;
+        d3_string(name,sizeof(name),d3_countermeasure_types[i].name);
+        d3_append(name,sizeof(name)," (");
+        append_number(name,sizeof(name),(D3U32)d3_countermeasure_types[i].maximum);
+        d3_append(name,sizeof(name),")");
+        label(name,261,y+2,137,18,page);
+        countermeasure_counts[i]=edit(408,y,82,ID_COUNTERMEASURE_COUNT+i,page,1);
+        SendMessageA(countermeasure_counts[i],EM_LIMITTEXT,7,0);
+    }
+    group("Schiffsfreigaben",513,146,221,166,page);
+    for (i=0; i<D3_STANDARD_SHIPS; i++)
+        unlock_ships[i]=checkbox(d3_standard_ships[i],525,170+i*25,193,ID_SHIP_UNLOCK+i,page);
+    label("Auswahl beim naechsten\r\npassenden Briefing.",525,255,193,36,page);
+    label("0 entfernt den Eintrag. Ein Strich zeigt fehlende Spieldaten an.",28,319,697,18,page);
+    label("Gespeicherte Eintraege",28,342,697,18,page);
+    saved_inventory=control("LISTBOX","",LBS_NOINTEGRALHEIGHT|WS_BORDER|WS_VSCROLL|WS_HSCROLL|WS_TABSTOP,28,362,701,94,0,page,1);
+    SendMessageA(saved_inventory,LB_SETHORIZONTALEXTENT,2800,0);
+}
 static void make_ui(void){
-    TCITEMA item;HWND heading;int i;const char *names[4]={"Spieler / Ausruestung","Primaerwaffen","Sekundaerwaffen","Datei / Pruefung"};
+    TCITEMA item;HWND heading;int i;const char *names[]={"Spieler / Ausruestung","Primaerwaffen","Sekundaerwaffen","Inventar / Schiffe","Datei / Pruefung"};
     font=(HFONT)GetStockObject(DEFAULT_GUI_FONT);title_font=CreateFontA(-18,0,0,0,FW_BOLD,0,0,0,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH|FF_SWISS,"MS Sans Serif");
     heading=label("DESCENT 3  -  SAVEGAME EDITOR / WINDOWS 98",12,10,736,25,-1);SendMessageA(heading,WM_SETFONT,(WPARAM)title_font,TRUE);
     button("Oeffnen...",12,42,105,ID_OPEN,-1,0);button("Speichern + Backup",123,42,144,ID_SAVE,-1,1);button("Kopie speichern...",273,42,128,ID_COPY,-1,1);
     button("Originalwerte",407,42,105,ID_RESET,-1,1);button("Schiffslimits laden...",518,42,150,ID_LIMITS,-1,1);button("Hilfe",674,42,74,ID_HELP,-1,0);
     info=label("Noch kein Spielstand geoeffnet. Im Spiel speichern, dann saveg000 usw. oeffnen.",12,76,736,34,-1);
     tab=control(WC_TABCONTROLA,"",WS_TABSTOP|WS_CLIPSIBLINGS,12,114,736,355,ID_TAB,-1,0);
-    d3_zero(&item,sizeof(item));item.mask=TCIF_TEXT;for(i=0;i<4;i++){item.pszText=(LPSTR)names[i];SendMessageA(tab,TCM_INSERTITEMA,(WPARAM)i,(LPARAM)&item);}
-    player_page();weapon_page(0,1);weapon_page(10,2);
-    button("Aenderungen pruefen",28,147,178,ID_CHECK,3,1);
-    review=control("EDIT","Geplante Aenderungen und Dateidaten erscheinen hier.\r\n\r\nDer Editor bearbeitet vorhandene Spielstaende; er erzeugt keinen\r\nvollstaendigen Levelzustand allein aus dem Quelltext.",ES_MULTILINE|ES_READONLY|ES_AUTOVSCROLL|WS_VSCROLL|WS_HSCROLL,28,180,701,276,0,3,0);
-    hint=label("",12,475,736,16,-1);status=label("Vorschau: noch kein Test unter echtem Windows 98 oder im Spiel.",12,495,736,32,-1);
+    d3_zero(&item,sizeof(item));item.mask=TCIF_TEXT;for(i=0;i<(int)(sizeof(names)/sizeof(names[0]));i++){item.pszText=(LPSTR)names[i];SendMessageA(tab,TCM_INSERTITEMA,(WPARAM)i,(LPARAM)&item);}
+    player_page();weapon_page(0,1);weapon_page(10,2);inventory_page(3);
+    button("Aenderungen pruefen",28,147,178,ID_CHECK,4,1);
+    review=control("EDIT","Geplante Aenderungen und Dateidaten erscheinen hier.\r\n\r\nDer Editor bearbeitet vorhandene Spielstaende; er erzeugt keinen\r\nvollstaendigen Levelzustand allein aus dem Quelltext.",ES_MULTILINE|ES_READONLY|ES_AUTOVSCROLL|WS_VSCROLL|WS_HSCROLL,28,180,701,276,0,4,0);
+    hint=label("",12,475,736,16,-1);status=label("Bereit.",12,495,736,32,-1);
     enable_controls();selected_page=0;apply_visibility();
 }
 static LRESULT CALLBACK window_proc(HWND hwnd,UINT message,WPARAM w,LPARAM l){
@@ -209,10 +331,13 @@ static LRESULT CALLBACK window_proc(HWND hwnd,UINT message,WPARAM w,LPARAM l){
     case WM_COMMAND:
         id=LOWORD(w);code=HIWORD(w);if(loading)return 0;
         if(id==ID_OPEN){choose_open();return 0;}if(id==ID_HELP){help();return 0;}if(!game)return 0;
-        if(code==EN_CHANGE){if((id>=ID_ENERGY && id<=ID_SCORE) || (id>=ID_AMMO && id<ID_AMMO+20))changed();return 0;}
+        if(code==EN_CHANGE){if((id>=ID_ENERGY && id<=ID_SCORE) || (id>=ID_AMMO && id<ID_AMMO+20) ||
+            (id>=ID_CARGO_COUNT && id<ID_CARGO_COUNT+D3_CARGO_TYPES) ||
+            (id>=ID_COUNTERMEASURE_COUNT && id<ID_COUNTERMEASURE_COUNT+D3_COUNTERMEASURE_TYPES))changed();return 0;}
         if(id==ID_PRIMARY && code==CBN_SELCHANGE){selected=(int)SendMessageA(primary,CB_GETCURSEL,0,0);if(selected>=0 && selected<10)check(owned[selected],1);refresh_weapons(1);changed();return 0;}
         if(id==ID_SECONDARY && code==CBN_SELCHANGE){selected=(int)SendMessageA(secondary,CB_GETCURSEL,0,0);if(selected==0)select_all(10,0);else if(selected>0){check(owned[selected+9],1);refresh_weapons(1);changed();}return 0;}
         if(code!=BN_CLICKED)return 0;
+        if(id>=ID_SHIP_UNLOCK && id<ID_SHIP_UNLOCK+D3_STANDARD_SHIPS){changed();return 0;}
         if(id>=ID_OWN && id<ID_OWN+20){i=id-ID_OWN;if(!checked(owned[i]))text(ammo[i],"0");refresh_weapons(1);changed();return 0;}
         if(id>=ID_MAX && id<ID_MAX+20){maximum_one(id-ID_MAX,0);return 0;}
         switch(id){

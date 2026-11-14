@@ -64,7 +64,21 @@ namespace D3SaveEditor {
     public sealed class InventoryItem {
         public int Type, OriginalType, Id, OriginalId, Flags, Count, InventoryFlags;
         public string Description, Icon, Name;
+        internal int Start = -1, End;
         internal InventoryItem Clone() { return (InventoryItem)MemberwiseClone(); }
+    }
+    internal sealed class SupplyItem {
+        internal readonly string Key, Name, Pickup;
+        internal readonly int Maximum;
+
+        internal SupplyItem(string key, string name, int maximum, string pickup = null) {
+            Key = key;
+            Name = name;
+            Maximum = maximum;
+            Pickup = pickup;
+        }
+
+        internal int Type { get { return Pickup == null ? 7 : 5; } }
     }
     internal sealed class InventoryBlock {
         internal int Start, End, Selected;
@@ -74,21 +88,30 @@ namespace D3SaveEditor {
             int n = r.I32();
             if (n < 0 || n > 10) throw new FormatProblem("Das Inventar enthält eine unbekannte Anzahl von Einträgen.");
             for (int i=0; i<n; i++) {
-                var item = new InventoryItem();
+                var item = new InventoryItem { Start = r.Pos };
                 item.Type=r.I32(); item.OriginalType=r.I32(); item.Id=r.I32(); item.OriginalId=r.I32();
                 item.Flags=r.I32(); item.Count=r.I32();
                 if (item.Count < 1 || item.Count > 1000000) throw new FormatProblem("Ungültige Inventar-Stückzahl.");
                 item.Description=r.Z(); item.Icon=r.Z(); item.Name=r.Z(); item.InventoryFlags=r.I32();
+                item.End = r.Pos;
                 result.Items.Add(item);
             }
             result.Selected=r.I32();
             if (result.Selected < 0 || result.Selected >= Math.Max(n,1)) throw new FormatProblem("Ungültige Inventarauswahl.");
             result.End=r.Pos; return result;
         }
-        internal byte[] Serialize() {
+        internal byte[] Serialize(byte[] source) {
             using (var stream = new MemoryStream()) using (var w = new BinaryWriter(stream, SaveGame.Ansi)) {
                 w.Write(Items.Count);
                 foreach (var x in Items) {
+                    if (x.Start >= 0) {
+                        const int countOffset = 5 * sizeof(int);
+                        int rest = x.Start + countOffset + sizeof(int);
+                        w.Write(source, x.Start, countOffset);
+                        w.Write(x.Count);
+                        w.Write(source, rest, x.End - rest);
+                        continue;
+                    }
                     w.Write(x.Type); w.Write(x.OriginalType); w.Write(x.Id); w.Write(x.OriginalId); w.Write(x.Flags); w.Write(x.Count);
                     WriteZ(w,x.Description); WriteZ(w,x.Icon); WriteZ(w,x.Name); w.Write(x.InventoryFlags);
                 }
@@ -98,6 +121,11 @@ namespace D3SaveEditor {
         private static void WriteZ(BinaryWriter w, string s) { w.Write(SaveGame.Ansi.GetBytes(s ?? "")); w.Write((byte)0); }
         internal InventoryBlock Copy() {
             return new InventoryBlock { Start=Start, End=End, Selected=Selected, Items=Items.Select(x=>x.Clone()).ToList() };
+        }
+        internal void Remove(int type, int id) {
+            var selected = Items[Selected];
+            Items.RemoveAll(item => item.Type == type && item.Id == id);
+            Selected = Math.Max(0, Items.IndexOf(selected));
         }
     }
 
@@ -155,6 +183,9 @@ namespace D3SaveEditor {
         // null means keep the saved effect, including its finite duration.
         public bool? GodMode, Cloaked, Cooler, Converter, QuadLasers;
         public bool RevealMap;
+        public int?[] CargoCounts = new int?[SaveGame.CargoItems.Length];
+        public int?[] CountermeasureCounts = new int?[SaveGame.CountermeasureTypes.Length];
+        public bool[] UnlockShips = new bool[SaveGame.StandardShips.Length];
     }
     internal sealed class Patch {
         internal int Start, Length;
@@ -169,6 +200,20 @@ namespace D3SaveEditor {
 
     public sealed class SaveGame {
         internal static readonly Encoding Ansi=Encoding.GetEncoding(1252);
+        private const int MaxObjectIds = 910, MaxWeapons = 200, MaxShips = 30;
+        internal static readonly SupplyItem[] CargoItems = {
+            new SupplyItem("Forcewall", "Force Wall", 1000000),
+            new SupplyItem("GoWingNut", "Go Wingnut", 1000000)
+        };
+        // Weapon and pickup names and regular carry limits from multisafe.cpp.
+        internal static readonly SupplyItem[] CountermeasureTypes = {
+            new SupplyItem("Chaff", "Chaff", 12, "Chaff"),
+            new SupplyItem("Betty", "Bouncing Betty", 12, "Betty4Pack"),
+            new SupplyItem("SeekerMine", "Seeker Mine", 12, "Seeker3Pack"),
+            new SupplyItem("GunBoy", "Gunboy", 4, "GunboyPowerup"),
+            new SupplyItem("ProxMine", "Proximity Mine", 12, "ProxMinePowerup")
+        };
+        internal static readonly string[] StandardShips = { "Pyro-GL", "Phoenix", "Magnum-AHT" };
         public static readonly string[] WeaponNames = {
             "Laser", "Vauss", "Microwave", "Plasma", "Fusion", "Super Laser", "Mass Driver", "Napalm", "EMD Gun", "Omega",
             "Concussion", "Homing", "Impact Mortar", "Smart", "Mega", "Frag", "Guided", "Napalm Rocket", "Cyclone", "Black Shark"
@@ -201,6 +246,8 @@ namespace D3SaveEditor {
         public bool HasQuad { get { return PlayerObject.BatteryCount==21 && (U32(Bytes,PlayerObject.BatteryStart+104)&16)!=0; } }
         public bool SupportsQuad { get { return PlayerObject.BatteryCount==21; } }
         public IList<InventoryItem> InventoryItems { get { return Inventory.Items.AsReadOnly(); } }
+        public IList<InventoryItem> CountermeasureItems { get { return CounterMeasures.Items.AsReadOnly(); } }
+        public uint ShipPermissions { get { return U32(Bytes, PlayerOffset + Layout.Permissions); } }
         public string Hash { get { return HashBytes(Bytes); } }
 
         public static SaveGame Parse(byte[] bytes) {
@@ -317,8 +364,31 @@ namespace D3SaveEditor {
             r.Need(4); int matcens=r.I32(); if(matcens<0 || matcens>4096)throw new FormatProblem("Ungültiger Folgeblock.");
         }
         public int FindEquipment(string name) {
-            for(int i=0;i<Tables[0].Length;i++) if(string.Equals(Tables[0][i],name,StringComparison.OrdinalIgnoreCase))return i;
+            return FindTableId(0, name, Tables[0].Length);
+        }
+        private int FindTableId(int table, string name, int limit) {
+            for (int i = 0; i < Math.Min(Tables[table].Length, limit); i++)
+                if (string.Equals(Tables[table][i], name, StringComparison.OrdinalIgnoreCase)) return i;
             return -1;
+        }
+        private int SupplyId(SupplyItem item) {
+            return item.Pickup == null ? FindTableId(0, item.Key, MaxObjectIds) : FindTableId(4, item.Key, MaxWeapons);
+        }
+        internal int SupplyCount(SupplyItem item) {
+            int id = SupplyId(item);
+            if (id < 0) return 0;
+            var items = item.Pickup == null ? Inventory.Items : CounterMeasures.Items;
+            var found = items.Find(entry => entry.Type == item.Type && entry.Id == id);
+            return found == null ? 0 : found.Count;
+        }
+        internal bool CanEditSupply(SupplyItem item) {
+            return SupplyId(item) >= 0 &&
+                (item.Pickup == null || SupplyCount(item) > 0 || FindTableId(0, item.Pickup, MaxObjectIds) >= 0);
+        }
+        internal uint ShipPermissionBit(string name) {
+            // Bits follow the indices in the ship table saved by the engine.
+            int id = FindTableId(3, name, MaxShips);
+            return id < 0 ? 0u : 1u << id;
         }
         public bool HasEquipment(string name) {
             int id=FindEquipment(name); return id>=0 && Inventory.Items.Any(x=>x.Type==7 && x.Id==id && x.Count>0);
@@ -331,7 +401,10 @@ namespace D3SaveEditor {
             return x;
         }
         public EditResult Edit(EditOptions edit) {
-            if(edit==null || edit.Owned==null || edit.Owned.Length!=20 || edit.Ammo==null || edit.Ammo.Length!=20)
+            if(edit==null || edit.Owned==null || edit.Owned.Length!=20 || edit.Ammo==null || edit.Ammo.Length!=20 ||
+               edit.CargoCounts==null || edit.CargoCounts.Length!=CargoItems.Length ||
+               edit.CountermeasureCounts==null || edit.CountermeasureCounts.Length!=CountermeasureTypes.Length ||
+               edit.UnlockShips==null || edit.UnlockShips.Length!=StandardShips.Length)
                 throw new ArgumentException("Unvollständige Editieroptionen.");
             if(!Finite(edit.Energy) || edit.Energy<0 || edit.Energy>1000000000 || !Finite(edit.Shields) || edit.Shields<0 || edit.Shields>1000000000 ||
                !Finite(edit.AfterburnerSeconds) || edit.AfterburnerSeconds<0 || edit.AfterburnerSeconds>1000000)
@@ -340,6 +413,15 @@ namespace D3SaveEditor {
             if(!edit.Owned.Take(10).Any(x=>x) && (originalMask&0x3ffu)!=0)throw new FormatProblem("Mindestens eine Primärwaffe muss vorhanden sein.");
             var result=new EditResult(); var patches=new List<Patch>();
             var raw=new byte[Layout.Size]; Buffer.BlockCopy(Bytes,PlayerOffset,raw,0,raw.Length);
+            uint shipPermissions = ShipPermissions;
+            for (int i = 0; i < StandardShips.Length; i++) {
+                if (!edit.UnlockShips[i]) continue;
+                uint bit = ShipPermissionBit(StandardShips[i]);
+                if (bit == 0) throw new FormatProblem("Die Schiffsdefinition „" + StandardShips[i] + "“ fehlt im Spielstand.");
+                if ((shipPermissions & bit) == 0) result.Changes.Add(StandardShips[i] + " freischalten");
+                shipPermissions |= bit;
+            }
+            Put(raw, Layout.Permissions, shipPermissions);
             Put(raw,104,edit.Energy); Put(raw,88,edit.Score); raw[108]=edit.Lives; Put(raw,Layout.Afterburner,edit.AfterburnerSeconds);
             uint mask=U32(raw,168)&~0xFFFFFu;
             for(int i=0;i<20;i++) { if(edit.Owned[i])mask|=1u<<i; Put(raw,172+2*i,edit.Ammo[i]); }
@@ -358,22 +440,27 @@ namespace D3SaveEditor {
                 Put(raw,84,flags); Put(raw,116,edit.GodMode.Value ? 1e9f : 0f);
                 result.Changes.Add(edit.GodMode.Value ? "God-Mode dauerhaft aktivieren" : "Unverwundbarkeit deaktivieren");
             }
-            var inventory=Inventory.Copy();
-            SetEquipment(inventory,"Afterburner","AB Cooler",128,edit.Cooler,result);
-            SetEquipment(inventory,"Converter","Energy to Shield Converter",131,edit.Converter,result);
+            if(edit.QuadLasers.HasValue && !SupportsQuad)
+                throw new FormatProblem("Die Waffenbatterien dieses Spielstands erlauben keine Quad-Laser-Bearbeitung.");
+            var inventory = Inventory.Copy();
+            var countermeasures = CounterMeasures.Copy();
+            // Remove first so an item can be replaced even when the inventory is full.
+            foreach (bool removing in new[] { true, false }) {
+                SetEquipment(inventory, "Afterburner", "AB Cooler", 128, edit.Cooler, removing, result);
+                SetEquipment(inventory, "Converter", "Energy to Shield Converter", 131, edit.Converter, removing, result);
+                SetEquipment(inventory, "QuadLaser", "Quad Laser", 132, edit.QuadLasers, removing, result);
+                SetSupplies(inventory, CargoItems, edit.CargoCounts, removing, result);
+                SetSupplies(countermeasures, CountermeasureTypes, edit.CountermeasureCounts, removing, result);
+            }
+            AddInventoryPatch(raw, Layout.Inventory, inventory, patches);
+            AddInventoryPatch(raw, Layout.CounterMeasures, countermeasures, patches);
             if(edit.QuadLasers.HasValue) {
-                if(!SupportsQuad)throw new FormatProblem("Die Waffenbatterien dieses Spielstands erlauben keine Quad-Laser-Bearbeitung.");
-                SetEquipment(inventory,"QuadLaser","Quad Laser",132,edit.QuadLasers,result);
                 foreach(int index in new[]{0,5}) {
                     int offset=PlayerObject.BatteryStart+108*index+104;
                     uint flags=U32(Bytes,offset)&~16u; if(edit.QuadLasers.Value)flags|=16;
                     patches.Add(new Patch(offset,4,BitConverter.GetBytes(flags)));
                 }
             }
-            if(inventory.Items.Count>10)throw new FormatProblem("Das Inventar ist voll (maximal 10 verschiedene Gegenstände).");
-            Put(raw,Layout.Inventory+Layout.PointerBytes,inventory.Items.Count);
-            byte[] invBytes=inventory.Serialize();
-            if(!SliceEqual(Bytes,Inventory.Start,Inventory.End-Inventory.Start,invBytes))patches.Add(new Patch(Inventory.Start,Inventory.End-Inventory.Start,invBytes));
             if(edit.Cloaked.HasValue) {
                 var effect=new byte[164];
                 if(PlayerObject.EffectOffset>=0)Buffer.BlockCopy(Bytes,PlayerObject.EffectOffset,effect,0,164);
@@ -400,8 +487,15 @@ namespace D3SaveEditor {
             if(result.Bytes.SequenceEqual(Bytes))result.Changes.Clear();
             return result;
         }
-        private void SetEquipment(InventoryBlock inv,string key,string name,int flags,bool? requested,EditResult result) {
-            if(!requested.HasValue)return;
+        private void AddInventoryPatch(byte[] raw, int offset, InventoryBlock block, List<Patch> patches) {
+            if (block.Items.Count > 10) throw new FormatProblem("Das Inventar ist voll (maximal 10 Arten pro Liste).");
+            Put(raw, offset + Layout.PointerBytes, block.Items.Count);
+            byte[] bytes = block.Serialize(Bytes);
+            if (!SliceEqual(Bytes, block.Start, block.End - block.Start, bytes))
+                patches.Add(new Patch(block.Start, block.End - block.Start, bytes));
+        }
+        private void SetEquipment(InventoryBlock inv,string key,string name,int flags,bool? requested,bool removing,EditResult result) {
+            if(!requested.HasValue || requested.Value==removing)return;
             int id=FindEquipment(key);
             if(id<0)throw new FormatProblem("Die Gegenstandsdefinition „"+key+"“ fehlt in diesem Spielstand.");
             var found=inv.Items.Find(x=>x.Type==7 && x.Id==id);
@@ -410,10 +504,40 @@ namespace D3SaveEditor {
                     InventoryFlags=flags,Description="",Icon="",Name=name });
                 result.Changes.Add(name+" hinzufügen");
             } else if(!requested.Value && found!=null) {
-                var selected=inv.Selected<inv.Items.Count ? inv.Items[inv.Selected] : null;
-                inv.Items.RemoveAll(x=>x.Type==7 && x.Id==id);
-                inv.Selected=selected==null ? 0 : Math.Max(0,inv.Items.IndexOf(selected));
+                inv.Remove(7, id);
                 result.Changes.Add(name+" entfernen");
+            }
+        }
+        private void SetSupplies(InventoryBlock block, SupplyItem[] items, int?[] counts, bool removing, EditResult result) {
+            for (int i = 0; i < items.Length; i++) {
+                if (!counts[i].HasValue || (counts[i].Value == 0) != removing) continue;
+                SupplyItem item = items[i];
+                int id = SupplyId(item);
+                if (id < 0) throw new FormatProblem("Die Definition „" + item.Name + "“ fehlt im Spielstand.");
+                var saved = block.Items.Find(entry => entry.Type == item.Type && entry.Id == id);
+                int oldCount = saved == null ? 0 : saved.Count;
+                int count = counts[i].Value;
+                if (count == oldCount) continue;
+                int maximum = Math.Max(oldCount, item.Maximum);
+                if (count < 0 || count > maximum)
+                    throw new FormatProblem(item.Name + " erlaubt eine Menge von 0 bis " + maximum + ".");
+
+                if (count == 0) {
+                    block.Remove(item.Type, id);
+                } else if (saved != null) {
+                    saved.Count = count;
+                } else {
+                    int pickup = item.Pickup == null ? id : FindTableId(0, item.Pickup, MaxObjectIds);
+                    if (pickup < 0) throw new FormatProblem("Die Aufsammeldefinition „" + item.Pickup + "“ fehlt im Spielstand.");
+                    // Engine inventory stores the power-up ID as the countermeasure's auxiliary ID.
+                    const int selectable = 0x03, missionItem = 0x04, timeoutOnSpew = 0x80;
+                    block.Items.Add(new InventoryItem {
+                        Type = item.Type, Id = id, OriginalType = 7, OriginalId = pickup, Count = count,
+                        InventoryFlags = selectable | timeoutOnSpew | (item.Pickup == null ? 0 : missionItem), Name = item.Key,
+                        Description = item.Name, Icon = ""
+                    });
+                }
+                result.Changes.Add(item.Name + ": " + oldCount + " → " + count);
             }
         }
         internal static byte[] ApplyPatches(byte[] source,List<Patch> patches) {

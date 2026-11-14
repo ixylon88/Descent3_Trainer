@@ -21,11 +21,15 @@
 | Versorgung | Schild und Energie setzen oder auf 200 maximieren; Nachbrennerladung setzen oder auf 5 Sekunden auffüllen |
 | Effekte | God-Mode und Cloaked-Mode aktivieren/deaktivieren; lange Restdauer erneuern |
 | Ausrüstung | Nachbrenner-Kühler, Energie-Schild-Konverter und Quad-Laser zuweisen/entfernen |
+| Inventar / Schiffe | Gespeicherte Einträge ansehen, unterstützte Gegenstände und Gegenmaßnahmen bearbeiten, Standardschiffe für ein späteres Briefing freischalten |
 | Karte | Gespeicherte Kartensichtbarkeit vollständig aufdecken; ohne Häkchen bleibt die gespeicherte Erkundung erhalten |
 | Weitere Werte | Leben und Punktestand bearbeiten |
 | Dateien | Änderungen prüfen, Kopie speichern, automatische Backups und Erkennung nachträglich veränderter Originaldateien |
 
 Es muss mindestens eine bereits vorhandene Primärwaffe übrig bleiben. Wird eine gerade aktive Waffe entfernt, setzt der Editor bei Bedarf eine noch vorhandene Waffe als aktiv. Abgewählte Waffen erhalten in der Oberfläche Munition 0. Flare und unbekannte zusätzliche Besitzbits bleiben erhalten.
+
+Die Bedienung des Reiters **Inventar / Schiffe** steht in der
+[gemeinsamen Anleitung](../README.md#inventar-und-schiffsfreigaben).
 
 ## Was „maximieren“ bedeutet
 
@@ -54,7 +58,7 @@ Entwickelt anhand des von dir genannten [Descent-3-Quelltexts](https://github.co
 
 Unterstützt werden das dort beschriebene Little-Endian-Speicherformat **0, 1 und 2** und die bekannten Windows-Spielerstrukturen mit **496 Byte (32-Bit)** oder **536 Byte (64-Bit)**. Das ist keine Konvertierung zwischen Spielversionen oder Prozessorarchitekturen: Der bearbeitete Spielstand behält sein ursprüngliches Layout. Andere Builds und nicht eindeutig erkennbare Strukturen werden abgelehnt.
 
-**Es lag kein echter Spielstand vor.** Die Tests verwenden künstliche, nicht spielbare Dateien, deren Spieler-, Effekt- und Waffenbatterie-Strukturen durch einen unabhängigen C++-Generator aus den Quelltextdeklarationen geschrieben werden. Das Laden eines bearbeiteten Spielstands im echten Spiel ist **noch nicht verifiziert**. Auch ein Start auf einem echten Windows-System konnte in der Entwicklungsumgebung nicht geprüft werden. Die Oberflächenprüfung erfolgte mit Mono/X11; Details stehen in `TESTS.md`.
+Der ursprüngliche Editor wurde vom Projektinhaber mit echten Spielständen erprobt. Für die Inventar- und Schiffsänderungen verwenden die automatisierten Tests synthetische Dateien. Die Oberfläche wurde unter Mono/X11 geprüft. Der Ingame-Test der neuen Funktionen steht noch aus. Details stehen in `TESTS.md`.
 
 Der Quelltext beschreibt das Speicherformat, ersetzt aber keinen vollständigen Levelzustand mit Mission, Objekten und Skripten. Deshalb erzeugt dieser Editor keinen komplett neuen, spielbaren Spielstand aus dem Nichts. Du benötigst zum Verwenden später eine im Spiel gespeicherte Datei.
 

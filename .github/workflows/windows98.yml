@@ -1,0 +1,56 @@
+name: Windows 98
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and test Windows 98
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+        working-directory: windows98
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install compiler and test tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends g++ gcc-mingw-w64-i686-posix python3
+
+      - name: Build Win32 executable
+        env:
+          D3_CC: i686-w64-mingw32-gcc-posix
+        run: sh build.sh
+
+      - name: Run data tests and check Win98 imports
+        run: sh tests/run-tests.sh
+
+      - name: Prepare download
+        run: |
+          package="$RUNNER_TEMP/Descent3_Trainer-Win98"
+          mkdir -p "$package"
+          cp -R D3EDIT98.EXE LICENSE build.sh src "$package/"
+          for file in LIESMICH.TXT build.cmd; do
+            sed 's/\r*$//; s/$/\r/' "$file" > "$package/$file"
+          done
+          printf '%s/%s/tree/%s/windows98\n' "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_SHA" > "$package/SOURCE.txt"
+          cd "$package"
+          sha256sum D3EDIT98.EXE > SHA256SUMS.txt
+
+      - name: Upload Windows 98 artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: Descent3_Trainer-Win98
+          path: ${{ runner.temp }}/Descent3_Trainer-Win98/
+          if-no-files-found: error

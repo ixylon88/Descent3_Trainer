@@ -1,6 +1,13 @@
 # Prüfprotokoll · Windows-98-Version · 24.10.2026
 
-## Bestanden
+**Inventar und Schiffsfreigaben, 14.11.2026.** 315 Assertions bestanden unter
+Linux mit AddressSanitizer und UndefinedBehaviorSanitizer. Die zusätzliche
+Testdatei prüft Änderungen beider Listen, Auswahlindizes, Mengenlimits,
+fehlende Aufsammeldefinitionen und Schiffserlaubnisse bei Lücken in der
+Schiffstabelle. GCC/MinGW-w64 14.2 hat den Win98-Build erstellt. Die PE-Prüfung
+bestätigte alle 49 Importe. Der Ingame-Test der neuen Funktionen steht aus.
+
+## Ursprünglicher Prüfstand vom 24.10.2026
 
 **299 Assertions** in den nativen C-Daten-/Dateitests, ausgeführt auf dem Linux-Testhost mit AddressSanitizer und UndefinedBehaviorSanitizer. LeakSanitizer wurde deaktiviert, weil ihm in dieser isolierten Umgebung der erforderliche Zugriff auf `/proc` fehlt; es wird deshalb kein bestandener Lecktest behauptet.
 
@@ -36,9 +43,11 @@ Für dieselbe historische Eingabedatei und dieselben Optionen wurde zusätzlich 
 
 Der Compiler war GCC/MinGW-w64 13.2.0, Ziel i386 mit x87, ohne SSE. Die EXE verwendet einen eigenen `WinMainCRTStartup`-Einstieg und ist ungefähr 37 KiB groß. Die Versionsangaben allein wären kein ausreichender Kompatibilitätsnachweis; deshalb werden auch Abhängigkeiten und Initialisierungsverzeichnisse geprüft.
 
-## Offen
+## Praxistest
 
-**Kein echter Windows-98-Start, kein Lauf der nativen Oberfläche, keine echten Spieldaten und kein Ingame-Ladetest.** Auch ein Importaudit kann die tatsächliche Laufzeitumgebung nicht vollständig nachbilden. Die zuvor unter Mono geprüfte C#-Oberfläche ist eine andere Anwendung und wird hier nicht als Test der nativen Win98-Oberfläche gezählt.
+Der Projektinhaber hat den ursprünglichen Editor unter Windows 98 mit echten
+Spielständen erprobt. Die Prüfungen der neuen Funktionen auf dem Linux-Testhost
+decken das Dateiformat und die Importe der neu gebauten EXE ab.
 
 Die erzeugten Testdateien sind keine spielbaren Speicherstände. Sie werden nicht als solche angeboten.
 
@@ -50,4 +59,7 @@ Auf einem Linux-Rechner mit C/C++-Compiler und Python:
 sh tests/run-tests.sh
 ```
 
-Das ergibt 298 Assertions ohne den optionalen C#-Vergleich. Der enthaltene `tests/Golden.cs` erzeugt den Referenzfall aus dem vorherigen C#-Quelltext. Wird dessen Ausgabepfad dem C-Testprogramm als zweites Argument übergeben, kommt die 299. Assertion hinzu. Die Fortsetzungsnotiz beschreibt die genauen Optionen und Quelltextstände.
+Das ergibt 315 Assertions. Der enthaltene `tests/Golden.cs` erzeugt den
+ursprünglichen Vergleichsfall mit dem C#-Editor. Wird dessen Ausgabepfad dem
+C-Testprogramm als zweites Argument übergeben, kommt die Byteprüfung der beiden
+Ausgaben hinzu. Die Fortsetzungsnotiz beschreibt die Vergleichsoptionen.

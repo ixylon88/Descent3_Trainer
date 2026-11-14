@@ -14,6 +14,9 @@ FUNKTIONSUMFANG
 Alle Primaer- und Sekundaerwaffen, aktive Waffenauswahl,
 Munition, Energie, Schild, Nachbrennerladung, Leben, Punkte,
 God-Mode, Tarnung, Kuehler, Konverter, Quad-Laser und volle Karte.
+Im Reiter Inventar / Schiffe kannst du Gegenstaende und Gegenmassnahmen
+einsehen, unterstuetzte Stueckzahlen bearbeiten und Standardschiffe
+fuer die Auswahl im Briefing freischalten. 0 entfernt einen Eintrag.
 
 MAXIMA
 Energie und Schild: normal jeweils 200.
@@ -36,15 +39,15 @@ Historischer 32-Bit-Spielerblock: 496 Byte, Speicherformat 0 bis 2.
 ANSI-Zielpfade maximal 200 Zeichen; Spielstaende maximal 32 MiB.
 Die EXE braucht nur klassische Windows-System-DLLs.
 
-299 Daten-/Dateipruefungen und eine Pruefung der EXE-Importe bestanden.
-Noch KEIN echter Windows-98-Start, KEIN Test der nativen Oberflaeche
-und KEIN Ingame-Test mit echtem Spielstand.
+Der fruehere Editor wurde unter Windows 98 mit echten Spielstaenden
+erprobt. Der Ingame-Test der neuen Inventar- und Schiffsfunktionen
+steht aus.
 
 WEITERARBEITEN
-README.md und TESTS.md enthalten Details.
-PROJEKTSTAND-Descent3.md haelt Quellen, Layouts, Entscheidungen,
-Tests und offene Punkte fuer spaetere Korrekturen fest.
-Vorgaenger-Windows10.zip enthaelt die vorige Version samt C#-Quelltext.
-Vollstaendiger nativer C-Quelltext: src. Tests: tests.
+Der C-Quelltext steht in src. Auf einem modernen Rechner mit einem
+i686-MinGW-w64-Compiler kann der Editor mit build.cmd unter Windows
+oder mit sh build.sh unter Linux gebaut werden.
+Handbuch und Tests stehen im Repository:
+https://github.com/ixylon88/Descent3_Trainer
 
 GPL-3.0-or-later, siehe LICENSE. Keine proprietaeren Spielinhalte.

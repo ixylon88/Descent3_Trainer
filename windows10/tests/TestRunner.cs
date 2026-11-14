@@ -62,9 +62,56 @@ internal static class Tests {
         Check(unarmedGame.Edit(unarmedGame.CurrentOptions()).Bytes.SequenceEqual(unarmed),"already unarmed source preserves exact unchanged bytes");
         var noDefinition=Changed(baseBytes,FindAscii(baseBytes,"Afterburner"),Encoding.ASCII.GetBytes("Otherburner"));var noDefGame=SaveGame.Parse(noDefinition);var noDefEdit=noDefGame.CurrentOptions();noDefEdit.Cooler=true;
         Reject(()=>noDefGame.Edit(noDefEdit),"missing equipment definition rejected");
+        foreach (string name in new[] { "fixture32-loadout", "fixture64-loadout" })
+            LoadoutTests(Path.Combine(dir,name));
         FileTests(dir,baseBytes);
         TableTests(dir);
         Console.WriteLine("\n"+passed+" assertions passed. No real in-game save/load test has been performed.");
+    }
+    private static void LoadoutTests(string path) {
+        string name=Path.GetFileName(path);
+        var original=SaveGame.Parse(File.ReadAllBytes(path));
+        var untouched=original.Edit(original.CurrentOptions());
+        Check(untouched.Bytes.SequenceEqual(original.Bytes),name+": unchanged inventories stay byte-identical");
+        Check(original.InventoryItems.Count==3 && original.CountermeasureItems.Count==3,name+": both lists are decoded");
+        var edit=original.CurrentOptions();
+        edit.CargoCounts[0]=4;
+        edit.CargoCounts[1]=1;
+        edit.CountermeasureCounts[0]=8;
+        edit.CountermeasureCounts[1]=0;
+        edit.CountermeasureCounts[2]=12;
+        edit.CountermeasureCounts[3]=4;
+        edit.CountermeasureCounts[4]=5;
+        edit.UnlockShips[1]=edit.UnlockShips[2]=true;
+        var result=original.Edit(edit);
+        var saved=result.Parsed;
+        Check(saved.InventoryItems.Count==4 && saved.CountermeasureItems.Count==5,name+": both list counts and raw counts agree");
+        Check(saved.ShipName=="Pyro-GL" && saved.ShipPermissions==0x4000002bu,name+": ship bits use sparse table positions");
+        Check(saved.InventoryItems[1].Count==4 && saved.InventoryItems[1].Icon=="force.ogf" && saved.InventoryItems[1].InventoryFlags==0x193,
+            name+": original cargo flags and icon retained");
+        Check(saved.InventoryItems[2].Id==-1 && saved.InventoryItems[2].Name=="Mission cargo" && saved.Inventory.Selected==2,
+            name+": selected mission entry preserved");
+        Check(saved.InventoryItems[3].Type==7 && saved.InventoryItems[3].OriginalId==5 && saved.InventoryItems[3].Count==1,
+            name+": new cargo entry has matching object IDs");
+        Check(saved.CountermeasureItems[0].Count==8 && saved.CountermeasureItems[0].Name=="Saved Chaff" && saved.CountermeasureItems[0].Icon=="chaff.ogf" &&
+            saved.CountermeasureItems[0].InventoryFlags==0x187,name+": existing countermeasure metadata survives a quantity change");
+        Check(saved.CounterMeasures.Selected==0 && saved.CountermeasureItems[1].Name=="Custom countermeasure",
+            name+": removed selection falls back to a valid entry and custom entries survive");
+        Check(saved.CountermeasureItems[2].Id==5 && saved.CountermeasureItems[2].OriginalType==7 && saved.CountermeasureItems[2].OriginalId==8 &&
+            saved.CountermeasureItems[2].Count==12 && saved.CountermeasureItems[2].InventoryFlags==0x87,
+            name+": new countermeasure records encode weapon and pickup IDs");
+        Check(saved.CountermeasureItems[3].Count==4 && saved.CountermeasureItems[4].Count==5,name+": Gunboy and Proximity Mine counts");
+        Check(result.Bytes.Skip(saved.CounterMeasures.End).SequenceEqual(original.Bytes.Skip(original.CounterMeasures.End)) &&
+            SaveGame.I32(result.Bytes,saved.PlayerOffset+saved.Layout.Size)==0x1001,
+            name+": opaque tail and optional guided projectile handle preserved");
+        Check(saved.Edit(saved.CurrentOptions()).Bytes.SequenceEqual(result.Bytes),name+": edited file reopens and round-trips");
+
+        edit.CountermeasureCounts[3]=5;
+        Reject(()=>original.Edit(edit),name+": Gunboy maximum enforced");
+        var missing=SaveGame.Parse(Changed(original.Bytes,FindAscii(original.Bytes,"Seeker3Pack"),Encoding.ASCII.GetBytes("MissingPack")));
+        Check(!missing.CanEditSupply(SaveGame.CountermeasureTypes[2]),name+": no new entry when pickup definition is missing");
+        edit=missing.CurrentOptions();edit.CountermeasureCounts[2]=1;
+        Reject(()=>missing.Edit(edit),name+": missing pickup ID is never guessed");
     }
     private static int FindAscii(byte[] bytes,string value) {
         byte[] pattern=Encoding.ASCII.GetBytes(value);

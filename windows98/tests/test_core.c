@@ -68,6 +68,59 @@ static void file_tests(const char *path,const char *dir){
     check(!d3_read_file("/this/file/does/not/exist",&read,&error),"missing file handled without writing");
     unlink(source);unlink(copy);unlink(backup);d3_free(g);d3_free(b.data);d3_free(out.data);
 }
+static void loadout_tests(const char *path){
+    D3Buffer input=read_file(path),out,again;
+    D3Game *original=parse(&input),*saved;
+    D3Options edit;
+    d3_current(original,&edit);
+    check(d3_edit(original,&edit,&out) && out.size==input.size && d3_equal(out.data,input.data,input.size),"unchanged inventories stay byte-identical");
+    d3_free(out.data);
+    check(original->inventory.count==3 && original->countermeasures.count==3,"both inventory lists are decoded");
+    edit.cargo_counts[0]=4;
+    edit.cargo_counts[1]=1;
+    edit.countermeasure_counts[0]=8;
+    edit.countermeasure_counts[1]=0;
+    edit.countermeasure_counts[2]=12;
+    edit.countermeasure_counts[3]=4;
+    edit.countermeasure_counts[4]=5;
+    edit.unlock_ships[1]=edit.unlock_ships[2]=1;
+    check(d3_edit(original,&edit,&out),"loadout changes accepted");
+    saved=parse(&out);
+    check(saved->inventory.count==4 && saved->countermeasures.count==5,"both list counts and raw counts agree");
+    check(!strcmp(d3_ship(saved),"Pyro-GL") && d3_ship_permissions(saved)==0x4000002bu,"ship bits use sparse table positions");
+    check(saved->inventory.items[1].count==4 && !strcmp(saved->inventory.items[1].icon,"force.ogf") && saved->inventory.items[1].iflags==0x193,
+          "original cargo flags and icon retained");
+    check(saved->inventory.items[2].id==-1 && !strcmp(saved->inventory.items[2].name,"Mission cargo") && saved->inventory.selected==2,"selected mission entry preserved");
+    check(saved->inventory.items[3].type==7 && saved->inventory.items[3].original_id==5 && saved->inventory.items[3].count==1,
+          "new cargo entry has matching object IDs");
+    check(saved->countermeasures.items[0].count==8 && !strcmp(saved->countermeasures.items[0].name,"Saved Chaff") &&
+          !strcmp(saved->countermeasures.items[0].icon,"chaff.ogf") && saved->countermeasures.items[0].iflags==0x187,
+          "existing countermeasure metadata survives a quantity change");
+    check(saved->countermeasures.selected==0 && !strcmp(saved->countermeasures.items[1].name,"Custom countermeasure"),
+          "removed selection falls back to a valid entry and custom entries survive");
+    check(saved->countermeasures.items[2].id==5 && saved->countermeasures.items[2].original_type==7 && saved->countermeasures.items[2].original_id==8 &&
+          saved->countermeasures.items[2].count==12 && saved->countermeasures.items[2].iflags==0x87,
+          "new countermeasure records encode weapon and pickup IDs");
+    check(saved->countermeasures.items[3].count==4 && saved->countermeasures.items[4].count==5,"Gunboy and Proximity Mine counts");
+    check(out.size-saved->countermeasures.end==input.size-original->countermeasures.end &&
+          d3_equal(out.data+saved->countermeasures.end,input.data+original->countermeasures.end,out.size-saved->countermeasures.end) &&
+          d3_u32(out.data+saved->player+D3_PLAYER_SIZE)==0x1001,"opaque tail and guided projectile handle preserved");
+    edit.countermeasure_counts[3]=5;
+    check(!d3_edit(original,&edit,&again),"Gunboy maximum enforced");
+    d3_current(saved,&edit);
+    check(d3_edit(saved,&edit,&again) && again.size==out.size && d3_equal(again.data,out.data,out.size),"edited file reopens and round-trips");
+    d3_free(again.data);
+    for(D3U32 i=0;i+sizeof("Seeker3Pack")<=input.size;i++) {
+        if(!d3_equal(input.data+i,"Seeker3Pack",sizeof("Seeker3Pack"))) continue;
+        d3_copy(input.data+i,"MissingPack",sizeof("MissingPack"));
+        break;
+    }
+    check(d3_parse(original,input.data,input.size) && d3_supply_count(original,1,2)<0,"no new entry when pickup definition is missing");
+    d3_current(original,&edit);
+    edit.countermeasure_counts[2]=1;
+    check(!d3_edit(original,&edit,&again),"missing pickup ID is never guessed");
+    d3_free(original);d3_free(saved);d3_free(input.data);d3_free(out.data);
+}
 static D3Buffer make_table(void){
     D3Buffer b;D3U32 p=5;int i,j;b.data=d3_alloc(8192);b.data[0]=6;d3_put16(b.data+p,6);p+=2;d3_copy(b.data+p,"Pyro-GL",8);p+=8;for(i=0;i<6;i++)b.data[p++]=0;p+=8+68+12;
     for(i=0;i<21;i++){b.data[p++]=0;for(j=0;j<3;j++)b.data[p++]=0;d3_put32(b.data+p,(D3U32)(i*7));p+=4+211;for(j=0;j<16;j++)b.data[p++]=0;}
@@ -93,6 +146,7 @@ int main(int argc,char **argv){
     const char *names[]={"fixture98","fixture98-noeffects","fixture98-guided","fixture98-snapshot","fixture98-v1","fixture98-v0"};char path[260],work[260];int i;
     if(argc<2)return 2;hash_test();number_tests();
     for(i=0;i<6;i++){snprintf(path,260,"%s/%s",argv[1],names[i]);fixture(path,i==0 && argc>2?argv[2]:0);}
+    snprintf(path,260,"%s/fixture98-loadout",argv[1]);loadout_tests(path);
     snprintf(work,260,"%s/io-%ld",argv[1],(long)getpid());if(mkdir(work,0700))return 2;
     snprintf(path,260,"%s/fixture98",argv[1]);file_tests(path,work);table_tests(work);check(rmdir(work)==0,"all temporary file-test artifacts cleaned");
     printf("\n%d assertions passed. Windows 98 runtime and in-game loading remain untested.\n",assertions);return 0;

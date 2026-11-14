@@ -45,6 +45,10 @@ namespace D3SaveEditor {
         private readonly Button[] maximum=new Button[20];
         private readonly Label[] capLabels=new Label[20];
         private readonly ComboBox primary=new ComboBox(),secondary=new ComboBox();
+        private readonly NumericUpDown[] cargoCounts=new NumericUpDown[SaveGame.CargoItems.Length];
+        private readonly NumericUpDown[] countermeasureCounts=new NumericUpDown[SaveGame.CountermeasureTypes.Length];
+        private readonly CheckBox[] unlockShips=new CheckBox[SaveGame.StandardShips.Length];
+        private readonly ListBox savedInventory=new ListBox();
         private readonly List<Control> needsFile=new List<Control>();
         private SaveGame game;
         private string openedPath;
@@ -74,9 +78,9 @@ namespace D3SaveEditor {
             info.Text="Noch kein Spielstand geöffnet.\r\nIm Spiel speichern, dann eine Datei wie saveg000 aus dem Ordner savegame öffnen.";
             info.AutoEllipsis=true;root.Controls.Add(info,0,2);
             tabs.Dock=DockStyle.Fill;tabs.Padding=new Point(18,8);tabs.Margin=new Padding(0);root.Controls.Add(tabs,0,3);
-            BuildPlayerTab();BuildWeaponTab(false);BuildWeaponTab(true);BuildReviewTab();
+            BuildPlayerTab();BuildWeaponTab(false);BuildWeaponTab(true);BuildInventoryTab();BuildReviewTab();
             status.Dock=DockStyle.Fill;status.Text="Bereit · Dateien können auch in das Fenster gezogen werden.";status.TextAlign=ContentAlignment.MiddleLeft;root.Controls.Add(status,0,4);
-            root.Controls.Add(new Label { Text="Offline · Format 0–2 · 32/64-Bit-Strukturen · Ingame-Test mit echtem Spielstand noch ausstehend",Dock=DockStyle.Fill,ForeColor=Color.FromArgb(89,104,120),TextAlign=ContentAlignment.MiddleLeft,Font=new Font(Font.FontFamily,8.5f) },0,5);
+            root.Controls.Add(new Label { Text="Offline · Format 0–2 · 32/64-Bit-Strukturen",Dock=DockStyle.Fill,ForeColor=Color.FromArgb(89,104,120),TextAlign=ContentAlignment.MiddleLeft,Font=new Font(Font.FontFamily,8.5f) },0,5);
             needsFile.AddRange(new Control[]{save,copy,reset,energy,shields,afterburner,lives,score,god,cloak,cooler,converter,quad,fullMap,primary,secondary});
             foreach(var c in needsFile)c.Enabled=false;
             foreach(var c in new[]{energy,shields,afterburner,lives,score})c.ValueChanged+=Changed;
@@ -197,6 +201,89 @@ namespace D3SaveEditor {
             review.Dock=DockStyle.Fill;review.Multiline=true;review.ReadOnly=true;review.ScrollBars=ScrollBars.Both;review.WordWrap=false;review.Font=new Font("Consolas",10);review.BackColor=Color.FromArgb(248,250,253);
             review.Text="Die Dateianalyse und die Prüfung der geplanten Änderungen erscheinen hier.\r\n\r\nDer Editor verändert vorhandene Spielstände. Er erzeugt keinen vollständigen\r\nLevelzustand allein aus dem Quelltext.";panel.Controls.Add(review,0,1);
         }
+        private void BuildInventoryTab() {
+            var page=Page("Inventar / Schiffe");
+            var layout=new TableLayoutPanel { Dock=DockStyle.Top, Height=395, ColumnCount=3, RowCount=3 };
+            for (int i=0; i<3; i++) layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f/3));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 204));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 32));
+            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            page.Controls.Add(layout);
+            layout.Controls.Add(BuildSupplyGroup("Gegenstände", SaveGame.CargoItems, cargoCounts), 0, 0);
+            layout.Controls.Add(BuildSupplyGroup("Gegenmaßnahmen", SaveGame.CountermeasureTypes, countermeasureCounts), 1, 0);
+
+            var ships=Group("Schiffsfreigaben");
+            var shipRows=new FlowLayoutPanel { Dock=DockStyle.Fill, FlowDirection=FlowDirection.TopDown, WrapContents=false };
+            for (int i=0; i<unlockShips.Length; i++) {
+                var box=Check(new CheckBox { Enabled=false }, SaveGame.StandardShips[i]);
+                unlockShips[i]=box;
+                box.CheckedChanged+=Changed;
+                shipRows.Controls.Add(box);
+            }
+            shipRows.Controls.Add(new Label { Text="Auswahl beim nächsten passenden Briefing.", AutoSize=true, MaximumSize=new Size(225,0), Margin=new Padding(5,9,0,0) });
+            ships.Controls.Add(shipRows);
+            layout.Controls.Add(ships, 2, 0);
+
+            var instructions=LabelFor("0 entfernt den Eintrag. Kühler, Konverter und Quad-Laser stehen im Spieler-Tab.");
+            layout.Controls.Add(instructions, 0, 1);
+            layout.SetColumnSpan(instructions, 3);
+            var saved=Group("Gespeicherte Einträge");
+            savedInventory.Dock=DockStyle.Fill;
+            savedInventory.HorizontalScrollbar=true;
+            needsFile.Add(savedInventory);
+            saved.Controls.Add(savedInventory);
+            layout.Controls.Add(saved, 0, 2);
+            layout.SetColumnSpan(saved, 3);
+        }
+        private GroupBox BuildSupplyGroup(string title, SupplyItem[] items, NumericUpDown[] inputs) {
+            var group=Group(title);
+            var rows=new TableLayoutPanel { Dock=DockStyle.Top, AutoSize=true, ColumnCount=2 };
+            rows.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            rows.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 82));
+            for (int i=0; i<items.Length; i++) {
+                var count=Number(items[i].Maximum, 0);
+                count.Width=76;
+                count.Margin=new Padding(3,3,0,1);
+                count.AccessibleName="Menge " + items[i].Name;
+                count.Enabled=false;
+                count.ValueChanged+=Changed;
+                inputs[i]=count;
+                rows.Controls.Add(LabelFor(items[i].Name), 0, i);
+                rows.Controls.Add(count, 1, i);
+            }
+            group.Controls.Add(rows);
+            return group;
+        }
+        private void LoadInventoryValues() {
+            LoadSupplyCounts(SaveGame.CargoItems, cargoCounts);
+            LoadSupplyCounts(SaveGame.CountermeasureTypes, countermeasureCounts);
+            for (int i=0; i<unlockShips.Length; i++) {
+                uint bit=game.ShipPermissionBit(SaveGame.StandardShips[i]);
+                var box=unlockShips[i];
+                box.Checked=(game.ShipPermissions & bit)!=0;
+                box.Enabled=bit!=0 && !box.Checked;
+                box.Text=SaveGame.StandardShips[i] + (bit==0 ? " (fehlt)" : "");
+            }
+            savedInventory.Items.Clear();
+            foreach (var item in game.InventoryItems) AddInventoryRow("Inventar", item);
+            foreach (var item in game.CountermeasureItems) AddInventoryRow("Gegenmaßnahme", item);
+            if (savedInventory.Items.Count==0) savedInventory.Items.Add("Inventar und Gegenmaßnahmen sind leer.");
+        }
+        private void LoadSupplyCounts(SupplyItem[] items, NumericUpDown[] inputs) {
+            for (int i=0; i<items.Length; i++) {
+                int count=game.SupplyCount(items[i]);
+                inputs[i].Maximum=Math.Max(count, items[i].Maximum);
+                inputs[i].Value=count;
+                inputs[i].Enabled=game.CanEditSupply(items[i]);
+                tips.SetToolTip(inputs[i], inputs[i].Enabled
+                    ? "Menge von 0 bis " + inputs[i].Maximum.ToString("N0")
+                    : "Die passende Definition fehlt in diesem Spielstand.");
+            }
+        }
+        private void AddInventoryRow(string group, InventoryItem item) {
+            string name=string.IsNullOrEmpty(item.Name) ? "ID " + (item.Id<0 ? item.OriginalId : item.Id) : item.Name;
+            savedInventory.Items.Add(group + " · " + name + " × " + item.Count);
+        }
         public void ShowTab(int tab) { tabs.SelectedIndex=Math.Max(0,Math.Min(tabs.TabCount-1,tab)); }
         private void Changed(object sender,EventArgs e) { if(!loading && game!=null) { dirty=true;Text="* Descent 3 · Savegame Editor";status.Text="Änderungen noch nicht gespeichert."; } }
         private bool MaybeDiscard() {
@@ -223,6 +310,7 @@ namespace D3SaveEditor {
                 tips.SetToolTip(cooler,cooler.Enabled ? "Passiver Nachbrenner-Kühler im Inventar." : "Die Definition „Afterburner“ fehlt im Spielstand.");
                 tips.SetToolTip(converter,converter.Enabled ? "Auswählbarer Energie-Schild-Konverter im Inventar." : "Die Definition „Converter“ fehlt im Spielstand.");
                 tips.SetToolTip(quad,quad.Enabled ? "Setzt Inventargegenstand und beide Laser-Waffenbatterien." : "Gegenstandsdefinition oder passende Waffenbatterien fehlen.");
+                LoadInventoryValues();
                 for(int i=0;i<20;i++) { owned[i].Enabled=true;owned[i].Checked=x.Owned[i];ammo[i].Value=x.Ammo[i]; }
                 primary.SelectedIndex=x.Primary;secondary.SelectedIndex=x.Owned.Skip(10).Any(y=>y) ? x.Secondary-9 : 0;
                 godTime.Text=EffectTime(game.Invulnerable,game.InvulnerableTime);cloakTime.Text=EffectTime(game.IsCloaked,game.CloakTime);
@@ -282,12 +370,24 @@ namespace D3SaveEditor {
             x.Primary=primary.SelectedIndex;x.Secondary=secondary.SelectedIndex==0 ? x.Secondary : secondary.SelectedIndex+9;
             x.GodMode=godTouched ? (bool?)god.Checked : null;x.Cloaked=cloakTouched ? (bool?)cloak.Checked : null;
             x.Cooler=coolerTouched ? (bool?)cooler.Checked : null;x.Converter=converterTouched ? (bool?)converter.Checked : null;x.QuadLasers=quadTouched ? (bool?)quad.Checked : null;
+            ReadSupplyCounts(SaveGame.CargoItems, cargoCounts, x.CargoCounts);
+            ReadSupplyCounts(SaveGame.CountermeasureTypes, countermeasureCounts, x.CountermeasureCounts);
+            for (int i=0; i<unlockShips.Length; i++) {
+                uint bit=game.ShipPermissionBit(SaveGame.StandardShips[i]);
+                x.UnlockShips[i]=bit!=0 && (game.ShipPermissions & bit)==0 && unlockShips[i].Checked;
+            }
             x.RevealMap=fullMap.Checked;return x;
+        }
+        private void ReadSupplyCounts(SupplyItem[] items, NumericUpDown[] inputs, int?[] counts) {
+            for (int i=0; i<items.Length; i++) {
+                int value=(int)inputs[i].Value;
+                if (game.CanEditSupply(items[i]) && value!=game.SupplyCount(items[i])) counts[i]=value;
+            }
         }
         private string FileReport() {
             return "DATEI\r\n"+openedPath+"\r\nSHA-256: "+game.Hash+"\r\n\r\n"+
                 "FORMAT\r\nVersion "+game.Version+" · "+game.Layout.Name+"\r\nSpielerblock: 0x"+game.PlayerOffset.ToString("X")+"\r\n"+
-                "Karte: "+game.MapCount+" Einträge · Inventar: "+game.InventoryItems.Count+" Gegenstandsarten\r\n\r\n";
+                "Karte: "+game.MapCount+" Einträge · Inventar: "+game.InventoryItems.Count+" Arten · Gegenmaßnahmen: "+game.CountermeasureItems.Count+" Arten\r\n\r\n";
         }
         private EditResult CheckChanges() {
             if(game==null)return null;
@@ -314,7 +414,7 @@ namespace D3SaveEditor {
         }
         private void Error(Exception ex) { status.Text="Fehler: "+ex.Message;MessageBox.Show(this,ex.Message,"Datei nicht geändert",MessageBoxButtons.OK,MessageBoxIcon.Error); }
         private void HelpText() {
-            MessageBox.Show(this,"Descent 3 Savegame Editor 1.0\r\n\r\n1. Im Spiel speichern und das Spiel beenden.\r\n2. saveg000, saveg001 usw. aus dem Ordner savegame öffnen.\r\n3. Werte ändern und „Speichern + Backup“ wählen.\r\n4. Den Spielstand im Spiel neu laden.\r\n\r\nBei jedem Überschreiben entsteht daneben eine datierte .bak-Datei.\r\nKopien mit Endung .edited zum Laden in einen passenden savegNNN-Slot umbenennen.\r\n\r\n„Max“: Schiffslimit aus Table.gam / d3.hog, sonst 65.535.\r\n„Erneuern“: God-Mode / Tarnung mit 1.000.000.000 s Restdauer.\r\nEffekte können durch Levelwechsel oder Skripte aufgehoben werden.\r\n\r\nQuelltextbasiert entwickelt; mit synthetischen Dateien geprüft.\r\nReale Spielstände und das Laden im Spiel sind noch nicht getestet.\r\nUnterstützt Windows-Strukturen mit 496 bzw. 536 Byte; Format 0–2.\r\n\r\nGPL-3.0-or-later · Quelle: github.com/DescentDevelopers/Descent3", "Anleitung",MessageBoxButtons.OK,MessageBoxIcon.Information);
+            MessageBox.Show(this,"Descent 3 Savegame Editor\r\n\r\n1. Im Spiel speichern und das Spiel beenden.\r\n2. saveg000, saveg001 usw. aus dem Ordner savegame öffnen.\r\n3. Werte ändern und „Speichern + Backup“ wählen.\r\n4. Den Spielstand im Spiel neu laden.\r\n\r\nBei jedem Überschreiben entsteht daneben eine datierte .bak-Datei.\r\nKopien mit Endung .edited zum Laden in einen passenden savegNNN-Slot umbenennen.\r\n\r\n„Inventar / Schiffe“ bearbeitet Bestände und die Freigaben für das Briefing.\r\n„Max“ nutzt das Schiffslimit aus Table.gam / d3.hog, sonst 65.535.\r\n„Erneuern“ setzt 1.000.000.000 s Restdauer für God-Mode und Tarnung.\r\n\r\nUnterstützt Windows-Strukturen mit 496 bzw. 536 Byte und Format 0–2.\r\nGPL-3.0-or-later · Quelle: github.com/DescentDevelopers/Descent3", "Anleitung",MessageBoxButtons.OK,MessageBoxIcon.Information);
         }
     }
 }
