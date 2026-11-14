@@ -275,7 +275,8 @@ struct dynamic_wb_info {
 
 
 static std::vector<uint8_t> out;
-template<class T> void write(T value) {
+// The serialized records include padding. Read the original object bytes to keep them reproducible.
+template<class T> void write(const T& value) {
   const auto* bytes=reinterpret_cast<const uint8_t*>(&value);
   out.insert(out.end(),bytes,bytes+sizeof(T));
 }
@@ -294,11 +295,11 @@ void object_record(int index,int version,bool effects) {
   u8(4);u8('t');u8('e');u8('s');u8('t');u8(0);i16(0); // custom names, position counter
   i16(128);zeros(128,0x31);i16(64);zeros(64,0x32); // movement/control opaque unions
   u8(index==0?0:1);if(index!=0){i16(16);zeros(16,0x19);} // optional AI
-  i16(160);zeros(160,0x33);f32(5.5f);custom_anim anim{};write(anim);
+  i16(160);zeros(160,0x33);f32(5.5f);custom_anim anim;std::memset(&anim,0,sizeof(anim));write(anim);
   u8(index==0?21:1);
-  for(int i=0;i<(index==0?21:1);i++){dynamic_wb_info wb{};wb.last_fire_time=2.25f;wb.flags=0x40;write(wb);}
+  for(int i=0;i<(index==0?21:1);i++){dynamic_wb_info wb;std::memset(&wb,0,sizeof(wb));wb.last_fire_time=2.25f;wb.flags=0x40;write(wb);}
   u8(effects?1:0);
-  if(effects){i16(sizeof(effect_info_s));effect_info_s fx{};fx.alpha=0.625f;fx.type_flags=256;fx.freeze_scalar=1;fx.sound_handle=-1;write(fx);}
+  if(effects){i16(sizeof(effect_info_s));effect_info_s fx;std::memset(&fx,0,sizeof(fx));fx.alpha=0.625f;fx.type_flags=256;fx.freeze_scalar=1;fx.sound_handle=-1;write(fx);}
 }
 void inventory_item(int type,int original_type,int id,int original_id,int count,
                     const char *name,const char *icon,int flags) {
@@ -334,7 +335,8 @@ int main(int argc,char**argv) {
   i16(1);i32(1500);i32(0);for(int i=0;i<1500;i++)i32(-1);
   i32(0);i32(0);i32(400);i32(0);for(int i=0;i<400;i++)i32(-1);
   object_record(0,version,effect);object_record(1,version,true);
-  player pl{};pl.start_index=0;pl.ship_index=0;std::strcpy(pl.callsign,"Testpilot");pl.flags=4096;pl.score=25;
+  // The serialized record includes padding bytes. Zero them for reproducible fixtures.
+  player pl;std::memset(&pl,0,sizeof(pl));pl.start_index=0;pl.ship_index=0;std::strcpy(pl.callsign,"Testpilot");pl.flags=4096;pl.score=25;
   pl.energy=100.125f;pl.lives=3;pl.level=1;pl.starting_level=1;pl.killer_objnum=-1;pl.objnum=0;pl.team=-1;
   pl.weapon_flags=(1u<<31)|(1u<<20)|(1u<<10)|1u;pl.weapon_ammo[1]=120;pl.weapon_ammo[10]=4;
   pl.weapon[0].index=0;pl.weapon[1].index=10;pl.inventory.count=1;pl.inventory.root=1234;pl.inventory.pos=1234;

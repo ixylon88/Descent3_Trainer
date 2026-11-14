@@ -12,22 +12,18 @@ using System.Windows.Threading;
 using D3SaveEditor.Core;
 using D3SaveEditor.Gui;
 
-internal static class UiTests
+internal sealed class UiTests
 {
-    private static int passed;
+    private int passed;
 
-    [STAThread]
-    private static void Main(string[] args)
+    internal void Run(string fixture)
     {
-        var app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
-        string fixture = Path.GetFullPath(args[0]);
-        string root = Path.Combine(Path.GetDirectoryName(fixture), "ui-tests-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(root);
+        string root = Path.GetDirectoryName(fixture);
+        string source = Path.Combine(root, "saveg000");
+        File.Copy(fixture, source);
+        var view = new MainView();
         try
         {
-            string source = Path.Combine(root, "saveg000");
-            File.Copy(fixture, source);
-            var view = new MainView();
             view.Show();
             Update(view);
             Check(!Field<Button>(view, "SaveButton").IsEnabled, "Save requires a loaded file");
@@ -108,13 +104,15 @@ internal static class UiTests
             byte[] before = File.ReadAllBytes(source);
             Click(save);
             Check(File.ReadAllBytes(source).SequenceEqual(before), "Unchanged resave preserves exact bytes");
-            view.Close();
             Console.WriteLine(passed + " WPF assertions passed.");
         }
         finally
         {
-            app.Shutdown();
-            Directory.Delete(root, true);
+            // Discard temporary edits before closing after a failed assertion.
+            var reset = Field<Button>(view, "ResetButton");
+            if (reset.IsEnabled)
+                Click(reset);
+            view.Close();
         }
     }
 
@@ -151,7 +149,7 @@ internal static class UiTests
         }
     }
 
-    private static void Check(bool condition, string description)
+    private void Check(bool condition, string description)
     {
         if (!condition)
             throw new InvalidOperationException(description);

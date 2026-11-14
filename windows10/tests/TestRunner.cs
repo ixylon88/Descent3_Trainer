@@ -16,7 +16,10 @@ internal static class Tests {
     }
     private static byte[] Changed(byte[] bytes,int offset,byte[] change) {var copy=(byte[])bytes.Clone();Buffer.BlockCopy(change,0,copy,offset,change.Length);return copy;}
     private static void Main(string[] args) {
-        string dir=args.Length>0 ? args[0] : ".";
+        Run(args.Length>0 ? args[0] : ".");
+    }
+    internal static void Run(string dir) {
+        passed=0;
         foreach(string name in new[]{"fixture32","fixture64","fixture32-noeffects","fixture64-guided","fixture32-snapshot","fixture32-v1","fixture32-v0"}) {
             byte[] original=File.ReadAllBytes(Path.Combine(dir,name));var s=SaveGame.Parse(original);
             Check(s.Energy==100.125f && s.Shields==87.25f && s.Callsign=="Testpilot",name+": fields match independent C++ writer");

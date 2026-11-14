@@ -16,7 +16,6 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: windows98
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -31,12 +30,13 @@ jobs:
       - name: Build Win32 executable
         env:
           D3_CC: i686-w64-mingw32-gcc-posix
-        run: sh build.sh
+        run: sh build-windows98.sh
 
       - name: Run data tests and check Win98 imports
-        run: sh tests/run-tests.sh
+        run: sh test-windows98.sh
 
       - name: Prepare download
+        working-directory: windows98
         run: |
           package="$RUNNER_TEMP/Descent3_Trainer-Win98"
           mkdir -p "$package"

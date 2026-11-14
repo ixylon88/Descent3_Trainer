@@ -55,16 +55,27 @@ ABI-Varianten außerhalb der ausdrücklich unterstützten Größen werden abgele
 
 Die Quelltextreferenz ist Commit `76049bb32d0a391ab35aedcd0716073c1e64d72a` des [Descent-3-Repositories](https://github.com/DescentDevelopers/Descent3).
 
-Reproduzieren der Datentests auf einem System mit C++17-Compiler und Mono:
+## Ausführen
 
-```sh
-sh tests/run-tests.sh
-```
+Das Testprojekt verwendet MSTest. Der Paket-Restore lädt die Testabhängigkeiten
+aus NuGet.
 
-Die Testdaten liegen in `test-output`. Der WPF-Test lässt sich unter Windows
-aus `windows10` mit einer erzeugten `fixture32-loadout` ausführen:
+In Visual Studio `windows10/D3SaveEditor.sln` öffnen und im **Test-Explorer**
+**Alle ausführen** wählen. Auf der Kommandozeile unter Windows im Repo-Hauptordner:
 
 ```powershell
-dotnet build tests/UiTests.csproj -c Release
-.\tests\bin\Release\net48\UiTests.exe .\test-output\fixture32-loadout
+.\test-windows10.cmd
+```
+
+Das Projekt `D3SaveEditor.Tests` enthält die neun von `make_fixtures.cpp` erzeugten
+synthetischen Testdateien in `tests/fixtures.zip`. Beide Tests entpacken ihre Daten
+beim Start in eigene temporäre Ordner. Unter Linux erzeugt `sh test-windows10.sh`
+die Testdateien mit einem C++17-Compiler neu und führt die Datentests mit Mono aus.
+
+Wenn sich der Generator ändert, lässt sich das Archiv im Repo-Hauptordner mit
+den folgenden Befehlen neu erzeugen.
+
+```sh
+sh test-windows10.sh
+python3 -m zipfile -c windows10/tests/fixtures.zip windows10/test-output/fixture*
 ```

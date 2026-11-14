@@ -129,6 +129,22 @@
             </StackPanel>
         </Border>
 
+        <DockPanel Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" x:Name="ZweiZeilenMesser" >
+            <!--<Image Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Source="flashmen_1.jpg" Stretch="None" HorizontalAlignment="Right" VerticalAlignment="Center" ImageFailed="Image_ImageFailed" />-->
+            <Image Height="{Binding ActualHeight, ElementName=ZweiZeilenMesser}" HorizontalAlignment="Right" VerticalAlignment="Center" ImageFailed="Image_ImageFailed" Stretch="Uniform">
+                <Image.Source>
+                    <!-- To save significant application memory, set the DecodePixelWidth or  
+                    DecodePixelHeight of the BitmapImage value of the image source to the desired 
+                    height and width of the rendered image. If you don't do this, the application will 
+                    cache the image as though it were rendered as its normal size rather than just 
+                    the size that is displayed. -->
+                    <!-- Note: In order to preserve aspect ratio, only set either DecodePixelWidth
+                    or DecodePixelHeight but not both. -->
+                    <BitmapImage DecodePixelWidth="200" UriSource="flashmen_1.jpg" />
+                </Image.Source>
+            </Image>
+        </DockPanel>
+
         <TabControl x:Name="EditorTabs" Grid.Row="2">
             <TabItem Header="Spieler / Ausrüstung">
                 <ScrollViewer x:Name="PlayerEditor" IsEnabled="False" VerticalScrollBarVisibility="Auto">
@@ -140,6 +156,7 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
                         <GroupBox Header="Versorgung">
                             <Grid>
@@ -205,6 +222,21 @@
                                            TextWrapping="Wrap" />
                             </StackPanel>
                         </GroupBox>
+
+                        <!-- https://learn.microsoft.com/en-us/dotnet/desktop/wpf/controls/how-to-use-the-image-element -->
+                        <Image Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Stretch="Fill" Height="103" Width="574" VerticalAlignment="Center" ImageFailed="Image_ImageFailed">
+                            <Image.Source>
+                                <!-- To save significant application memory, set the DecodePixelWidth or  
+                                DecodePixelHeight of the BitmapImage value of the image source to the desired 
+                                height and width of the rendered image. If you don't do this, the application will 
+                                cache the image as though it were rendered as its normal size rather than just 
+                                the size that is displayed. -->
+                                <!-- Note: In order to preserve aspect ratio, only set either DecodePixelWidth
+                                or DecodePixelHeight but not both. -->
+                                <BitmapImage DecodePixelHeight="103" UriSource="SETUP.BMP" />
+                            </Image.Source>
+                        </Image>
+
                     </Grid>
                 </ScrollViewer>
             </TabItem>

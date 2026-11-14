@@ -78,36 +78,25 @@ Laufs. Es enthält die Programmdateien, eine Kurzanleitung und die Lizenzhinweis
 Quelltext und den Buildskripten des gebauten Commits. `SHA256SUMS.txt` enthält
 die Prüfsummen der Programmdateien.
 
-## Kompilieren
+## Bauen und testen
 
-Alle Builds erfolgen auf einem modernen Entwicklungsrechner.
+Die Skripte liegen im Repo-Hauptordner und werden auch von GitHub Actions verwendet.
 
-Für **Windows 10/11** die Solution [`windows10/D3SaveEditor.sln`](windows10/D3SaveEditor.sln)
-in Visual Studio öffnen oder unter Windows `windows10\build.cmd` ausführen.
-Die Voraussetzungen und Ausgabepfade stehen in der [Windows-10/11-Anleitung](windows10/README.md#quelltext-und-neubau).
+| Ziel | Umgebung | Bauen | Testen |
+| --- | --- | --- | --- |
+| Windows 10/11 | Windows mit .NET SDK und .NET Framework 4.8-Zielpaket | `build-windows10.cmd` | `test-windows10.cmd` |
+| Windows 10/11 | Linux mit C++17 und Mono | | `sh test-windows10.sh` für die Datentests |
+| Windows 98 | Linux mit i686-MinGW-w64, GCC/G++ und Python 3 | `sh build-windows98.sh` | `sh test-windows98.sh` nach dem Build |
+| Windows 98 | Windows mit i686-MinGW-w64 | `build-windows98.cmd` | |
 
-**Windows 98:** Im Ordner `windows98` mit einem i686-MinGW-w64-Compiler
-`build.cmd` unter Windows oder `sh build.sh` unter Linux ausführen.
-Danach die Importprüfung starten:
+In Visual Studio die Solution [`windows10/D3SaveEditor.sln`](windows10/D3SaveEditor.sln)
+öffnen. **F5** startet `D3SaveEditor.Gui`. Im **Test-Explorer** führt **Alle ausführen**
+die Datentests und den WPF-Oberflächentest aus `D3SaveEditor.Tests` aus.
 
-```sh
-cd windows98
-sh build.sh
-python3 tests/pe_audit.py D3EDIT98.EXE
-```
-
-Nur die erzeugte native EXE muss auf den Win98-Zielrechner kopiert werden.
-Die besonderen Buildoptionen für i386, ANSI-APIs, PE-Version 4.0 und den
-CRT-freien Einstieg bleiben erforderlich.
-
-## Tests
-
-Im jeweiligen Variantenordner unter Linux `sh tests/run-tests.sh` ausführen.
-Für die moderne Variante werden C++17, Mono und `mcs` benötigt. Die native
-Testsuite verwendet C++17, einen C-Compiler, ASan/UBSan und Python 3; ihr letzter
-Schritt prüft die **zuvor gebaute** `D3EDIT98.EXE`.
-Details und die historischen Prüfergebnisse stehen in `windows10/TESTS.md`
-und `windows98/TESTS.md`.
+Die Windows-98-Tests laufen auf dem Linux-Entwicklungsrechner mit ASan/UBSan
+und prüfen die Importe der gebauten `windows98/D3EDIT98.EXE`. Auf den
+Windows-98-Rechner wird die erzeugte EXE kopiert. Weitere Details stehen in
+[`windows10/TESTS.md`](windows10/TESTS.md) und [`windows98/TESTS.md`](windows98/TESTS.md).
 
 `SOURCE-PROVENANCE.json` dokumentiert die Dateihashes und Herkunft des
 ursprünglich importierten Quelltextpakets.

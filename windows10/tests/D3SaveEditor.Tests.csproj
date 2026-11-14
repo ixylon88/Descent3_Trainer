@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <IsTestProject>true</IsTestProject>
+    <IsPackable>false</IsPackable>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest" Version="3.11.1" />
+    <ProjectReference Include="..\D3SaveEditor.Core\D3SaveEditor.Core.csproj" />
+    <ProjectReference Include="..\D3SaveEditor.Gui\D3SaveEditor.Gui.csproj" />
+    <EmbeddedResource Include="fixtures.zip" LogicalName="D3SaveEditor.Tests.fixtures.zip" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+</Project>

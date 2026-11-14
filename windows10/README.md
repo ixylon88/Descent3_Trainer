@@ -72,10 +72,11 @@ werden die Workload **.NET-Desktopentwicklung** und das **.NET Framework 4.8-Zie
 | --- | --- |
 | `D3SaveEditor.Gui` | WPF-Fenster in `MainView.xaml`, Bedienlogik in `MainView.xaml.cs`, Dialoge und Programmstart |
 | `D3SaveEditor.Core` | Spielstandformat, Änderungen, Dateizugriff, Backups, Schiffslimits aus den Spieldaten |
+| `D3SaveEditor.Tests` | Datentests und WPF-Oberflächentest im Visual-Studio-Test-Explorer |
 
-`build.cmd` baut unter Windows mit dem .NET SDK die Release-Konfiguration der Solution.
+`build-windows10.cmd` im Repo-Hauptordner baut unter Windows mit dem .NET SDK die
+Release-Konfiguration des Editors. `test-windows10.cmd` baut und startet das Testprojekt.
 Die Programmdateien liegen in `D3SaveEditor.Gui/bin/Debug/net48` oder
-`D3SaveEditor.Gui/bin/Release/net48`. Die Projekte benötigen keine NuGet-Pakete,
-wenn das .NET Framework 4.8-Zielpaket installiert ist.
+`D3SaveEditor.Gui/bin/Release/net48`. Das Testprojekt verwendet MSTest über NuGet.
 
 Lizenz: **GPL-3.0-or-later**, siehe `LICENSE`. Es werden keine proprietären Spielinhalte mitgeliefert. Die Formatgrundlage und die übernommenen C++-Deklarationen stammen aus Descent 3, Copyright (C) 2024 Parallax Software. Dieses Projekt ist ein eigenständiger Editor und keine offizielle Veröffentlichung der Descent-Entwickler.

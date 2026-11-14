@@ -16,7 +16,6 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: windows10
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -30,16 +29,13 @@ jobs:
             g++ mono-mcs mono-runtime libmono-i18n-west4.0-cil
 
       - name: Run data tests
-        run: sh tests/run-tests.sh
+        run: sh test-windows10.sh
 
   build:
     name: Build Windows 10 and 11
     needs: test
     runs-on: windows-2025
     timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: windows10
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -48,21 +44,16 @@ jobs:
 
       - name: Build the WPF editor
         shell: cmd
-        run: call build.cmd
+        run: call build-windows10.cmd
 
-      - name: Test the WPF editor with a synthetic save
-        shell: pwsh
-        timeout-minutes: 3
-        run: |
-          $PSNativeCommandUseErrorActionPreference = $true
-          New-Item -ItemType Directory -Path test-output -Force | Out-Null
-          g++ -std=c++17 -O2 -DABI32 tests/make_fixtures.cpp -o test-output/make32.exe
-          & ./test-output/make32.exe test-output/fixture32-loadout 2 1 1 1 1
-          dotnet build tests/UiTests.csproj --configuration Release
-          & ./tests/bin/Release/net48/UiTests.exe "$PWD/test-output/fixture32-loadout"
+      - name: Run the solution tests
+        shell: cmd
+        timeout-minutes: 5
+        run: call test-windows10.cmd
 
       - name: Prepare download
         shell: pwsh
+        working-directory: windows10
         run: |
           $package = Join-Path $env:RUNNER_TEMP 'Descent3_Trainer-Win10-Win11'
           New-Item -Path $package -ItemType Directory -Force | Out-Null

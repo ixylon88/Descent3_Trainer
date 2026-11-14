@@ -2,4 +2,8 @@
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
   </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="D3SaveEditor.Tests" />
+  </ItemGroup>
 </Project>

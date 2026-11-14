@@ -53,10 +53,11 @@ Die erzeugten Testdateien sind keine spielbaren Speicherstände. Sie werden nich
 
 ## Reproduzieren
 
-Auf einem Linux-Rechner mit C/C++-Compiler und Python:
+Im Repo-Hauptordner auf einem Linux-Rechner mit i686-MinGW-w64, C/C++-Compiler und Python:
 
 ```sh
-sh tests/run-tests.sh
+sh build-windows98.sh
+sh test-windows98.sh
 ```
 
 Das ergibt 315 Assertions. Der enthaltene `tests/Golden.cs` erzeugt den

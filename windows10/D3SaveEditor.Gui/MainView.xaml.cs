@@ -36,6 +36,11 @@ namespace D3SaveEditor.Gui
                 row.PropertyChanged += OnWeaponChanged;
         }
 
+        private void Image_ImageFailed(object sender, ExceptionRoutedEventArgs e)
+        {
+            MessageBox.Show(e.ErrorException.Message);
+        }
+
         public bool OpenPath(string path)
         {
             if (!MaybeDiscard())
