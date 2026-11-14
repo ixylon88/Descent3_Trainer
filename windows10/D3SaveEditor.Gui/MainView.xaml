@@ -1,0 +1,270 @@
+<Window x:Class="D3SaveEditor.Gui.MainView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Descent 3 · Savegame Editor" Width="1020" Height="780"
+        MinWidth="820" MinHeight="600" WindowStartupLocation="CenterScreen"
+        Background="#F3F6FA" Foreground="#152438" FontFamily="Segoe UI" FontSize="13"
+        AllowDrop="True" PreviewDragOver="OnDragOver" PreviewDrop="OnDrop" Closing="OnClosing">
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="10,4" />
+            <Setter Property="Margin" Value="0,0,8,4" />
+            <Setter Property="MinHeight" Value="28" />
+        </Style>
+        <Style TargetType="GroupBox">
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="Margin" Value="0,0,10,10" />
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,4" />
+            <Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
+        </Style>
+        <Style x:Key="NumericInput" TargetType="TextBox">
+            <Setter Property="TextAlignment" Value="Right" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="MinHeight" Value="25" />
+            <Setter Property="Padding" Value="3,0" />
+            <Setter Property="Margin" Value="0,0,8,4" />
+            <Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
+        </Style>
+        <Style x:Key="ValueLabel" TargetType="Label">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Padding" Value="0,2,8,4" />
+        </Style>
+
+        <DataTemplate x:Key="WeaponRowTemplate">
+            <Grid Margin="0,2" MinHeight="29">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="85" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="92" />
+                    <ColumnDefinition Width="74" />
+                    <ColumnDefinition Width="154" />
+                </Grid.ColumnDefinitions>
+                <CheckBox HorizontalAlignment="Center" AutomationProperties.Name="{Binding Name}"
+                          IsChecked="{Binding Owned, Mode=TwoWay}" />
+                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding Name}" />
+                <TextBox Grid.Column="2" Style="{StaticResource NumericInput}"
+                         AutomationProperties.Name="{Binding AmmoLabel}"
+                         IsEnabled="{Binding CanEditAmmo}" Text="{Binding Ammo, UpdateSourceTrigger=PropertyChanged}" />
+                <Button Grid.Column="3" Content="Max" IsEnabled="{Binding CanEditAmmo}" Click="OnMaxWeapon"
+                        ToolTip="Verwendet das Schiffslimit oder das Speichermaximum 65.535." />
+                <TextBlock Grid.Column="4" VerticalAlignment="Center" Margin="6,0" Text="{Binding Limit}" />
+            </Grid>
+        </DataTemplate>
+        <DataTemplate x:Key="WeaponTabTemplate">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="12">
+                    <DockPanel Margin="0,0,0,10" LastChildFill="False">
+                        <Label Style="{StaticResource ValueLabel}" Content="Aktive Waffe"
+                               Target="{Binding ElementName=ActiveWeapon}" />
+                        <ComboBox x:Name="ActiveWeapon" MinWidth="230" ItemsSource="{Binding Choices}"
+                                  SelectedIndex="{Binding SelectedIndex, Mode=OneWay}"
+                                  SelectionChanged="OnActiveWeaponChanged" />
+                    </DockPanel>
+                    <Grid Background="#E8EEF6" MinHeight="28" Margin="0,0,0,4" TextBlock.FontWeight="SemiBold">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="85" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="92" />
+                            <ColumnDefinition Width="74" />
+                            <ColumnDefinition Width="154" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="Vorhanden" />
+                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="Waffe" />
+                        <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="Munition" />
+                        <TextBlock Grid.Column="4" VerticalAlignment="Center" Margin="6,0" Text="Schiffslimit" />
+                    </Grid>
+                    <ItemsControl ItemsSource="{Binding Rows}" ItemTemplate="{StaticResource WeaponRowTemplate}" />
+                    <WrapPanel Margin="0,10,0,0">
+                        <Button Content="Alle auswählen" Click="OnSelectWeapons" />
+                        <Button Content="Alle abwählen" Click="OnClearWeapons" />
+                        <Button Content="Vorhandene: Schiff-Max" Click="OnMaxShipWeapons" />
+                        <Button Content="Vorhandene: 65.535" Click="OnMaxStorageWeapons" />
+                    </WrapPanel>
+                    <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Text="{Binding Hint}" />
+                </StackPanel>
+            </ScrollViewer>
+        </DataTemplate>
+        <DataTemplate x:Key="SupplyRowTemplate">
+            <DockPanel Margin="0,1">
+                <TextBox x:Name="SupplyCount" DockPanel.Dock="Right" Width="74" Margin="4,0,0,4"
+                         Style="{StaticResource NumericInput}" ToolTip="{Binding Hint}"
+                         IsEnabled="{Binding CanEdit}" Text="{Binding CountText, UpdateSourceTrigger=PropertyChanged}" />
+                <Label Style="{StaticResource ValueLabel}" Content="{Binding Item.Name}"
+                       Target="{Binding ElementName=SupplyCount}" />
+            </DockPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="ShipRowTemplate">
+            <CheckBox Content="{Binding Label}" IsEnabled="{Binding CanUnlock}"
+                      IsChecked="{Binding Allowed, Mode=TwoWay}" />
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <WrapPanel Margin="0,0,0,6">
+            <Button Content="Spielstand öffnen…" Click="OnChooseOpen" />
+            <Button x:Name="SaveButton" Content="Speichern + Backup" Click="OnSave" IsEnabled="False" />
+            <Button x:Name="CopyButton" Content="Kopie speichern…" Click="OnSaveCopy" IsEnabled="False" />
+            <Button x:Name="ResetButton" Content="Originalwerte" Click="OnReset" IsEnabled="False" />
+            <Button Content="Schiffslimits laden…" Click="OnLoadLimits" />
+            <Button Content="Hilfe" Click="OnHelp" />
+        </WrapPanel>
+
+        <Border Grid.Row="1" Background="#152438" Padding="12,9" Margin="0,0,0,10">
+            <StackPanel>
+                <TextBlock x:Name="SaveTitle" Text="Noch kein Spielstand geöffnet"
+                           FontWeight="SemiBold" Foreground="White" TextTrimming="CharacterEllipsis" />
+                <TextBlock x:Name="SaveDetails" Margin="0,3,0,0" Foreground="#CFDCEA"
+                           Text="Im Spiel speichern, dann eine Datei wie saveg000 aus dem Ordner savegame öffnen."
+                           TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+
+        <TabControl x:Name="EditorTabs" Grid.Row="2">
+            <TabItem Header="Spieler / Ausrüstung">
+                <ScrollViewer x:Name="PlayerEditor" IsEnabled="False" VerticalScrollBarVisibility="Auto">
+                    <Grid Margin="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <GroupBox Header="Versorgung">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="88" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Label Style="{StaticResource ValueLabel}" Content="Energie" Target="{Binding ElementName=EnergyInput}" />
+                                <TextBox x:Name="EnergyInput" Grid.Column="1" Style="{StaticResource NumericInput}" TextChanged="OnInputChanged" />
+                                <Button Grid.Column="2" Content="Max 200" Click="OnMaxEnergy" />
+                                <Label Grid.Row="1" Style="{StaticResource ValueLabel}" Content="Schild" Target="{Binding ElementName=ShieldsInput}" />
+                                <TextBox x:Name="ShieldsInput" Grid.Row="1" Grid.Column="1" Style="{StaticResource NumericInput}" TextChanged="OnInputChanged" />
+                                <Button Grid.Row="1" Grid.Column="2" Content="Max 200" Click="OnMaxShields" />
+                                <Label Grid.Row="2" Style="{StaticResource ValueLabel}" Content="Nachbrenner (s)" Target="{Binding ElementName=AfterburnerInput}" />
+                                <TextBox x:Name="AfterburnerInput" Grid.Row="2" Grid.Column="1" Style="{StaticResource NumericInput}" TextChanged="OnInputChanged" />
+                                <Button Grid.Row="2" Grid.Column="2" Content="Voll (5 s)" Click="OnMaxAfterburner" />
+                                <Label Grid.Row="3" Style="{StaticResource ValueLabel}" Content="Leben" Target="{Binding ElementName=LivesInput}" />
+                                <TextBox x:Name="LivesInput" Grid.Row="3" Grid.Column="1" Style="{StaticResource NumericInput}" TextChanged="OnInputChanged" />
+                                <Label Grid.Row="4" Style="{StaticResource ValueLabel}" Content="Punktestand" Target="{Binding ElementName=ScoreInput}" />
+                                <TextBox x:Name="ScoreInput" Grid.Row="4" Grid.Column="1" Style="{StaticResource NumericInput}" TextChanged="OnInputChanged" />
+                            </Grid>
+                        </GroupBox>
+
+                        <GroupBox Grid.Column="1" Header="Effekte">
+                            <StackPanel>
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="Erneuern" Click="OnRenewEffect" Tag="{Binding ElementName=GodModeInput}" />
+                                    <CheckBox x:Name="GodModeInput" Content="God-Mode / unverwundbar"
+                                              Checked="OnEffectChanged" Unchecked="OnEffectChanged"
+                                              ToolTip="„Erneuern“ setzt die lange Restdauer auch bei bereits aktivem Effekt." />
+                                </DockPanel>
+                                <TextBlock x:Name="GodTime" Margin="0,0,0,10" TextWrapping="Wrap" />
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="Erneuern" Click="OnRenewEffect" Tag="{Binding ElementName=CloakInput}" />
+                                    <CheckBox x:Name="CloakInput" Content="Cloaked-Mode / getarnt" Checked="OnEffectChanged" Unchecked="OnEffectChanged"
+                                              ToolTip="Tarnung wird am Spielerobjekt gesetzt. Fade-Übergänge werden beim Ändern beendet." />
+                                </DockPanel>
+                                <TextBlock x:Name="CloakTime" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </GroupBox>
+
+                        <GroupBox Grid.Row="1" Header="Ausrüstung">
+                            <StackPanel>
+                                <CheckBox x:Name="CoolerInput" Content="Nachbrenner-Kühler" Checked="OnEffectChanged" Unchecked="OnEffectChanged" />
+                                <CheckBox x:Name="ConverterInput" Content="Energie → Schild-Konverter" Checked="OnEffectChanged" Unchecked="OnEffectChanged" />
+                                <CheckBox x:Name="QuadInput" Content="Quad-Laser" Checked="OnEffectChanged" Unchecked="OnEffectChanged" />
+                            </StackPanel>
+                        </GroupBox>
+
+                        <GroupBox Grid.Row="1" Grid.Column="1" Header="Karte">
+                            <StackPanel>
+                                <CheckBox x:Name="MapInput" Content="Gesamte Karte aufdecken" Checked="OnInputChanged" Unchecked="OnInputChanged" />
+                                <TextBlock x:Name="MapInfo" Margin="0,4,0,0" TextWrapping="Wrap" />
+                                <TextBlock Margin="0,7,0,0" Text="Ohne Häkchen bleibt die gespeicherte Erkundung erhalten."
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </GroupBox>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem x:Name="PrimaryTab" Header="Primärwaffen" IsEnabled="False">
+                <ContentControl x:Name="PrimaryWeaponEditor" ContentTemplate="{StaticResource WeaponTabTemplate}" />
+            </TabItem>
+            <TabItem x:Name="SecondaryTab" Header="Sekundärwaffen" IsEnabled="False">
+                <ContentControl x:Name="SecondaryWeaponEditor" ContentTemplate="{StaticResource WeaponTabTemplate}" />
+            </TabItem>
+
+            <TabItem x:Name="InventoryTab" Header="Inventar / Schiffe" IsEnabled="False">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Grid Margin="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <GroupBox Header="Gegenstände">
+                            <ItemsControl x:Name="CargoInputs" ItemTemplate="{StaticResource SupplyRowTemplate}" />
+                        </GroupBox>
+                        <GroupBox Grid.Column="1" Header="Gegenmaßnahmen">
+                            <ItemsControl x:Name="CountermeasureInputs" ItemTemplate="{StaticResource SupplyRowTemplate}" />
+                        </GroupBox>
+                        <GroupBox Grid.Column="2" Header="Schiffsfreigaben">
+                            <StackPanel>
+                                <ItemsControl x:Name="ShipInputs" ItemTemplate="{StaticResource ShipRowTemplate}" />
+                                <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Text="Auswahl beim nächsten passenden Briefing." />
+                            </StackPanel>
+                        </GroupBox>
+                        <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Margin="0,0,0,10"
+                                   Text="0 entfernt den Eintrag. Kühler, Konverter und Quad-Laser stehen im Spieler-Tab."
+                                   TextWrapping="Wrap" />
+                        <GroupBox Grid.Row="2" Grid.ColumnSpan="3" Header="Gespeicherte Einträge">
+                            <ListBox x:Name="SavedInventory" MinHeight="110" MaxHeight="220"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Auto" />
+                        </GroupBox>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Datei / Änderungen">
+                <DockPanel Margin="12">
+                    <Button x:Name="ReviewButton" DockPanel.Dock="Top" HorizontalAlignment="Left" IsEnabled="False"
+                            Content="Änderungen prüfen" Click="OnCheckChanges" />
+                    <TextBox x:Name="Review" Margin="0,6,0,0" IsReadOnly="True"
+                             FontFamily="Consolas" AcceptsReturn="True" TextWrapping="NoWrap"
+                             VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                             Text="Hier erscheinen die Dateianalyse und die geplanten Änderungen." />
+                </DockPanel>
+            </TabItem>
+        </TabControl>
+        <TextBlock x:Name="Status" Grid.Row="3" Margin="0,8,0,0" Foreground="#465B70"
+                   Text="Bereit · Dateien können auch in das Fenster gezogen werden." TextWrapping="Wrap" />
+    </Grid>
+</Window>

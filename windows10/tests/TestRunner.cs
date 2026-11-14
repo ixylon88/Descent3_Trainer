@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using D3SaveEditor;
+using D3SaveEditor.Core;
 
 internal static class Tests {
     private static int passed;

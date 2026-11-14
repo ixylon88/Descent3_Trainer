@@ -3,13 +3,13 @@
 Quelltexte zweier grafischer Offline-Editoren für Descent-3-Spielstände.
 Mit Hilfe von ChatGPT (OpenAI) entwickelt.
 
-**Vorschauversion 1.0:** Beide Versionen wurden unter den dafür entwickelten Umgebungen getestet und sind vorläufig einsatztauglich (beta).
+**Vorschauversion 1.0.** Unterstützte Spielstände und Testumfang stehen in den Anleitungen der jeweiligen Variante.
 
 ## Varianten
 
 | Ordner | Zielsystem und Technik | Grundlage des Dateiformats |
 | --- | --- | --- |
-| [`windows10`](windows10/README.md) | Windows 10/11, C#, .NET Framework 4.x, Windows Forms | Descent3 `main`, Revision `76049bb32d0a391ab35aedcd0716073c1e64d72a`; bekannte Spielerlayouts 496/536 Byte |
+| [`windows10`](windows10/README.md) | Windows 10/11, C#, .NET Framework 4.8, WPF | Descent3 `main`, Revision `76049bb32d0a391ab35aedcd0716073c1e64d72a`; bekannte Spielerlayouts 496/536 Byte |
 | [`windows98`](windows98/README.md) | Windows 98, natives C/ANSI-Win32, ohne zusätzliche Laufzeitpakete | Descent3 `d3-historical`, Revision `84e25b0b411284bad57b34f50fd976f1a8a2367f`; Spielerlayout 496 Byte |
 
 Die Betriebssystemvariante und das Layout des gespeicherten Spielstands sind
@@ -70,7 +70,7 @@ sich auch manuell über **Run workflow** starten.
 | Workflow | Prüfungen und Build | ZIP unter **Artifacts** |
 | --- | --- | --- |
 | Windows 98 | MinGW-w64-Build auf Ubuntu, native Datentests mit ASan/UBSan und Prüfung der Win98-Importe | `Descent3_Trainer-Win98` mit `D3EDIT98.EXE` |
-| Windows 10 and 11 | Datentests und WinForms-Oberflächentest mit Mono auf Ubuntu, Build mit dem .NET-Framework-Compiler unter Windows | `Descent3_Trainer-Win10-Win11` mit `D3SaveEditor.exe` und `D3SaveEditor.exe.config` |
+| Windows 10 and 11 | Datentests mit Mono auf Ubuntu, WPF-Build und Oberflächentest unter Windows | `Descent3_Trainer-Win10-Win11` mit `D3SaveEditor.exe`, `D3SaveEditor.exe.config` und `D3SaveEditor.Core.dll` |
 
 Nach einem erfolgreichen Lauf findest du das Programm-ZIP auf der Seite des
 Laufs. Es enthält die Programmdateien, eine Kurzanleitung und die Lizenzhinweise.
@@ -82,9 +82,9 @@ die Prüfsummen der Programmdateien.
 
 Alle Builds erfolgen auf einem modernen Entwicklungsrechner.
 
-**Windows 10/11:** Im Ordner `windows10` unter Windows `build.cmd` ausführen.
-Das Skript verwendet den C#-Compiler des .NET Frameworks. Keine NuGet-Pakete nötig.
-`D3SaveEditor.exe.config` gehört neben die erzeugte EXE.
+Für **Windows 10/11** die Solution [`windows10/D3SaveEditor.sln`](windows10/D3SaveEditor.sln)
+in Visual Studio öffnen oder unter Windows `windows10\build.cmd` ausführen.
+Die Voraussetzungen und Ausgabepfade stehen in der [Windows-10/11-Anleitung](windows10/README.md#quelltext-und-neubau).
 
 **Windows 98:** Im Ordner `windows98` mit einem i686-MinGW-w64-Compiler
 `build.cmd` unter Windows oder `sh build.sh` unter Linux ausführen.

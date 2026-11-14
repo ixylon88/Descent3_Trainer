@@ -1,10 +1,10 @@
 # Descent 3 Savegame Editor · Windows 10 / 11
 
-**Quelltextbasierte Vorschauversion 1.0.** Dieses Paket enthält den vollständigen Quelltext. Die Windows-Anwendung lässt sich mit `build.cmd` oder in Visual Studio erstellen. Es wird keine Installation benötigt. Die EXE verwendet das .NET Framework 4.x und Windows Forms. Sie läuft ohne Netzwerkzugriff und ohne Administratorrechte; im Zielordner werden Schreibrechte benötigt.
+**Vorschauversion 1.0.** Der Editor verwendet WPF und .NET Framework 4.8. Er läuft ohne Netzwerkzugriff und ohne Administratorrechte. Zum Speichern werden Schreibrechte im Zielordner benötigt.
 
 ## Start und Verwendung
 
-1. ZIP vollständig entpacken, auf einem modernen Windows-Rechner `build.cmd` ausführen und die erzeugte **D3SaveEditor.exe** doppelt anklicken. Die Datei `D3SaveEditor.exe.config` daneben lassen.
+1. Das Programm-ZIP vollständig entpacken und **D3SaveEditor.exe** starten. `D3SaveEditor.Core.dll` und `D3SaveEditor.exe.config` gehören in denselben Ordner. Für einen Start aus dem Quelltext siehe [Quelltext und Neubau](#quelltext-und-neubau).
 2. In Descent 3 zunächst einen Spielstand anlegen und das Spiel beenden.
 3. Im Editor **Spielstand öffnen…** anklicken. Descent 3 nennt die eigentlichen Speicherdateien üblicherweise `saveg000` bis `saveg007`, ohne Dateiendung, im Unterordner `savegame` des beschreibbaren Spielverzeichnisses. Eine Datei lässt sich auch in das Fenster ziehen oder als Startargument übergeben.
 4. Gewünschte Werte und Häkchen einstellen. **Datei / Änderungen → Änderungen prüfen** zeigt die geplanten Änderungen.
@@ -58,26 +58,24 @@ Entwickelt anhand des von dir genannten [Descent-3-Quelltexts](https://github.co
 
 Unterstützt werden das dort beschriebene Little-Endian-Speicherformat **0, 1 und 2** und die bekannten Windows-Spielerstrukturen mit **496 Byte (32-Bit)** oder **536 Byte (64-Bit)**. Das ist keine Konvertierung zwischen Spielversionen oder Prozessorarchitekturen: Der bearbeitete Spielstand behält sein ursprüngliches Layout. Andere Builds und nicht eindeutig erkennbare Strukturen werden abgelehnt.
 
-Der ursprüngliche Editor wurde vom Projektinhaber mit echten Spielständen erprobt. Für die Inventar- und Schiffsänderungen verwenden die automatisierten Tests synthetische Dateien. Die Oberfläche wurde unter Mono/X11 geprüft. Der Ingame-Test der neuen Funktionen steht noch aus. Details stehen in `TESTS.md`.
+Der ursprüngliche Editor wurde mit echten Spielständen erprobt. Die automatisierten Daten- und WPF-Tests verwenden synthetische Dateien. Details stehen in [`TESTS.md`](TESTS.md).
 
 Der Quelltext beschreibt das Speicherformat, ersetzt aber keinen vollständigen Levelzustand mit Mission, Objekten und Skripten. Deshalb erzeugt dieser Editor keinen komplett neuen, spielbaren Spielstand aus dem Nichts. Du benötigst zum Verwenden später eine im Spiel gespeicherte Datei.
 
 ## Quelltext und Neubau
 
-Die Dateien in `src` enthalten den vollständigen Editor. In Visual Studio 2022
-oder neuer [`D3SaveEditor.sln`](D3SaveEditor.sln) öffnen und mit **F5** starten.
-Im Visual Studio Installer werden die Workload **.NET-Desktopentwicklung** und
-das **.NET Framework 4.8-Zielpaket** benötigt. Die EXE und ihre Konfigurationsdatei
-liegen je nach Buildkonfiguration in `bin/Debug/net48` oder `bin/Release/net48`.
+In Visual Studio 2022 oder neuer [`D3SaveEditor.sln`](D3SaveEditor.sln) öffnen
+und das Projekt **D3SaveEditor.Gui** mit **F5** starten. Im Visual Studio Installer
+werden die Workload **.NET-Desktopentwicklung** und das **.NET Framework 4.8-Zielpaket** benötigt.
 
-Unter Windows kann auch `build.cmd` den Editor mit dem C#-Compiler des .NET Frameworks
-neu erstellen. Es sind keine NuGet-Pakete erforderlich. Unter Linux/Mono:
+| Projekt | Aufgaben |
+| --- | --- |
+| `D3SaveEditor.Gui` | WPF-Fenster in `MainView.xaml`, Bedienlogik in `MainView.xaml.cs`, Dialoge und Programmstart |
+| `D3SaveEditor.Core` | Spielstandformat, Änderungen, Dateizugriff, Backups, Schiffslimits aus den Spieldaten |
 
-```sh
-mcs -target:winexe -platform:anycpu -optimize+ \
-  -win32manifest:src/app.manifest -out:D3SaveEditor.exe \
-  -r:System.Windows.Forms -r:System.Drawing \
-  src/AssemblyInfo.cs src/SaveGame.cs src/ShipLimits.cs src/Program.cs
-```
+`build.cmd` baut unter Windows mit dem .NET SDK die Release-Konfiguration der Solution.
+Die Programmdateien liegen in `D3SaveEditor.Gui/bin/Debug/net48` oder
+`D3SaveEditor.Gui/bin/Release/net48`. Die Projekte benötigen keine NuGet-Pakete,
+wenn das .NET Framework 4.8-Zielpaket installiert ist.
 
 Lizenz: **GPL-3.0-or-later**, siehe `LICENSE`. Es werden keine proprietären Spielinhalte mitgeliefert. Die Formatgrundlage und die übernommenen C++-Deklarationen stammen aus Descent 3, Copyright (C) 2024 Parallax Software. Dieses Projekt ist ein eigenständiger Editor und keine offizielle Veröffentlichung der Descent-Entwickler.

@@ -8,7 +8,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace D3SaveEditor {
+namespace D3SaveEditor.Core {
     public sealed class FormatProblem : Exception {
         public FormatProblem(string message) : base(message) { }
     }
@@ -67,9 +67,10 @@ namespace D3SaveEditor {
         internal int Start = -1, End;
         internal InventoryItem Clone() { return (InventoryItem)MemberwiseClone(); }
     }
-    internal sealed class SupplyItem {
-        internal readonly string Key, Name, Pickup;
-        internal readonly int Maximum;
+    public sealed class SupplyItem {
+        internal readonly string Key, Pickup;
+        public string Name { get; }
+        public int Maximum { get; }
 
         internal SupplyItem(string key, string name, int maximum, string pickup = null) {
             Key = key;
@@ -183,9 +184,9 @@ namespace D3SaveEditor {
         // null means keep the saved effect, including its finite duration.
         public bool? GodMode, Cloaked, Cooler, Converter, QuadLasers;
         public bool RevealMap;
-        public int?[] CargoCounts = new int?[SaveGame.CargoItems.Length];
-        public int?[] CountermeasureCounts = new int?[SaveGame.CountermeasureTypes.Length];
-        public bool[] UnlockShips = new bool[SaveGame.StandardShips.Length];
+        public int?[] CargoCounts = new int?[SaveGame.CargoItems.Count];
+        public int?[] CountermeasureCounts = new int?[SaveGame.CountermeasureTypes.Count];
+        public bool[] UnlockShips = new bool[SaveGame.StandardShips.Count];
     }
     internal sealed class Patch {
         internal int Start, Length;
@@ -201,23 +202,26 @@ namespace D3SaveEditor {
     public sealed class SaveGame {
         internal static readonly Encoding Ansi=Encoding.GetEncoding(1252);
         private const int MaxObjectIds = 910, MaxWeapons = 200, MaxShips = 30;
-        internal static readonly SupplyItem[] CargoItems = {
+        public static IReadOnlyList<SupplyItem> CargoItems { get; } = Array.AsReadOnly(new[] {
             new SupplyItem("Forcewall", "Force Wall", 1000000),
             new SupplyItem("GoWingNut", "Go Wingnut", 1000000)
-        };
+        });
         // Weapon and pickup names and regular carry limits from multisafe.cpp.
-        internal static readonly SupplyItem[] CountermeasureTypes = {
+        public static IReadOnlyList<SupplyItem> CountermeasureTypes { get; } = Array.AsReadOnly(new[] {
             new SupplyItem("Chaff", "Chaff", 12, "Chaff"),
             new SupplyItem("Betty", "Bouncing Betty", 12, "Betty4Pack"),
             new SupplyItem("SeekerMine", "Seeker Mine", 12, "Seeker3Pack"),
             new SupplyItem("GunBoy", "Gunboy", 4, "GunboyPowerup"),
             new SupplyItem("ProxMine", "Proximity Mine", 12, "ProxMinePowerup")
-        };
-        internal static readonly string[] StandardShips = { "Pyro-GL", "Phoenix", "Magnum-AHT" };
+        });
+        public static IReadOnlyList<string> StandardShips { get; } = Array.AsReadOnly(new[] { "Pyro-GL", "Phoenix", "Magnum-AHT" });
         public static readonly string[] WeaponNames = {
             "Laser", "Vauss", "Microwave", "Plasma", "Fusion", "Super Laser", "Mass Driver", "Napalm", "EMD Gun", "Omega",
             "Concussion", "Homing", "Impact Mortar", "Smart", "Mega", "Frag", "Guided", "Napalm Rocket", "Cyclone", "Black Shark"
         };
+        public static bool UsesAmmo(int index) {
+            return (index >= 10 && index < 20) || index == 1 || index == 6 || index == 7;
+        }
         public byte[] Bytes { get; private set; }
         public string Description { get; private set; }
         public string Mission { get; private set; }
@@ -374,14 +378,14 @@ namespace D3SaveEditor {
         private int SupplyId(SupplyItem item) {
             return item.Pickup == null ? FindTableId(0, item.Key, MaxObjectIds) : FindTableId(4, item.Key, MaxWeapons);
         }
-        internal int SupplyCount(SupplyItem item) {
+        public int SupplyCount(SupplyItem item) {
             int id = SupplyId(item);
             if (id < 0) return 0;
             var items = item.Pickup == null ? Inventory.Items : CounterMeasures.Items;
             var found = items.Find(entry => entry.Type == item.Type && entry.Id == id);
             return found == null ? 0 : found.Count;
         }
-        internal bool CanEditSupply(SupplyItem item) {
+        public bool CanEditSupply(SupplyItem item) {
             return SupplyId(item) >= 0 &&
                 (item.Pickup == null || SupplyCount(item) > 0 || FindTableId(0, item.Pickup, MaxObjectIds) >= 0);
         }
@@ -390,6 +394,8 @@ namespace D3SaveEditor {
             int id = FindTableId(3, name, MaxShips);
             return id < 0 ? 0u : 1u << id;
         }
+        public bool IsShipDefined(string name) { return ShipPermissionBit(name) != 0; }
+        public bool IsShipAllowed(string name) { return (ShipPermissions & ShipPermissionBit(name)) != 0; }
         public bool HasEquipment(string name) {
             int id=FindEquipment(name); return id>=0 && Inventory.Items.Any(x=>x.Type==7 && x.Id==id && x.Count>0);
         }
@@ -402,9 +408,9 @@ namespace D3SaveEditor {
         }
         public EditResult Edit(EditOptions edit) {
             if(edit==null || edit.Owned==null || edit.Owned.Length!=20 || edit.Ammo==null || edit.Ammo.Length!=20 ||
-               edit.CargoCounts==null || edit.CargoCounts.Length!=CargoItems.Length ||
-               edit.CountermeasureCounts==null || edit.CountermeasureCounts.Length!=CountermeasureTypes.Length ||
-               edit.UnlockShips==null || edit.UnlockShips.Length!=StandardShips.Length)
+               edit.CargoCounts==null || edit.CargoCounts.Length!=CargoItems.Count ||
+               edit.CountermeasureCounts==null || edit.CountermeasureCounts.Length!=CountermeasureTypes.Count ||
+               edit.UnlockShips==null || edit.UnlockShips.Length!=StandardShips.Count)
                 throw new ArgumentException("Unvollständige Editieroptionen.");
             if(!Finite(edit.Energy) || edit.Energy<0 || edit.Energy>1000000000 || !Finite(edit.Shields) || edit.Shields<0 || edit.Shields>1000000000 ||
                !Finite(edit.AfterburnerSeconds) || edit.AfterburnerSeconds<0 || edit.AfterburnerSeconds>1000000)
@@ -414,7 +420,7 @@ namespace D3SaveEditor {
             var result=new EditResult(); var patches=new List<Patch>();
             var raw=new byte[Layout.Size]; Buffer.BlockCopy(Bytes,PlayerOffset,raw,0,raw.Length);
             uint shipPermissions = ShipPermissions;
-            for (int i = 0; i < StandardShips.Length; i++) {
+            for (int i = 0; i < StandardShips.Count; i++) {
                 if (!edit.UnlockShips[i]) continue;
                 uint bit = ShipPermissionBit(StandardShips[i]);
                 if (bit == 0) throw new FormatProblem("Die Schiffsdefinition „" + StandardShips[i] + "“ fehlt im Spielstand.");
@@ -508,8 +514,8 @@ namespace D3SaveEditor {
                 result.Changes.Add(name+" entfernen");
             }
         }
-        private void SetSupplies(InventoryBlock block, SupplyItem[] items, int?[] counts, bool removing, EditResult result) {
-            for (int i = 0; i < items.Length; i++) {
+        private void SetSupplies(InventoryBlock block, IReadOnlyList<SupplyItem> items, int?[] counts, bool removing, EditResult result) {
+            for (int i = 0; i < items.Count; i++) {
                 if (!counts[i].HasValue || (counts[i].Value == 0) != removing) continue;
                 SupplyItem item = items[i];
                 int id = SupplyId(item);

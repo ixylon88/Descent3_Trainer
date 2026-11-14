@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   test:
-    name: Test save files and editor UI
+    name: Test save files
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     defaults:
@@ -27,18 +27,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            g++ mono-mcs mono-runtime libmono-i18n-west4.0-cil \
-            libmono-system-windows-forms4.0-cil libgdiplus xauth xvfb
+            g++ mono-mcs mono-runtime libmono-i18n-west4.0-cil
 
       - name: Run data tests
         run: sh tests/run-tests.sh
-
-      - name: Test the WinForms UI with Mono
-        timeout-minutes: 2
-        run: |
-          mcs -target:exe -main:UiTests -out:test-output/UiTests.exe \
-            -r:System.Windows.Forms -r:System.Drawing src/*.cs tests/UiTests.cs
-          xvfb-run -a -s '-screen 0 1280x900x24' mono test-output/UiTests.exe "$PWD/test-output/fixture32-loadout"
 
   build:
     name: Build Windows 10 and 11
@@ -54,20 +46,35 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Build with the .NET Framework compiler
+      - name: Build the WPF editor
         shell: cmd
         run: call build.cmd
+
+      - name: Test the WPF editor with a synthetic save
+        shell: pwsh
+        timeout-minutes: 3
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          New-Item -ItemType Directory -Path test-output -Force | Out-Null
+          g++ -std=c++17 -O2 -DABI32 tests/make_fixtures.cpp -o test-output/make32.exe
+          & ./test-output/make32.exe test-output/fixture32-loadout 2 1 1 1 1
+          dotnet build tests/UiTests.csproj --configuration Release
+          & ./tests/bin/Release/net48/UiTests.exe "$PWD/test-output/fixture32-loadout"
 
       - name: Prepare download
         shell: pwsh
         run: |
           $package = Join-Path $env:RUNNER_TEMP 'Descent3_Trainer-Win10-Win11'
           New-Item -Path $package -ItemType Directory -Force | Out-Null
-          Copy-Item -LiteralPath D3SaveEditor.exe, D3SaveEditor.exe.config, LICENSE, ../NOTICE.md -Destination $package
+          $output = 'D3SaveEditor.Gui/bin/Release/net48'
+          $programFiles = 'D3SaveEditor.exe', 'D3SaveEditor.exe.config', 'D3SaveEditor.Core.dll'
+          $programPaths = $programFiles | ForEach-Object { Join-Path $output $_ }
+          Copy-Item -LiteralPath $programPaths -Destination $package
+          Copy-Item -LiteralPath LICENSE, ../NOTICE.md -Destination $package
           $repository = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY"
           @(
             'Descent 3 Savegame Editor for Windows 10 and 11'
-            'Extract the ZIP and keep D3SaveEditor.exe.config next to D3SaveEditor.exe.'
+            'Extract the ZIP and keep D3SaveEditor.Core.dll and D3SaveEditor.exe.config next to D3SaveEditor.exe.'
             'Run D3SaveEditor.exe and open a Descent 3 save file.'
             "Manual: $repository/blob/$env:GITHUB_SHA/windows10/README.md"
           ) | Set-Content -LiteralPath (Join-Path $package 'README.txt') -Encoding ascii
@@ -75,7 +82,7 @@ jobs:
             'Corresponding source (including build scripts):'
             "$repository/archive/$env:GITHUB_SHA.zip"
           ) | Set-Content -LiteralPath (Join-Path $package 'SOURCE.txt') -Encoding ascii
-          Get-FileHash -LiteralPath D3SaveEditor.exe, D3SaveEditor.exe.config -Algorithm SHA256 |
+          Get-FileHash -LiteralPath $programPaths -Algorithm SHA256 |
             ForEach-Object { '{0}  {1}' -f $_.Hash.ToLowerInvariant(), (Split-Path -Leaf $_.Path) } |
             Set-Content -LiteralPath (Join-Path $package 'SHA256SUMS.txt') -Encoding ascii
 

@@ -14,9 +14,5 @@ test-output/make32 test-output/fixture32-v1 1
 test-output/make32 test-output/fixture32-v0 0
 test-output/make32 test-output/fixture32-loadout 2 1 1 1 1
 test-output/make64 test-output/fixture64-loadout 2 1 1 1 1
-mcs -target:exe -out:test-output/Tests.exe src/SaveGame.cs src/ShipLimits.cs tests/TestRunner.cs
+mcs -codepage:65001 -target:exe -out:test-output/Tests.exe D3SaveEditor.Core/*.cs tests/TestRunner.cs
 mono test-output/Tests.exe "$(pwd)/test-output"
-# Optional with a running X11 server (e.g. xvfb-run):
-# mcs -target:exe -main:UiTests -out:test-output/UiTests.exe \
-#   -r:System.Windows.Forms -r:System.Drawing src/*.cs tests/UiTests.cs
-# mono test-output/UiTests.exe "$(pwd)/test-output/fixture32-loadout"

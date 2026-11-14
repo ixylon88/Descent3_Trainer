@@ -8,7 +8,7 @@ Zusätzliche 32- und 64-Bit-Testdateien prüfen gleichzeitige Änderungen beider
 Listen, Auswahlindizes, Mengenlimits, fehlende Aufsammeldefinitionen und
 Schiffserlaubnisse bei Lücken in der Schiffstabelle.
 
-Die fertige EXE wurde als Windows-GUI-Anwendung für AnyCPU kompiliert. Verwendet werden ausschließlich .NET-Framework-Bibliotheken; keine zusätzlichen Bibliotheken oder Spieldaten werden ausgeliefert.
+Der WPF-Build liefert `D3SaveEditor.exe` und `D3SaveEditor.Core.dll` für AnyCPU. Die Datentests prüfen den Spielstandcode in `D3SaveEditor.Core`.
 
 ## Datenformat und Dateischreiben
 
@@ -41,13 +41,17 @@ Die Tests prüfen unter anderem:
 
 ## Oberfläche
 
-Die Oberfläche wurde mit Mono 6.8 / X11 gestartet und visuell geprüft. Dabei wurden abgeschnittene Beschriftungen und Tabellenhöhen korrigiert.
-
-Ein automatisierter Oberflächentest öffnet eine synthetische Datei, wählt Waffen, setzt Maximalmunition, Schild, Energie und Ausrüstung über die tatsächlichen Controls, betätigt **Speichern + Backup** und liest die gespeicherten Werte erneut aus. Ein zweiter, unveränderter Speichervorgang wird auf Byte-Identität geprüft. Alle acht Assertions sind bestanden.
+Die oben genannten Oberflächenergebnisse beziehen sich auf den früheren WinForms-Editor.
+Der Windows-Job führt den WPF-Oberflächentest mit einer synthetischen Datei aus.
+Der Test öffnet `MainView`, bedient die WPF-Eingabefelder und speichert über
+**Speichern + Backup**. Er prüft Spielerwerte, Waffenauswahl, Inventar,
+Schiffsfreigaben, Backups und byte-identische Ausgabe bei unveränderten Werten.
 
 ## Verbleibende Grenzen
 
-Es gab keinen echten Spielstand, keine proprietären Spieldaten und keinen echten Windows-Testrechner. Das Laden eines bearbeiteten Spielstands in Descent 3 und der native Windows-Start sind deshalb noch **nicht bestätigt**. Die synthetischen Testdateien sind keine spielbaren Spielstände und werden nicht als solche ausgeliefert. ABI-Varianten außerhalb der ausdrücklich unterstützten Größen werden abgelehnt.
+Die synthetischen Testdateien werden aus den dokumentierten Strukturen erstellt.
+Ein Ingame-Test mit echten Spielständen ergänzt die automatisierten Prüfungen.
+ABI-Varianten außerhalb der ausdrücklich unterstützten Größen werden abgelehnt.
 
 Die Quelltextreferenz ist Commit `76049bb32d0a391ab35aedcd0716073c1e64d72a` des [Descent-3-Repositories](https://github.com/DescentDevelopers/Descent3).
 
@@ -57,4 +61,10 @@ Reproduzieren der Datentests auf einem System mit C++17-Compiler und Mono:
 sh tests/run-tests.sh
 ```
 
-Die optionale Durchführung der Oberflächentests ist am Ende dieses Skripts dokumentiert. Die Tests erzeugen ihre Daten ausschließlich im Unterordner `test-output`.
+Die Testdaten liegen in `test-output`. Der WPF-Test lässt sich unter Windows
+aus `windows10` mit einer erzeugten `fixture32-loadout` ausführen:
+
+```powershell
+dotnet build tests/UiTests.csproj -c Release
+.\tests\bin\Release\net48\UiTests.exe .\test-output\fixture32-loadout
+```

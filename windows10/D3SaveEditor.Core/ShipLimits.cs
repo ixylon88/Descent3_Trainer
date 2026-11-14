@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace D3SaveEditor {
+namespace D3SaveEditor.Core {
     public sealed class ShipLimits {
         public readonly Dictionary<string,ushort[]> Ships=new Dictionary<string,ushort[]>(StringComparer.OrdinalIgnoreCase);
         public string Source { get; private set; }
