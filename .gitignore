@@ -9,3 +9,9 @@
 **/test-output/
 **/__pycache__/
 .DS_Store
+
+# Visual Studio files for the Windows 10/11 editor
+/windows10/.vs/
+/windows10/bin/
+/windows10/obj/
+/windows10/*.csproj.user

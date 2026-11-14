@@ -1,6 +1,6 @@
 # Descent 3 Savegame Editor · Windows 10 / 11
 
-**Quelltextbasierte Vorschauversion 1.0.** Dieses Paket enthält den vollständigen Quelltext; die Windows-Anwendung wird mit `build.cmd` erzeugt. Es wird keine Installation benötigt. Die EXE verwendet das .NET Framework 4.x und Windows Forms. Sie läuft ohne Netzwerkzugriff und ohne Administratorrechte; im Zielordner werden Schreibrechte benötigt.
+**Quelltextbasierte Vorschauversion 1.0.** Dieses Paket enthält den vollständigen Quelltext. Die Windows-Anwendung lässt sich mit `build.cmd` oder in Visual Studio erstellen. Es wird keine Installation benötigt. Die EXE verwendet das .NET Framework 4.x und Windows Forms. Sie läuft ohne Netzwerkzugriff und ohne Administratorrechte; im Zielordner werden Schreibrechte benötigt.
 
 ## Start und Verwendung
 
@@ -64,7 +64,14 @@ Der Quelltext beschreibt das Speicherformat, ersetzt aber keinen vollständigen 
 
 ## Quelltext und Neubau
 
-Die Dateien in `src` enthalten den vollständigen Editor. Unter Windows kann `build.cmd` den Editor mit dem C#-Compiler des .NET Frameworks neu erstellen. Es sind keine NuGet-Pakete erforderlich. Unter Linux/Mono:
+Die Dateien in `src` enthalten den vollständigen Editor. In Visual Studio 2022
+oder neuer [`D3SaveEditor.sln`](D3SaveEditor.sln) öffnen und mit **F5** starten.
+Im Visual Studio Installer werden die Workload **.NET-Desktopentwicklung** und
+das **.NET Framework 4.8-Zielpaket** benötigt. Die EXE und ihre Konfigurationsdatei
+liegen je nach Buildkonfiguration in `bin/Debug/net48` oder `bin/Release/net48`.
+
+Unter Windows kann auch `build.cmd` den Editor mit dem C#-Compiler des .NET Frameworks
+neu erstellen. Es sind keine NuGet-Pakete erforderlich. Unter Linux/Mono:
 
 ```sh
 mcs -target:winexe -platform:anycpu -optimize+ \
