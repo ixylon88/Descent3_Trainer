@@ -1,8 +1,8 @@
 <Window x:Class="D3SaveEditor.Gui.MainView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Descent 3 · Savegame Editor" Width="1020" Height="780"
-        MinWidth="820" MinHeight="600" WindowStartupLocation="CenterScreen"
+        Title="Descent 3 · Savegame Editor" Width="920" Height="760"
+        MinWidth="900" MinHeight="760" WindowStartupLocation="CenterScreen"
         Background="#F3F6FA" Foreground="#152438" FontFamily="Segoe UI" FontSize="13"
         AllowDrop="True" PreviewDragOver="OnDragOver" PreviewDrop="OnDrop" Closing="OnClosing">
     <Window.Resources>
@@ -224,7 +224,7 @@
                         </GroupBox>
 
                         <!-- https://learn.microsoft.com/en-us/dotnet/desktop/wpf/controls/how-to-use-the-image-element -->
-                        <Image Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Stretch="Fill" Height="103" Width="574" VerticalAlignment="Center" ImageFailed="Image_ImageFailed">
+                        <Image Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="12" Stretch="Fill" Height="103" Width="574" HorizontalAlignment="Right" VerticalAlignment="Bottom" ImageFailed="Image_ImageFailed">
                             <Image.Source>
                                 <!-- To save significant application memory, set the DecodePixelWidth or  
                                 DecodePixelHeight of the BitmapImage value of the image source to the desired 

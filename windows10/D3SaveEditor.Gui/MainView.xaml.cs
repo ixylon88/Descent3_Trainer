@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+using D3SaveEditor.Core;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using D3SaveEditor.Core;
-using Microsoft.Win32;
+using System.Windows.Interop;
+using System.Windows.Media.Imaging;
 
 namespace D3SaveEditor.Gui
 {
@@ -30,6 +33,7 @@ namespace D3SaveEditor.Gui
         public MainView()
         {
             InitializeComponent();
+            //LoadIconWithFallback("d3_orb__2006+2.ico");
             PrimaryWeaponEditor.Content = primary;
             SecondaryWeaponEditor.Content = secondary;
             foreach (var row in primary.Rows.Concat(secondary.Rows))
@@ -38,8 +42,26 @@ namespace D3SaveEditor.Gui
 
         private void Image_ImageFailed(object sender, ExceptionRoutedEventArgs e)
         {
-            MessageBox.Show(e.ErrorException.Message);
+            //MessageBox.Show(e.ErrorException.Message);
         }
+
+        //private void LoadIconWithFallback(string pfad)
+        //{
+        //    if (File.Exists(pfad))
+        //    {
+        //        this.Icon = new BitmapImage(new Uri(pfad, UriKind.RelativeOrAbsolute));
+        //    }
+        //    else
+        //    {
+        //        using (Icon sysIcon = SystemIcons.Application)
+        //        {
+        //            this.Icon = Imaging.CreateBitmapSourceFromHIcon(
+        //                sysIcon.Handle,
+        //                Int32Rect.Empty,
+        //                BitmapSizeOptions.FromEmptyOptions());
+        //        }
+        //    }
+        //}
 
         public bool OpenPath(string path)
         {

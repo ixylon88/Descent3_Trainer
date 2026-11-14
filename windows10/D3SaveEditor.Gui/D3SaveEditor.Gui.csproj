@@ -3,7 +3,7 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net48</TargetFramework>
     <UseWPF>true</UseWPF>
-    <ApplicationIcon>..\..\pics\d3_orb__2006+2.ico</ApplicationIcon>
+    <!--<ApplicationIcon>..\..\pics\d3_orb__2006+2.ico</ApplicationIcon>-->
     <AssemblyName>D3SaveEditor</AssemblyName>
     <Prefer32Bit>false</Prefer32Bit>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
