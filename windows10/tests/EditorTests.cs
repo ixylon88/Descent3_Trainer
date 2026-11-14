@@ -4,39 +4,42 @@ using System.IO;
 using System.IO.Compression;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
-[DoNotParallelize]
-public sealed class EditorTests
+namespace D3SaveEditor.Tests
 {
-    [TestMethod]
-    [TestCategory("Core")]
-    public void SaveGameFormatAndFileOperations()
+    [TestClass]
+    [DoNotParallelize]
+    public sealed class EditorTests
     {
-        WithFixtures(Tests.Run);
-    }
-
-    [STATestMethod]
-    [TestCategory("WPF")]
-    public void EditorChangesAndSavesLoadout()
-    {
-        WithFixtures(folder => new UiTests().Run(Path.Combine(folder, "fixture32-loadout")));
-    }
-
-    private static void WithFixtures(Action<string> run)
-    {
-        string folder = Path.Combine(Path.GetTempPath(), "D3SaveEditor.Tests-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(folder);
-        try
+        [TestMethod]
+        [TestCategory("Core")]
+        public void SaveGameFormatAndFileOperations()
         {
-            using (var resource = typeof(EditorTests).Assembly.GetManifestResourceStream("D3SaveEditor.Tests.fixtures.zip"))
-            using (var archive = new ZipArchive(resource, ZipArchiveMode.Read))
-                archive.ExtractToDirectory(folder);
-
-            run(folder);
+            WithFixtures(Tests.Run);
         }
-        finally
+
+        [STATestMethod]
+        [TestCategory("WPF")]
+        public void EditorChangesAndSavesLoadout()
         {
-            Directory.Delete(folder, true);
+            WithFixtures(folder => new UiTests().Run(Path.Combine(folder, "fixture32-loadout")));
+        }
+
+        private static void WithFixtures(Action<string> run)
+        {
+            string folder = Path.Combine(Path.GetTempPath(), "D3SaveEditor.Tests-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(folder);
+            try
+            {
+                using (var resource = typeof(EditorTests).Assembly.GetManifestResourceStream("D3SaveEditor.Tests.fixtures.zip"))
+                using (var archive = new ZipArchive(resource, ZipArchiveMode.Read))
+                    archive.ExtractToDirectory(folder);
+
+                run(folder);
+            }
+            finally
+            {
+                Directory.Delete(folder, true);
+            }
         }
     }
 }

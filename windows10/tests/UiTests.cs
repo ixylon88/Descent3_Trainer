@@ -12,148 +12,151 @@ using System.Windows.Threading;
 using D3SaveEditor.Core;
 using D3SaveEditor.Gui;
 
-internal sealed class UiTests
+namespace D3SaveEditor.Tests
 {
-    private int passed;
-
-    internal void Run(string fixture)
+    internal sealed class UiTests
     {
-        string root = Path.GetDirectoryName(fixture);
-        string source = Path.Combine(root, "saveg000");
-        File.Copy(fixture, source);
-        var view = new MainView();
-        try
+        private int passed;
+
+        internal void Run(string fixture)
         {
-            view.Show();
-            Update(view);
-            Check(!Field<Button>(view, "SaveButton").IsEnabled, "Save requires a loaded file");
-            Check(view.OpenPath(source), "WPF opens independent synthetic fixture");
-            Update(view);
+            string root = Path.GetDirectoryName(fixture);
+            string source = Path.Combine(root, "saveg000");
+            File.Copy(fixture, source);
+            var view = new MainView();
+            try
+            {
+                view.Show();
+                Update(view);
+                Check(!Field<Button>(view, "SaveButton").IsEnabled, "Save requires a loaded file");
+                Check(view.OpenPath(source), "WPF opens independent synthetic fixture");
+                Update(view);
 
-            var save = Field<Button>(view, "SaveButton");
-            var energy = Field<TextBox>(view, "EnergyInput");
-            Check(save.IsEnabled && energy.Text.StartsWith("100", StringComparison.Ordinal), "Loaded player values are displayed");
-            var tabs = Field<TabControl>(view, "EditorTabs");
-            tabs.SelectedIndex = 3;
-            Update(view);
-            Check(!view.Title.StartsWith("*", StringComparison.Ordinal), "Viewing inventory leaves the save unchanged");
-            Click(save);
-            Check(File.ReadAllBytes(source).SequenceEqual(File.ReadAllBytes(fixture)), "Initial save preserves exact bytes");
+                var save = Field<Button>(view, "SaveButton");
+                var energy = Field<TextBox>(view, "EnergyInput");
+                Check(save.IsEnabled && energy.Text.StartsWith("100", StringComparison.Ordinal), "Loaded player values are displayed");
+                var tabs = Field<TabControl>(view, "EditorTabs");
+                tabs.SelectedIndex = 3;
+                Update(view);
+                Check(!view.Title.StartsWith("*", StringComparison.Ordinal), "Viewing inventory leaves the save unchanged");
+                Click(save);
+                Check(File.ReadAllBytes(source).SequenceEqual(File.ReadAllBytes(fixture)), "Initial save preserves exact bytes");
 
-            tabs.SelectedIndex = 1;
-            Update(view);
-            SelectWeapon(tabs, 4);
-            Update(view);
-            Check(WeaponCheck(tabs, "Fusion").IsChecked == true, "Choosing active primary grants that weapon");
+                tabs.SelectedIndex = 1;
+                Update(view);
+                SelectWeapon(tabs, 4);
+                Update(view);
+                Check(WeaponCheck(tabs, "Fusion").IsChecked == true, "Choosing active primary grants that weapon");
 
-            tabs.SelectedIndex = 2;
-            Update(view);
-            SelectWeapon(tabs, 0);
-            Update(view);
-            Check(WeaponCheck(tabs, "Concussion").IsChecked == false, "Choosing no secondary removes its ownership");
-            WeaponCheck(tabs, "Black Shark").SetCurrentValue(ToggleButton.IsCheckedProperty, true);
-            Update(view);
-            Text(Find<TextBox>(tabs, box => AutomationProperties.GetName(box) == "Munition Black Shark"), "65535");
+                tabs.SelectedIndex = 2;
+                Update(view);
+                SelectWeapon(tabs, 0);
+                Update(view);
+                Check(WeaponCheck(tabs, "Concussion").IsChecked == false, "Choosing no secondary removes its ownership");
+                WeaponCheck(tabs, "Black Shark").SetCurrentValue(ToggleButton.IsCheckedProperty, true);
+                Update(view);
+                Text(Find<TextBox>(tabs, box => AutomationProperties.GetName(box) == "Munition Black Shark"), "65535");
 
-            tabs.SelectedIndex = 0;
-            Update(view);
-            energy.Text = "200";
-            Field<TextBox>(view, "ShieldsInput").Text = "200";
-            Field<TextBox>(view, "AfterburnerInput").Text = "5";
-            Field<TextBox>(view, "LivesInput").Text = "50";
-            Field<TextBox>(view, "ScoreInput").Text = "999";
-            foreach (string name in new[] { "GodModeInput", "CloakInput", "CoolerInput", "QuadInput", "MapInput" })
-                Field<CheckBox>(view, name).IsChecked = true;
-            Field<CheckBox>(view, "ConverterInput").IsChecked = false;
+                tabs.SelectedIndex = 0;
+                Update(view);
+                energy.Text = "200";
+                Field<TextBox>(view, "ShieldsInput").Text = "200";
+                Field<TextBox>(view, "AfterburnerInput").Text = "5";
+                Field<TextBox>(view, "LivesInput").Text = "50";
+                Field<TextBox>(view, "ScoreInput").Text = "999";
+                foreach (string name in new[] { "GodModeInput", "CloakInput", "CoolerInput", "QuadInput", "MapInput" })
+                    Field<CheckBox>(view, name).IsChecked = true;
+                Field<CheckBox>(view, "ConverterInput").IsChecked = false;
 
-            tabs.SelectedIndex = 3;
-            Update(view);
-            var cargo = Field<ItemsControl>(view, "CargoInputs");
-            var measures = Field<ItemsControl>(view, "CountermeasureInputs");
-            var ships = Field<ItemsControl>(view, "ShipInputs");
-            Check(CountInput(cargo, 0).Text == "2" && CountInput(measures, 0).Text == "2"
-                && CountInput(measures, 3).ToolTip.ToString().EndsWith("4"), "Both inventories and the Gunboy limit are displayed");
-            Check(Field<ListBox>(view, "SavedInventory").Items.Cast<string>().Any(item => item.Contains("Mission cargo")),
-                "Saved mission inventory is displayed");
-            var pyro = Find<CheckBox>(ships, box => Equals(box.Content, "Pyro-GL"));
-            var phoenix = Find<CheckBox>(ships, box => Equals(box.Content, "Phoenix"));
-            Check(pyro.IsChecked == true && !pyro.IsEnabled && phoenix.IsChecked == false && phoenix.IsEnabled,
-                "Already allowed ships and available unlocks are distinguished");
+                tabs.SelectedIndex = 3;
+                Update(view);
+                var cargo = Field<ItemsControl>(view, "CargoInputs");
+                var measures = Field<ItemsControl>(view, "CountermeasureInputs");
+                var ships = Field<ItemsControl>(view, "ShipInputs");
+                Check(CountInput(cargo, 0).Text == "2" && CountInput(measures, 0).Text == "2"
+                    && CountInput(measures, 3).ToolTip.ToString().EndsWith("4"), "Both inventories and the Gunboy limit are displayed");
+                Check(Field<ListBox>(view, "SavedInventory").Items.Cast<string>().Any(item => item.Contains("Mission cargo")),
+                    "Saved mission inventory is displayed");
+                var pyro = Find<CheckBox>(ships, box => Equals(box.Content, "Pyro-GL"));
+                var phoenix = Find<CheckBox>(ships, box => Equals(box.Content, "Phoenix"));
+                Check(pyro.IsChecked == true && !pyro.IsEnabled && phoenix.IsChecked == false && phoenix.IsEnabled,
+                    "Already allowed ships and available unlocks are distinguished");
 
-            Text(CountInput(cargo, 0), "4");
-            Text(CountInput(measures, 0), "12");
-            Text(CountInput(measures, 1), "0");
-            phoenix.SetCurrentValue(ToggleButton.IsCheckedProperty, true);
-            Update(view);
-            Click(save);
+                Text(CountInput(cargo, 0), "4");
+                Text(CountInput(measures, 0), "12");
+                Text(CountInput(measures, 1), "0");
+                phoenix.SetCurrentValue(ToggleButton.IsCheckedProperty, true);
+                Update(view);
+                Click(save);
 
-            var saved = SaveFiles.Open(source);
-            var options = saved.CurrentOptions();
-            Check(saved.Energy == 200 && saved.Shields == 200 && options.Lives == 50 && options.Score == 999,
-                "WPF save writes edited player values");
-            Check(options.Primary == 4 && options.Secondary == 19 && options.Ammo[19] == 65535,
-                "WPF save writes selected weapons and maximum ammo");
-            Check(saved.Invulnerable && saved.IsCloaked && saved.HasEquipment("Afterburner") && saved.HasQuad && !saved.HasEquipment("Converter"),
-                "WPF save writes effects and equipment");
-            Check(saved.InventoryItems.Any(item => item.Name == "Force Wall" && item.Count == 4)
-                && saved.CountermeasureItems.Any(item => item.Name == "Saved Chaff" && item.Count == 12)
-                && saved.CountermeasureItems.All(item => item.Name != "Saved Betty"), "WPF save writes inventory edits");
-            Check(saved.ShipPermissions == 0x40000023u && saved.ShipName == "Pyro-GL", "WPF saves the unlock by ship name");
-            Check(Directory.GetFiles(root, "*.bak-*").Length == 2, "Both saves create backups");
+                var saved = SaveFiles.Open(source);
+                var options = saved.CurrentOptions();
+                Check(saved.Energy == 200 && saved.Shields == 200 && options.Lives == 50 && options.Score == 999,
+                    "WPF save writes edited player values");
+                Check(options.Primary == 4 && options.Secondary == 19 && options.Ammo[19] == 65535,
+                    "WPF save writes selected weapons and maximum ammo");
+                Check(saved.Invulnerable && saved.IsCloaked && saved.HasEquipment("Afterburner") && saved.HasQuad && !saved.HasEquipment("Converter"),
+                    "WPF save writes effects and equipment");
+                Check(saved.InventoryItems.Any(item => item.Name == "Force Wall" && item.Count == 4)
+                    && saved.CountermeasureItems.Any(item => item.Name == "Saved Chaff" && item.Count == 12)
+                    && saved.CountermeasureItems.All(item => item.Name != "Saved Betty"), "WPF save writes inventory edits");
+                Check(saved.ShipPermissions == 0x40000023u && saved.ShipName == "Pyro-GL", "WPF saves the unlock by ship name");
+                Check(Directory.GetFiles(root, "*.bak-*").Length == 2, "Both saves create backups");
 
-            byte[] before = File.ReadAllBytes(source);
-            Click(save);
-            Check(File.ReadAllBytes(source).SequenceEqual(before), "Unchanged resave preserves exact bytes");
-            Console.WriteLine(passed + " WPF assertions passed.");
+                byte[] before = File.ReadAllBytes(source);
+                Click(save);
+                Check(File.ReadAllBytes(source).SequenceEqual(before), "Unchanged resave preserves exact bytes");
+                Console.WriteLine(passed + " WPF assertions passed.");
+            }
+            finally
+            {
+                // Discard temporary edits before closing after a failed assertion.
+                var reset = Field<Button>(view, "ResetButton");
+                if (reset.IsEnabled)
+                    Click(reset);
+                view.Close();
+            }
         }
-        finally
+
+        private static T Field<T>(MainView view, string name) where T : FrameworkElement => (T)view.FindName(name);
+        private static void SelectWeapon(TabControl tabs, int index) =>
+            Find<ComboBox>(tabs, box => box.Name == "ActiveWeapon").SetCurrentValue(Selector.SelectedIndexProperty, index);
+        private static CheckBox WeaponCheck(DependencyObject tab, string name) =>
+            Find<CheckBox>(tab, box => AutomationProperties.GetName(box) == name);
+        private static TextBox CountInput(ItemsControl items, int index) =>
+            Find<TextBox>(items.ItemContainerGenerator.ContainerFromIndex(index), box => box.Name == "SupplyCount");
+        private static void Click(Button button) => button.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
+        private static void Text(TextBox input, string text) => input.SetCurrentValue(TextBox.TextProperty, text);
+
+        private static void Update(Window window)
         {
-            // Discard temporary edits before closing after a failed assertion.
-            var reset = Field<Button>(view, "ResetButton");
-            if (reset.IsEnabled)
-                Click(reset);
-            view.Close();
+            window.UpdateLayout();
+            window.Dispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
         }
-    }
 
-    private static T Field<T>(MainView view, string name) where T : FrameworkElement => (T)view.FindName(name);
-    private static void SelectWeapon(TabControl tabs, int index) =>
-        Find<ComboBox>(tabs, box => box.Name == "ActiveWeapon").SetCurrentValue(Selector.SelectedIndexProperty, index);
-    private static CheckBox WeaponCheck(DependencyObject tab, string name) =>
-        Find<CheckBox>(tab, box => AutomationProperties.GetName(box) == name);
-    private static TextBox CountInput(ItemsControl items, int index) =>
-        Find<TextBox>(items.ItemContainerGenerator.ContainerFromIndex(index), box => box.Name == "SupplyCount");
-    private static void Click(Button button) => button.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
-    private static void Text(TextBox input, string text) => input.SetCurrentValue(TextBox.TextProperty, text);
-
-    private static void Update(Window window)
-    {
-        window.UpdateLayout();
-        window.Dispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
-    }
-
-    private static T Find<T>(DependencyObject root, Func<T, bool> matches) where T : DependencyObject
-    {
-        var result = Descendants(root).OfType<T>().FirstOrDefault(matches);
-        return result ?? throw new InvalidOperationException(typeof(T).Name + " not found");
-    }
-
-    private static IEnumerable<DependencyObject> Descendants(DependencyObject root)
-    {
-        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        private static T Find<T>(DependencyObject root, Func<T, bool> matches) where T : DependencyObject
         {
-            var child = VisualTreeHelper.GetChild(root, i);
-            yield return child;
-            foreach (var descendant in Descendants(child))
-                yield return descendant;
+            var result = Descendants(root).OfType<T>().FirstOrDefault(matches);
+            return result ?? throw new InvalidOperationException(typeof(T).Name + " not found");
         }
-    }
 
-    private void Check(bool condition, string description)
-    {
-        if (!condition)
-            throw new InvalidOperationException(description);
-        passed++;
-        Console.WriteLine("PASS: " + description);
+        private static IEnumerable<DependencyObject> Descendants(DependencyObject root)
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+            {
+                var child = VisualTreeHelper.GetChild(root, i);
+                yield return child;
+                foreach (var descendant in Descendants(child))
+                    yield return descendant;
+            }
+        }
+
+        private void Check(bool condition, string description)
+        {
+            if (!condition)
+                throw new InvalidOperationException(description);
+            passed++;
+            Console.WriteLine("PASS: " + description);
+        }
     }
 }

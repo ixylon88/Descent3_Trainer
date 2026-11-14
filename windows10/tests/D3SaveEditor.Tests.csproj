@@ -4,10 +4,11 @@
     <IsTestProject>true</IsTestProject>
     <IsPackable>false</IsPackable>
     <UseWPF>true</UseWPF>
+    <RootNamespace>D3SaveEditor.Tests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MSTest" Version="3.11.1" />
+    <PackageReference Include="MSTest" Version="4.5.3" />
     <ProjectReference Include="..\D3SaveEditor.Core\D3SaveEditor.Core.csproj" />
     <ProjectReference Include="..\D3SaveEditor.Gui\D3SaveEditor.Gui.csproj" />
     <EmbeddedResource Include="fixtures.zip" LogicalName="D3SaveEditor.Tests.fixtures.zip" />
