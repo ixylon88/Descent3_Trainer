@@ -23,7 +23,8 @@ verschiedene Eigenschaften. Die Editoren konvertieren keine Speicherformate.
 - Gegenstände und Gegenmaßnahmen im Spielstand einsehen. Mengen für Force Wall,
   Go Wingnut sowie die fünf Standard-Gegenmaßnahmen bearbeiten, sofern die
   passenden Definitionen im Spielstand vorhanden sind.
-- Pyro-GL, Phoenix und Magnum-AHT für die Schiffsauswahl der Kampagne freischalten.
+- Pyro-GL, Phoenix, Magnum-AHT und den Black Pyro freischalten, sofern sie im
+  Spielstand definiert sind. Automatische Wahl des Black Pyro beim Briefing testen.
 - Gespeicherte Kartensichtbarkeit vollständig aufdecken.
 - Normale Munitionslimits aus eigenen Spieldaten lesen; alternativ 65.535 als technisches Maximum setzen.
 - Geplante Ausgabe prüfen und beim Überschreiben Backups anlegen.
@@ -47,20 +48,25 @@ von der Spielversion und den Spieldaten ab. Die Liste zeigt auch Guide-Bot und
 Missionsgegenstände an. Deren Zustand kann an Levelobjekte und Skripte gekoppelt
 sein.
 
-Die Häkchen ergänzen die Schiffserlaubnisse im geladenen Spielstand. Das Schiff
-wählst du beim nächsten Briefing mit Schiffsauswahl im Spiel. Das Pilotenprofil
-speichert seine Freigaben pro Kampagne weiterhin über den normalen Spielfortschritt.
+Die Häkchen ergänzen die Schiffserlaubnisse im Spielstand. Die reguläre
+Schiffsauswahl im Einzelspieler-Briefing bietet Pyro-GL, Phoenix und Magnum-AHT
+an. In Mercenary schaltet ein Skript am Ende von Level 2 den Black Pyro frei
+und sperrt den Phoenix.
 
-Das reguläre Einzelspielermenü in `main` und `d3-historical` bietet die drei
-Standardschiffe an. In Mercenary schaltet das Level-2-Skript den Black Pyro frei
-und sperrt den Phoenix. Für den Black Pyro in der Hauptkampagne gibt es die
-historische Mod [Black Pyro Justice](https://www.descentforum.net/Pyromania/files/).
+Mit **Nur Black Pyro (Testmodus)** bleibt der Black Pyro als einziges Schiff
+erlaubt. Das nächste passende Briefing kann ihn dadurch automatisch übernehmen.
+Die Option ist in Mercenary und in der Hauptkampagne verfügbar, wenn die
+Schiffstabelle des Spielstands den Black Pyro enthält. Zum Probieren eine
+Spielstandkopie kurz vor dem nächsten Briefing verwenden. Das Spiel kann die
+Schiffsfreigaben beim Fortschritt auch ins Pilotenprofil übernehmen. Für einen
+isolierten Versuch ein separates Profil und einen Spielstand dieses Profils
+verwenden. Der Ingame-Test des Modus steht noch aus.
 
 Quelltextstellen für das Format und die Spielregeln
 
 - Spielerdaten und beide Inventare in [`main`](https://github.com/DescentDevelopers/Descent3/blob/de4bebf5f2d2523261956d0f28603e426eb88c63/Descent3/gamesave.cpp#L962-L975) und [`d3-historical`](https://github.com/DescentDevelopers/Descent3/blob/84e25b0b411284bad57b34f50fd976f1a8a2367f/Descent3/gamesave.cpp#L1014-L1030).
 - [Aufsammeldefinitionen und Mengenbegrenzungen](https://github.com/DescentDevelopers/Descent3/blob/de4bebf5f2d2523261956d0f28603e426eb88c63/Descent3/multisafe.cpp#L2800-L2981).
-- [TelCom-Auswahl](https://github.com/DescentDevelopers/Descent3/blob/de4bebf5f2d2523261956d0f28603e426eb88c63/Descent3/TelCom.cpp#L3603-L3633), [zugelassene Standardnamen](https://github.com/DescentDevelopers/Descent3/blob/de4bebf5f2d2523261956d0f28603e426eb88c63/Descent3/ship.cpp#L124-L129) und [Mercenary-Skript](https://github.com/DescentDevelopers/Descent3/blob/de4bebf5f2d2523261956d0f28603e426eb88c63/scripts/Merc02.cpp#L5095-L5104).
+- [Zugelassene Schiffsnamen im Briefing](https://github.com/DescentDevelopers/Descent3/blob/de4bebf5f2d2523261956d0f28603e426eb88c63/Descent3/ship.cpp#L124-L129), [automatische Auswahl](https://github.com/DescentDevelopers/Descent3/blob/de4bebf5f2d2523261956d0f28603e426eb88c63/Descent3/TelCom.cpp#L3425-L3456) und [Mercenary-Skript](https://github.com/DescentDevelopers/Descent3/blob/de4bebf5f2d2523261956d0f28603e426eb88c63/scripts/Merc02.cpp#L5095-L5104).
 
 ## Builds auf GitHub
 

@@ -28,6 +28,7 @@ const char *const d3_standard_ships[D3_STANDARD_SHIPS] = {"Pyro-GL", "Phoenix", 
 
 enum {OBJ_WEAPON = 5, OBJ_POWERUP = 7, SHIP_PERMISSIONS_OFFSET = 468};
 enum {MAX_OBJECT_IDS = 910, MAX_WEAPONS = 200, MAX_SHIPS = 30};
+#define SHIP_PERMISSION_MASK ((1u << MAX_SHIPS) - 1u)
 void d3_zero(void *p,D3U32 n) { D3U8 *d=(D3U8*)p;while(n--)*d++=0; }
 void d3_copy(void *dest,const void *source,D3U32 n) { D3U8 *d=(D3U8*)dest;const D3U8 *s=(const D3U8*)source;while(n--)*d++=*s++; }
 int d3_equal(const void *a,const void *b,D3U32 n) { const D3U8 *x=(const D3U8*)a,*y=(const D3U8*)b;while(n--)if(*x++!=*y++)return 0;return 1; }
@@ -180,6 +181,10 @@ D3U32 d3_ship_permission_bit(const D3Game *g,const char *name) {
         if (d3_string_iequal(g->ships[i],name)) return 1u<<i;
     return 0;
 }
+int d3_prefers_black_pyro(const D3Game *g) {
+    D3U32 bit=d3_ship_permission_bit(g,D3_BLACK_PYRO);
+    return bit!=0 && (d3_ship_permissions(g) & SHIP_PERMISSION_MASK)==bit;
+}
 static int find_item(const D3Inventory *inventory,int type,int id) {
     int i;
     if (id<0) return -1;
@@ -311,6 +316,13 @@ int d3_edit(D3Game *g,const D3Options *o,D3Buffer *out){
         bit=d3_ship_permission_bit(g,d3_standard_ships[i]);
         if (!bit) return fail(g,"Die Schiffsdefinition fehlt im Spielstand.");
         permissions|=bit;
+    }
+    if (o->unlock_black_pyro || o->prefer_black_pyro) {
+        D3U32 bit=d3_ship_permission_bit(g,D3_BLACK_PYRO);
+        if (!bit) return fail(g,"Die Schiffsdefinition Black Pyro fehlt im Spielstand.");
+        /* With no standard ship in TelCom's menu, it takes the first permitted index. */
+        if (o->prefer_black_pyro) permissions &= ~SHIP_PERMISSION_MASK;
+        permissions |= bit;
     }
     if(o->quad>=0 && g->object.batteries!=21) return fail(g,"Quad-Laser nicht zuweisbar: Waffenbatterien fehlen.");
     lists=(D3Inventory*)d3_alloc(2*sizeof(*lists));inv_bytes=(D3U8*)d3_alloc(2*D3_INVENTORY_BYTES);verify=(D3Game*)d3_alloc(sizeof(*verify));

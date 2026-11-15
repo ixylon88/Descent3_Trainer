@@ -271,7 +271,12 @@
                         <GroupBox Grid.Column="2" Header="Schiffsfreigaben">
                             <StackPanel>
                                 <ItemsControl x:Name="ShipInputs" ItemTemplate="{StaticResource ShipRowTemplate}" />
-                                <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Text="Auswahl beim nächsten passenden Briefing." />
+                                <CheckBox x:Name="BlackPyroUnlockInput" Checked="OnInputChanged" Unchecked="OnInputChanged"
+                                          ToolTip="Speichert die Freigabe im Spielstand. Für die automatische Auswahl beim Briefing den Testmodus verwenden." />
+                                <CheckBox x:Name="PreferBlackPyroInput" Content="Nur Black Pyro (Testmodus)"
+                                          Checked="OnBlackPyroModeChanged" Unchecked="OnBlackPyroModeChanged"
+                                          ToolTip="Entfernt die anderen Schiffsfreigaben im Spielstand. Beim nächsten passenden Briefing kann das Spiel den Black Pyro automatisch wählen." />
+                                <TextBlock x:Name="ShipSelectionHint" Margin="0,8,0,0" TextWrapping="Wrap" />
                             </StackPanel>
                         </GroupBox>
                         <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Margin="0,0,0,10"

@@ -25,6 +25,9 @@ static void fixture(const char *path,const char *golden){
     check(g->player>0 && d3_string_equal(g->callsign,"Testpilot") && d3_string_equal(d3_ship(g),"Pyro-GL"),"historical player header and ship decoded");
     d3_current(g,&o);check(o.energy==100.125f && o.shields==87.25f && o.ammo[10]==4,"historical values match independent C++ generator");
     check(d3_edit(g,&o,&out) && out.size==b.size && d3_equal(out.data,b.data,b.size),"unchanged file is byte-identical");d3_free(out.data);
+    o.unlock_black_pyro=1;
+    check(!d3_edit(g,&o,&out),"Black Pyro unlock requires a saved definition");
+    o.unlock_black_pyro=0;
     set_options(&o);check(d3_edit(g,&o,&out),"all requested edits accepted");edited=parse(&out);d3_current(edited,&o);
     check(o.energy==200 && o.shields==200 && o.afterburner==5 && o.lives==99 && o.score==123456,"player values changed");
     check(d3_god(edited) && d3_float(out.data+edited->player+116)==1e9f && d3_cloak(edited) && d3_float(out.data+edited->object.effect+12)==1e9f,"effect flags and long timers set");
@@ -76,6 +79,31 @@ static void loadout_tests(const char *path){
     check(d3_edit(original,&edit,&out) && out.size==input.size && d3_equal(out.data,input.data,input.size),"unchanged inventories stay byte-identical");
     d3_free(out.data);
     check(original->inventory.count==3 && original->countermeasures.count==3,"both inventory lists are decoded");
+    check((d3_ship_permissions(original) & d3_ship_permission_bit(original,D3_BLACK_PYRO)) && !d3_prefers_black_pyro(original),
+          "existing Black Pyro permission is visible");
+    {
+        D3Options ship_edit;
+        D3Buffer unlocked,preferred;
+        D3U32 permission_offset=original->player+468, original_permissions=d3_ship_permissions(original);
+        d3_put32(input.data+permission_offset,0x40000009u);
+        d3_current(original,&ship_edit);
+        ship_edit.unlock_black_pyro=1;
+        check(d3_edit(original,&ship_edit,&unlocked),"Black Pyro unlock accepted");
+        saved=parse(&unlocked);
+        check(d3_ship_permissions(saved)==0x4000000bu,"Black Pyro unlock retains other permissions");
+        d3_current(saved,&ship_edit);
+        ship_edit.prefer_black_pyro=1;
+        check(d3_edit(saved,&ship_edit,&preferred),"Black Pyro briefing mode accepted");
+        d3_free(saved);d3_free(unlocked.data);
+        saved=parse(&preferred);
+        check(d3_prefers_black_pyro(saved) && d3_ship_permissions(saved)==0x40000002u && !strcmp(d3_ship(saved),d3_ship(original)),
+              "Black Pyro mode clears the other ship bits and preserves the active ship and unrelated bits");
+        d3_current(saved,&ship_edit);
+        check(d3_edit(saved,&ship_edit,&again) && again.size==preferred.size && d3_equal(again.data,preferred.data,preferred.size),
+              "saved Black Pyro mode round-trips");
+        d3_free(again.data);d3_free(saved);d3_free(preferred.data);
+        d3_put32(input.data+permission_offset,original_permissions);
+    }
     edit.cargo_counts[0]=4;
     edit.cargo_counts[1]=1;
     edit.countermeasure_counts[0]=8;

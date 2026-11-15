@@ -54,6 +54,8 @@ namespace D3SaveEditor.Tests
                 Check(!off.Invulnerable && !off.IsCloaked && off.InvulnerableTime == 0 && off.CloakTime == 0 && !off.HasQuad && !off.HasEquipment("Afterburner"), name + ": effects and equipment can be disabled");
             }
             var baseBytes = File.ReadAllBytes(Path.Combine(dir, "fixture32")); var valid = SaveGame.Parse(baseBytes);
+            var missingShip = valid.CurrentOptions(); missingShip.UnlockBlackPyro = true;
+            Reject(() => valid.Edit(missingShip), "Black Pyro unlock requires a saved definition");
             Reject(() => SaveGame.Parse(Changed(baseBytes, 32, BitConverter.GetBytes((short)3))), "unknown version rejected");
             Reject(() => SaveGame.Parse(Changed(baseBytes, valid.PlayerOffset - 2, BitConverter.GetBytes((short)500))), "unknown raw ABI rejected");
             Reject(() => SaveGame.Parse(Changed(baseBytes, valid.PlayerOffset + 136, BitConverter.GetBytes((short)13))), "cross-link mismatch rejected");
@@ -87,6 +89,17 @@ namespace D3SaveEditor.Tests
             var untouched = original.Edit(original.CurrentOptions());
             Check(untouched.Bytes.SequenceEqual(original.Bytes), name + ": unchanged inventories stay byte-identical");
             Check(original.InventoryItems.Count == 3 && original.CountermeasureItems.Count == 3, name + ": both lists are decoded");
+            Check(original.IsShipAllowed(SaveGame.BlackPyro) && !original.PrefersBlackPyro, name + ": existing Black Pyro permission is visible");
+            var locked = SaveGame.Parse(Changed(original.Bytes, original.PlayerOffset + original.Layout.Permissions, BitConverter.GetBytes(0x40000009u)));
+            var unlock = locked.CurrentOptions(); unlock.UnlockBlackPyro = true;
+            var unlocked = locked.Edit(unlock).Parsed;
+            Check(unlocked.IsShipAllowed(SaveGame.BlackPyro) && unlocked.ShipPermissions == 0x4000000bu,
+                name + ": unlocking Black Pyro retains other permissions");
+            var prefer = unlocked.CurrentOptions(); prefer.PreferBlackPyro = true;
+            var preferred = unlocked.Edit(prefer).Parsed;
+            Check(preferred.PrefersBlackPyro && preferred.ShipPermissions == 0x40000002u && preferred.ShipName == original.ShipName,
+                name + ": Black Pyro mode clears the other ship bits and preserves the active ship and unrelated bits");
+            Check(preferred.Edit(preferred.CurrentOptions()).Bytes.SequenceEqual(preferred.Bytes), name + ": saved Black Pyro mode round-trips");
             var edit = original.CurrentOptions();
             edit.CargoCounts[0] = 4;
             edit.CargoCounts[1] = 1;

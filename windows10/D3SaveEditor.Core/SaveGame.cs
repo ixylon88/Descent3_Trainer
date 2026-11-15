@@ -187,6 +187,7 @@ namespace D3SaveEditor.Core {
         public int?[] CargoCounts = new int?[SaveGame.CargoItems.Count];
         public int?[] CountermeasureCounts = new int?[SaveGame.CountermeasureTypes.Count];
         public bool[] UnlockShips = new bool[SaveGame.StandardShips.Count];
+        public bool UnlockBlackPyro, PreferBlackPyro;
     }
     internal sealed class Patch {
         internal int Start, Length;
@@ -202,6 +203,7 @@ namespace D3SaveEditor.Core {
     public sealed class SaveGame {
         internal static readonly Encoding Ansi=Encoding.GetEncoding(1252);
         private const int MaxObjectIds = 910, MaxWeapons = 200, MaxShips = 30;
+        private const uint ShipPermissionMask = (1u << MaxShips) - 1;
         public static IReadOnlyList<SupplyItem> CargoItems { get; } = Array.AsReadOnly(new[] {
             new SupplyItem("Forcewall", "Force Wall", 1000000),
             new SupplyItem("GoWingNut", "Go Wingnut", 1000000)
@@ -215,6 +217,7 @@ namespace D3SaveEditor.Core {
             new SupplyItem("ProxMine", "Proximity Mine", 12, "ProxMinePowerup")
         });
         public static IReadOnlyList<string> StandardShips { get; } = Array.AsReadOnly(new[] { "Pyro-GL", "Phoenix", "Magnum-AHT" });
+        public const string BlackPyro = "Black Pyro";
         public static readonly string[] WeaponNames = {
             "Laser", "Vauss", "Microwave", "Plasma", "Fusion", "Super Laser", "Mass Driver", "Napalm", "EMD Gun", "Omega",
             "Concussion", "Homing", "Impact Mortar", "Smart", "Mega", "Frag", "Guided", "Napalm Rocket", "Cyclone", "Black Shark"
@@ -396,6 +399,12 @@ namespace D3SaveEditor.Core {
         }
         public bool IsShipDefined(string name) { return ShipPermissionBit(name) != 0; }
         public bool IsShipAllowed(string name) { return (ShipPermissions & ShipPermissionBit(name)) != 0; }
+        public bool PrefersBlackPyro {
+            get {
+                uint bit = ShipPermissionBit(BlackPyro);
+                return bit != 0 && (ShipPermissions & ShipPermissionMask) == bit;
+            }
+        }
         public bool HasEquipment(string name) {
             int id=FindEquipment(name); return id>=0 && Inventory.Items.Any(x=>x.Type==7 && x.Id==id && x.Count>0);
         }
@@ -426,6 +435,18 @@ namespace D3SaveEditor.Core {
                 if (bit == 0) throw new FormatProblem("Die Schiffsdefinition „" + StandardShips[i] + "“ fehlt im Spielstand.");
                 if ((shipPermissions & bit) == 0) result.Changes.Add(StandardShips[i] + " freischalten");
                 shipPermissions |= bit;
+            }
+            if (edit.UnlockBlackPyro || edit.PreferBlackPyro) {
+                uint bit = ShipPermissionBit(BlackPyro);
+                if (bit == 0) throw new FormatProblem("Die Schiffsdefinition „Black Pyro“ fehlt im Spielstand.");
+                if (edit.PreferBlackPyro) {
+                    // TelCom excludes this ship from its menu. With fewer than two menu ships it takes the first permitted index.
+                    shipPermissions = (shipPermissions & ~ShipPermissionMask) | bit;
+                    result.Changes.Add("Nur Black Pyro erlauben (automatische Auswahl beim Briefing)");
+                } else {
+                    if ((shipPermissions & bit) == 0) result.Changes.Add("Black Pyro freischalten");
+                    shipPermissions |= bit;
+                }
             }
             Put(raw, Layout.Permissions, shipPermissions);
             Put(raw,104,edit.Energy); Put(raw,88,edit.Score); raw[108]=edit.Lives; Put(raw,Layout.Afterburner,edit.AfterburnerSeconds);

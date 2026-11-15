@@ -20,6 +20,7 @@ typedef char D3AssertFloat[(sizeof(float)==4) ? 1 : -1];
 #define D3_CARGO_TYPES 2
 #define D3_COUNTERMEASURE_TYPES 5
 #define D3_STANDARD_SHIPS 3
+#define D3_BLACK_PYRO "Black Pyro"
 
 typedef struct {
     const char *key, *name, *pickup;
@@ -63,6 +64,7 @@ typedef struct {
     /* -1 keeps the saved count, 0 removes the entry. */
     int cargo_counts[D3_CARGO_TYPES], countermeasure_counts[D3_COUNTERMEASURE_TYPES];
     D3U8 unlock_ships[D3_STANDARD_SHIPS];
+    D3U8 unlock_black_pyro, prefer_black_pyro;
 } D3Options;
 typedef struct {
     D3U8 *data;
@@ -98,6 +100,7 @@ int d3_supply_count(const D3Game *game,int countermeasure,int index);
 const char *d3_ship(const D3Game *game);
 D3U32 d3_ship_permissions(const D3Game *game);
 D3U32 d3_ship_permission_bit(const D3Game *game,const char *name);
+int d3_prefers_black_pyro(const D3Game *game);
 int d3_god(const D3Game *game);
 int d3_cloak(const D3Game *game);
 int d3_quad(const D3Game *game);
