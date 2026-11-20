@@ -29,6 +29,7 @@ namespace D3SaveEditor.Gui
         private string openedPath;
         private bool loading;
         private bool dirty;
+        private bool preferBlackPyro;
 
         public MainView()
         {
@@ -211,14 +212,12 @@ namespace D3SaveEditor.Gui
             CargoInputs.ItemsSource = cargoRows;
             CountermeasureInputs.ItemsSource = countermeasureRows;
             ShipInputs.ItemsSource = shipRows;
-            ShipInputs.IsEnabled = true;
             bool blackPyroDefined = game.IsShipDefined(SaveGame.BlackPyro);
             BlackPyroUnlockInput.Content = blackPyroDefined ? SaveGame.BlackPyro : SaveGame.BlackPyro + " (fehlt)";
             BlackPyroUnlockInput.IsChecked = game.IsShipAllowed(SaveGame.BlackPyro);
             BlackPyroUnlockInput.IsEnabled = blackPyroDefined && BlackPyroUnlockInput.IsChecked != true;
-            PreferBlackPyroInput.IsChecked = false;
-            PreferBlackPyroInput.IsEnabled = blackPyroDefined && !game.PrefersBlackPyro;
-            UpdateShipSelectionHint();
+            preferBlackPyro = false;
+            RefreshBlackPyroButton();
 
             var entries = game.InventoryItems.Select(item => InventoryLine("Inventar", item))
                 .Concat(game.CountermeasureItems.Select(item => InventoryLine("Gegenmaßnahme", item))).ToArray();
@@ -231,28 +230,27 @@ namespace D3SaveEditor.Gui
             return $"{group} · {name} × {item.Count}";
         }
 
-        private void OnBlackPyroModeChanged(object sender, RoutedEventArgs e)
+        private void OnPreferBlackPyro(object sender, RoutedEventArgs e)
         {
-            if (loading || game == null)
+            if (game == null || !game.IsShipDefined(SaveGame.BlackPyro))
                 return;
 
-            bool preferBlackPyro = PreferBlackPyroInput.IsChecked == true;
-            ShipInputs.IsEnabled = !preferBlackPyro;
-            BlackPyroUnlockInput.IsEnabled = !preferBlackPyro && !game.IsShipAllowed(SaveGame.BlackPyro);
-            UpdateShipSelectionHint();
+            preferBlackPyro = true;
+            foreach (var row in shipRows)
+            {
+                row.Allowed = false;
+                row.CanUnlock = row.Defined;
+            }
+            BlackPyroUnlockInput.IsChecked = true;
+            BlackPyroUnlockInput.IsEnabled = false;
+            RefreshBlackPyroButton();
             MarkDirty();
         }
 
-        private void UpdateShipSelectionHint()
+        private void RefreshBlackPyroButton()
         {
-            if (!game.IsShipDefined(SaveGame.BlackPyro))
-                ShipSelectionHint.Text = "Die Schiffsdefinition fehlt im Spielstand.";
-            else if (game.PrefersBlackPyro)
-                ShipSelectionHint.Text = "Gespeichert: Nur Black Pyro erlaubt.";
-            else if (PreferBlackPyroInput.IsChecked == true)
-                ShipSelectionHint.Text = "Beim Speichern entfallen die anderen Schiffsfreigaben.";
-            else
-                ShipSelectionHint.Text = "Im Testmodus kann das Briefing den Black Pyro automatisch wählen.";
+            PreferBlackPyroButton.IsEnabled = game.IsShipDefined(SaveGame.BlackPyro) &&
+                ((!preferBlackPyro && !game.PrefersBlackPyro) || shipRows.Any(row => row.Allowed));
         }
 
         private static string EffectTime(bool enabled, float seconds)
@@ -272,6 +270,8 @@ namespace D3SaveEditor.Gui
 
         private void OnInventoryChanged(object sender, PropertyChangedEventArgs e)
         {
+            if (sender is ShipRow && e.PropertyName == nameof(ShipRow.Allowed))
+                RefreshBlackPyroButton();
             if (!loading)
                 MarkDirty();
         }
@@ -455,9 +455,9 @@ namespace D3SaveEditor.Gui
             options.RevealMap = MapInput.IsChecked == true;
             ReadSupplies(cargoRows, options.CargoCounts);
             ReadSupplies(countermeasureRows, options.CountermeasureCounts);
-            options.PreferBlackPyro = PreferBlackPyroInput.IsChecked == true;
+            options.PreferBlackPyro = preferBlackPyro;
             for (int i = 0; i < shipRows.Length; i++)
-                options.UnlockShips[i] = !options.PreferBlackPyro && shipRows[i].CanUnlock && shipRows[i].Allowed;
+                options.UnlockShips[i] = shipRows[i].CanUnlock && shipRows[i].Allowed;
             options.UnlockBlackPyro = !options.PreferBlackPyro && BlackPyroUnlockInput.IsChecked == true && !game.IsShipAllowed(SaveGame.BlackPyro);
 
             return options;

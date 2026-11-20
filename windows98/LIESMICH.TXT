@@ -16,10 +16,10 @@ Munition, Energie, Schild, Nachbrennerladung, Leben, Punkte,
 God-Mode, Tarnung, Kuehler, Konverter, Quad-Laser und volle Karte.
 Im Reiter Inventar / Schiffe kannst du Gegenstaende und Gegenmassnahmen
 einsehen und unterstuetzte Stueckzahlen bearbeiten. 0 entfernt einen Eintrag.
-Die Schiffshaekchen speichern Freigaben. "Nur Black Pyro (Testmodus)"
-laesst nur dieses Schiff zu, wenn es im Spielstand definiert ist.
-Es kann beim naechsten passenden Briefing automatisch gewaehlt werden.
-Zum Testen eine Kopie des Spielstands in einem separaten Pilotenprofil nutzen.
+Die Schiffshaekchen speichern Freigaben. "Nur Black Pyro erlauben"
+waehlt die anderen Schiffe ab. Ist der Black Pyro im Spielstand definiert,
+uebernimmt das Spiel ihn beim naechsten passenden Briefing automatisch.
+In der Hauptkampagne ist der Wechsel von Level 1 zu 2 bestaetigt.
 
 MAXIMA
 Energie und Schild: normal jeweils 200.

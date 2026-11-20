@@ -24,7 +24,8 @@ static HWND energy,shields,afterburner,lives,score,god,cloak,cooler,converter,qu
 static HWND owned[20],ammo[20],max_buttons[20],cap_labels[20],primary,secondary;
 static HWND cargo_counts[D3_CARGO_TYPES],countermeasure_counts[D3_COUNTERMEASURE_TYPES];
 static HWND unlock_ships[D3_STANDARD_SHIPS],saved_inventory;
-static HWND unlock_black_pyro,prefer_black_pyro,ship_selection_hint;
+static HWND unlock_black_pyro,prefer_black_pyro_button;
+static int prefer_black_pyro;
 static D3Game *game;
 static D3Buffer opened;
 static D3U8 original_hash[32];
@@ -115,19 +116,26 @@ static void add_inventory_rows(const D3Inventory *inventory,const char *group_na
     }
 }
 static void refresh_ship_controls(void) {
-    int i,prefer=checked(prefer_black_pyro);
+    int i,standard_checked=0;
     D3U32 bit,permissions=d3_ship_permissions(game);
     for (i=0; i<D3_STANDARD_SHIPS; i++) {
         bit=d3_ship_permission_bit(game,d3_standard_ships[i]);
-        EnableWindow(unlock_ships[i],!prefer && bit!=0 && !(permissions & bit));
+        EnableWindow(unlock_ships[i],bit!=0 && (prefer_black_pyro || !(permissions & bit)));
+        if (checked(unlock_ships[i])) standard_checked=1;
     }
     bit=d3_ship_permission_bit(game,D3_BLACK_PYRO);
-    EnableWindow(unlock_black_pyro,!prefer && bit!=0 && !(permissions & bit));
-    EnableWindow(prefer_black_pyro,bit!=0 && !d3_prefers_black_pyro(game));
-    if (!bit) text(ship_selection_hint,"Schiff fehlt im Spielstand.");
-    else if (d3_prefers_black_pyro(game)) text(ship_selection_hint,"Nur Black Pyro erlaubt.");
-    else if (prefer) text(ship_selection_hint,"Andere Freigaben entfallen.");
-    else text(ship_selection_hint,"Testmodus: Auswahl im Briefing.");
+    EnableWindow(unlock_black_pyro,!prefer_black_pyro && bit!=0 && !(permissions & bit));
+    EnableWindow(prefer_black_pyro_button,bit!=0 &&
+        ((!prefer_black_pyro && !d3_prefers_black_pyro(game)) || standard_checked));
+}
+static void select_black_pyro(void) {
+    int i;
+    if (!d3_ship_permission_bit(game,D3_BLACK_PYRO)) return;
+    prefer_black_pyro=1;
+    for (i=0; i<D3_STANDARD_SHIPS; i++) check(unlock_ships[i],0);
+    check(unlock_black_pyro,1);
+    refresh_ship_controls();
+    changed();
 }
 static void load_inventory_values(void) {
     int i;
@@ -145,7 +153,7 @@ static void load_inventory_values(void) {
     bit=d3_ship_permission_bit(game,D3_BLACK_PYRO);
     check(unlock_black_pyro,(permissions & bit)!=0);
     text(unlock_black_pyro,bit ? D3_BLACK_PYRO : D3_BLACK_PYRO " (fehlt)");
-    check(prefer_black_pyro,0);
+    prefer_black_pyro=0;
     refresh_ship_controls();
     SendMessageA(saved_inventory,LB_RESETCONTENT,0,0);
     add_inventory_rows(&game->inventory,"Inventar: ");
@@ -210,10 +218,10 @@ static int read_options(D3Options *o){
     for(i=0;i<20;i++){o->owned[i]=(D3U8)checked(owned[i]);get_text(ammo[i],s,64);if(!d3_integer(s,0,65535,&n))return 0;o->ammo[i]=(D3U16)n;}
     if (!read_supply_counts(cargo_counts,0,d3_cargo_items,D3_CARGO_TYPES,o->cargo_counts) ||
         !read_supply_counts(countermeasure_counts,1,d3_countermeasure_types,D3_COUNTERMEASURE_TYPES,o->countermeasure_counts)) return 0;
-    o->prefer_black_pyro=(D3U8)checked(prefer_black_pyro);
+    o->prefer_black_pyro=(D3U8)prefer_black_pyro;
     for (i=0; i<D3_STANDARD_SHIPS; i++) {
         bit=d3_ship_permission_bit(game,d3_standard_ships[i]);
-        o->unlock_ships[i]=(D3U8)(!o->prefer_black_pyro && bit!=0 && (d3_ship_permissions(game) & bit)==0 && checked(unlock_ships[i]));
+        o->unlock_ships[i]=(D3U8)(bit!=0 && (prefer_black_pyro || !(d3_ship_permissions(game) & bit)) && checked(unlock_ships[i]));
     }
     bit=d3_ship_permission_bit(game,D3_BLACK_PYRO);
     o->unlock_black_pyro=(D3U8)(!o->prefer_black_pyro && bit!=0 && !(d3_ship_permissions(game) & bit) && checked(unlock_black_pyro));
@@ -248,7 +256,7 @@ static int build_output(D3Buffer *out){
             if (!o.unlock_ships[i]) continue;
             d3_append(s,sizeof(s),d3_standard_ships[i]);d3_append(s,sizeof(s)," freischalten\r\n");
         }
-        if (o.prefer_black_pyro) d3_append(s,sizeof(s),"Nur Black Pyro erlauben (automatische Auswahl beim Briefing)\r\n");
+        if (o.prefer_black_pyro) d3_append(s,sizeof(s),"Schiffsfreigaben auf Black Pyro zuruecksetzen und angewaehlte Schiffe erlauben\r\n");
         else if (o.unlock_black_pyro) d3_append(s,sizeof(s),"Black Pyro freischalten\r\n");
     }
     d3_append(s,4096,"\r\nAusgabe wurde erneut erfolgreich eingelesen.");text(review,s);set_status("Pruefung bestanden. Ausgabe konnte erneut gelesen werden.");return 1;
@@ -327,11 +335,11 @@ static void inventory_page(int page) {
     for (i=0; i<D3_STANDARD_SHIPS; i++)
         unlock_ships[i]=checkbox(d3_standard_ships[i],525,166+i*20,193,ID_SHIP_UNLOCK+i,page);
     unlock_black_pyro=checkbox(D3_BLACK_PYRO,525,226,193,ID_BLACK_PYRO_UNLOCK,page);
-    prefer_black_pyro=checkbox("Nur Black Pyro (Testmodus)",525,250,193,ID_BLACK_PYRO_PREFER,page);
-    ship_selection_hint=label("",525,274,193,32,page);
-    label("0 entfernt den Eintrag. Ein Strich zeigt fehlende Spieldaten an.",28,319,697,18,page);
-    label("Gespeicherte Eintraege",28,342,697,18,page);
-    saved_inventory=control("LISTBOX","",LBS_NOINTEGRALHEIGHT|WS_BORDER|WS_VSCROLL|WS_HSCROLL|WS_TABSTOP,28,362,701,94,0,page,1);
+    prefer_black_pyro_button=button("Nur Black Pyro erlauben",525,250,193,ID_BLACK_PYRO_PREFER,page,1);
+    label("Der Black Pyro fehlt im Auswahlmenue. Der Knopf waehlt alle anderen Schiffe ab.\r\n"
+          "So uebernimmt das Spiel ihn beim passenden Briefing automatisch, auch in der Hauptkampagne.",28,319,697,34,page);
+    label("Gespeicherte Eintraege (0 entfernt einen bearbeitbaren Bestand)",28,359,697,18,page);
+    saved_inventory=control("LISTBOX","",LBS_NOINTEGRALHEIGHT|WS_BORDER|WS_VSCROLL|WS_HSCROLL|WS_TABSTOP,28,378,701,78,0,page,1);
     SendMessageA(saved_inventory,LB_SETHORIZONTALEXTENT,2800,0);
 }
 static void make_ui(void){
@@ -363,8 +371,8 @@ static LRESULT CALLBACK window_proc(HWND hwnd,UINT message,WPARAM w,LPARAM l){
         if(id==ID_PRIMARY && code==CBN_SELCHANGE){selected=(int)SendMessageA(primary,CB_GETCURSEL,0,0);if(selected>=0 && selected<10)check(owned[selected],1);refresh_weapons(1);changed();return 0;}
         if(id==ID_SECONDARY && code==CBN_SELCHANGE){selected=(int)SendMessageA(secondary,CB_GETCURSEL,0,0);if(selected==0)select_all(10,0);else if(selected>0){check(owned[selected+9],1);refresh_weapons(1);changed();}return 0;}
         if(code!=BN_CLICKED)return 0;
-        if(id>=ID_SHIP_UNLOCK && id<ID_SHIP_UNLOCK+D3_STANDARD_SHIPS){changed();return 0;}
-        if(id==ID_BLACK_PYRO_PREFER){refresh_ship_controls();changed();return 0;}
+        if(id>=ID_SHIP_UNLOCK && id<ID_SHIP_UNLOCK+D3_STANDARD_SHIPS){refresh_ship_controls();changed();return 0;}
+        if(id==ID_BLACK_PYRO_PREFER){select_black_pyro();return 0;}
         if(id==ID_BLACK_PYRO_UNLOCK){changed();return 0;}
         if(id>=ID_OWN && id<ID_OWN+20){i=id-ID_OWN;if(!checked(owned[i]))text(ammo[i],"0");refresh_weapons(1);changed();return 0;}
         if(id>=ID_MAX && id<ID_MAX+20){maximum_one(id-ID_MAX,0);return 0;}

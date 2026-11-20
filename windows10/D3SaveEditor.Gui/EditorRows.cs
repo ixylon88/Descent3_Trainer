@@ -138,17 +138,23 @@ namespace D3SaveEditor.Gui
     internal sealed class ShipRow : BindableItem
     {
         private bool allowed;
+        private bool canUnlock;
 
         internal ShipRow(SaveGame game, string name)
         {
-            bool defined = game.IsShipDefined(name);
+            Defined = game.IsShipDefined(name);
             allowed = game.IsShipAllowed(name);
-            CanUnlock = defined && !allowed;
-            Label = defined ? name : name + " (fehlt)";
+            canUnlock = Defined && !allowed;
+            Label = Defined ? name : name + " (fehlt)";
         }
 
         public string Label { get; }
-        public bool CanUnlock { get; }
+        internal bool Defined { get; }
+        public bool CanUnlock
+        {
+            get => canUnlock;
+            set => SetField(ref canUnlock, value);
+        }
         public bool Allowed
         {
             get => allowed;

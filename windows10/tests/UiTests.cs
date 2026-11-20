@@ -82,7 +82,7 @@ namespace D3SaveEditor.Tests
                 Check(pyro.IsChecked == true && !pyro.IsEnabled && phoenix.IsChecked == false && phoenix.IsEnabled,
                     "Already allowed ships and available unlocks are distinguished");
                 var blackPyro = Field<CheckBox>(view, "BlackPyroUnlockInput");
-                var blackPyroMode = Field<CheckBox>(view, "PreferBlackPyroInput");
+                var blackPyroMode = Field<Button>(view, "PreferBlackPyroButton");
                 Check(Equals(blackPyro.Content, "Black Pyro") && blackPyro.IsChecked == true && blackPyroMode.IsEnabled,
                     "Black Pyro and its saved permission are visible");
 
@@ -110,8 +110,10 @@ namespace D3SaveEditor.Tests
                 byte[] before = File.ReadAllBytes(source);
                 Click(save);
                 Check(File.ReadAllBytes(source).SequenceEqual(before), "Unchanged resave preserves exact bytes");
-                blackPyroMode.SetCurrentValue(ToggleButton.IsCheckedProperty, true);
+                Click(blackPyroMode);
                 Update(view);
+                Check(Find<CheckBox>(ships, box => Equals(box.Content, "Pyro-GL")).IsChecked == false && blackPyro.IsChecked == true,
+                    "The Black Pyro button clears other visible permissions immediately");
                 Click(save);
                 Check(SaveFiles.Open(source).PrefersBlackPyro && !blackPyroMode.IsEnabled,
                     "WPF saves the Black Pyro briefing mode and shows the saved state");

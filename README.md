@@ -24,7 +24,7 @@ verschiedene Eigenschaften. Die Editoren konvertieren keine Speicherformate.
   Go Wingnut sowie die fünf Standard-Gegenmaßnahmen bearbeiten, sofern die
   passenden Definitionen im Spielstand vorhanden sind.
 - Pyro-GL, Phoenix, Magnum-AHT und den Black Pyro freischalten, sofern sie im
-  Spielstand definiert sind. Automatische Wahl des Black Pyro beim Briefing testen.
+  Spielstand definiert sind. Automatische Wahl des Black Pyro beim Briefing ermöglichen.
 - Gespeicherte Kartensichtbarkeit vollständig aufdecken.
 - Normale Munitionslimits aus eigenen Spieldaten lesen; alternativ 65.535 als technisches Maximum setzen.
 - Geplante Ausgabe prüfen und beim Überschreiben Backups anlegen.
@@ -53,14 +53,12 @@ Schiffsauswahl im Einzelspieler-Briefing bietet Pyro-GL, Phoenix und Magnum-AHT
 an. In Mercenary schaltet ein Skript am Ende von Level 2 den Black Pyro frei
 und sperrt den Phoenix.
 
-Mit **Nur Black Pyro (Testmodus)** bleibt der Black Pyro als einziges Schiff
-erlaubt. Das nächste passende Briefing kann ihn dadurch automatisch übernehmen.
-Die Option ist in Mercenary und in der Hauptkampagne verfügbar, wenn die
-Schiffstabelle des Spielstands den Black Pyro enthält. Zum Probieren eine
-Spielstandkopie kurz vor dem nächsten Briefing verwenden. Das Spiel kann die
-Schiffsfreigaben beim Fortschritt auch ins Pilotenprofil übernehmen. Für einen
-isolierten Versuch ein separates Profil und einen Spielstand dieses Profils
-verwenden. Der Ingame-Test des Modus steht noch aus.
+**Nur Black Pyro erlauben** wählt alle anderen Schiffe ab. Das Spiel übernimmt
+den Black Pyro beim nächsten passenden Briefing automatisch, weil er das einzige
+erlaubte Schiff ist. In der Hauptkampagne wurde das beim Wechsel von Level 1 zu
+Level 2 im Spiel bestätigt. Der Knopf ist auch in Mercenary verfügbar, wenn der
+Spielstand eine Schiffsdefinition für den Black Pyro enthält. Das Spiel kann
+die Schiffsfreigaben beim Fortschritt auch ins Pilotenprofil übernehmen.
 
 Quelltextstellen für das Format und die Spielregeln
 

@@ -310,19 +310,19 @@ int d3_edit(D3Game *g,const D3Options *o,D3Buffer *out){
     oldmask=d3_u32(g->data+g->player+168);for(i=0;i<10;i++)if(o->owned[i])primaries++;
     if(!primaries && (oldmask&1023))return fail(g,"Mindestens eine Primaerwaffe muss vorhanden bleiben.");
     permissions=d3_ship_permissions(g);
+    if (o->unlock_black_pyro || o->prefer_black_pyro) {
+        D3U32 bit=d3_ship_permission_bit(g,D3_BLACK_PYRO);
+        if (!bit) return fail(g,"Die Schiffsdefinition Black Pyro fehlt im Spielstand.");
+        /* A reset leaves the user free to re-enable individual ships before saving. */
+        if (o->prefer_black_pyro) permissions &= ~SHIP_PERMISSION_MASK;
+        permissions |= bit;
+    }
     for (i=0; i<D3_STANDARD_SHIPS; i++) {
         D3U32 bit;
         if (!o->unlock_ships[i]) continue;
         bit=d3_ship_permission_bit(g,d3_standard_ships[i]);
         if (!bit) return fail(g,"Die Schiffsdefinition fehlt im Spielstand.");
         permissions|=bit;
-    }
-    if (o->unlock_black_pyro || o->prefer_black_pyro) {
-        D3U32 bit=d3_ship_permission_bit(g,D3_BLACK_PYRO);
-        if (!bit) return fail(g,"Die Schiffsdefinition Black Pyro fehlt im Spielstand.");
-        /* With no standard ship in TelCom's menu, it takes the first permitted index. */
-        if (o->prefer_black_pyro) permissions &= ~SHIP_PERMISSION_MASK;
-        permissions |= bit;
     }
     if(o->quad>=0 && g->object.batteries!=21) return fail(g,"Quad-Laser nicht zuweisbar: Waffenbatterien fehlen.");
     lists=(D3Inventory*)d3_alloc(2*sizeof(*lists));inv_bytes=(D3U8*)d3_alloc(2*D3_INVENTORY_BYTES);verify=(D3Game*)d3_alloc(sizeof(*verify));

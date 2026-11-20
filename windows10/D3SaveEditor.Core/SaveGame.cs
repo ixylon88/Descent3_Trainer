@@ -429,25 +429,23 @@ namespace D3SaveEditor.Core {
             var result=new EditResult(); var patches=new List<Patch>();
             var raw=new byte[Layout.Size]; Buffer.BlockCopy(Bytes,PlayerOffset,raw,0,raw.Length);
             uint shipPermissions = ShipPermissions;
+            if (edit.UnlockBlackPyro || edit.PreferBlackPyro) {
+                uint bit = ShipPermissionBit(BlackPyro);
+                if (bit == 0) throw new FormatProblem("Die Schiffsdefinition „Black Pyro“ fehlt im Spielstand.");
+                // Apply a reset first so the user can re-enable individual ships before saving.
+                if (edit.PreferBlackPyro) shipPermissions &= ~ShipPermissionMask;
+                if (!IsShipAllowed(BlackPyro)) result.Changes.Add(BlackPyro + " freischalten");
+                shipPermissions |= bit;
+            }
             for (int i = 0; i < StandardShips.Count; i++) {
                 if (!edit.UnlockShips[i]) continue;
                 uint bit = ShipPermissionBit(StandardShips[i]);
                 if (bit == 0) throw new FormatProblem("Die Schiffsdefinition „" + StandardShips[i] + "“ fehlt im Spielstand.");
-                if ((shipPermissions & bit) == 0) result.Changes.Add(StandardShips[i] + " freischalten");
+                if (!IsShipAllowed(StandardShips[i])) result.Changes.Add(StandardShips[i] + " freischalten");
                 shipPermissions |= bit;
             }
-            if (edit.UnlockBlackPyro || edit.PreferBlackPyro) {
-                uint bit = ShipPermissionBit(BlackPyro);
-                if (bit == 0) throw new FormatProblem("Die Schiffsdefinition „Black Pyro“ fehlt im Spielstand.");
-                if (edit.PreferBlackPyro) {
-                    // TelCom excludes this ship from its menu. With fewer than two menu ships it takes the first permitted index.
-                    shipPermissions = (shipPermissions & ~ShipPermissionMask) | bit;
-                    result.Changes.Add("Nur Black Pyro erlauben (automatische Auswahl beim Briefing)");
-                } else {
-                    if ((shipPermissions & bit) == 0) result.Changes.Add("Black Pyro freischalten");
-                    shipPermissions |= bit;
-                }
-            }
+            if ((ShipPermissions & ~shipPermissions) != 0)
+                result.Changes.Add("Andere Schiffsfreigaben entfernen");
             Put(raw, Layout.Permissions, shipPermissions);
             Put(raw,104,edit.Energy); Put(raw,88,edit.Score); raw[108]=edit.Lives; Put(raw,Layout.Afterburner,edit.AfterburnerSeconds);
             uint mask=U32(raw,168)&~0xFFFFFu;

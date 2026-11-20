@@ -272,11 +272,10 @@
                             <StackPanel>
                                 <ItemsControl x:Name="ShipInputs" ItemTemplate="{StaticResource ShipRowTemplate}" />
                                 <CheckBox x:Name="BlackPyroUnlockInput" Checked="OnInputChanged" Unchecked="OnInputChanged"
-                                          ToolTip="Speichert die Freigabe im Spielstand. Für die automatische Auswahl beim Briefing den Testmodus verwenden." />
-                                <CheckBox x:Name="PreferBlackPyroInput" Content="Nur Black Pyro (Testmodus)"
-                                          Checked="OnBlackPyroModeChanged" Unchecked="OnBlackPyroModeChanged"
-                                          ToolTip="Entfernt die anderen Schiffsfreigaben im Spielstand. Beim nächsten passenden Briefing kann das Spiel den Black Pyro automatisch wählen." />
-                                <TextBlock x:Name="ShipSelectionHint" Margin="0,8,0,0" TextWrapping="Wrap" />
+                                          ToolTip="Speichert die Freigabe im Spielstand." />
+                                <Button x:Name="PreferBlackPyroButton" Content="Nur Black Pyro erlauben"
+                                        HorizontalAlignment="Left" Margin="0,8,0,4" Click="OnPreferBlackPyro" />
+                                <TextBlock TextWrapping="Wrap" Text="Der Knopf wählt alle anderen Schiffe ab. Da der Black Pyro im Auswahlmenü fehlt, übernimmt ihn das Spiel als einziges erlaubtes Schiff beim nächsten passenden Briefing automatisch. Das funktioniert auch in der Hauptkampagne." />
                             </StackPanel>
                         </GroupBox>
                         <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Margin="0,0,0,10"
