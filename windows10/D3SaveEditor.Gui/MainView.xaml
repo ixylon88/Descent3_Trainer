@@ -124,6 +124,21 @@
                     </Button.ContextMenu>
                 </Button>
                 <TextBlock x:Name="VersionText" Foreground="#637488" FontSize="12" Margin="0,0,0,4" VerticalAlignment="Center" />
+                <Image x:Name="LauncherOrb" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="6,-15,0,-11"
+                       Stretch="Fill" UseLayoutRounding="True" SnapsToDevicePixels="True"
+                       RenderOptions.BitmapScalingMode="NearestNeighbor">
+                    <Image.OpacityMask>
+                        <DrawingBrush Viewbox="0,0,64,64" ViewboxUnits="Absolute" Stretch="Fill">
+                            <DrawingBrush.Drawing>
+                                <GeometryDrawing Brush="Black">
+                                    <GeometryDrawing.Geometry>
+                                        <EllipseGeometry Center="32,32" RadiusX="30" RadiusY="30" />
+                                    </GeometryDrawing.Geometry>
+                                </GeometryDrawing>
+                            </DrawingBrush.Drawing>
+                        </DrawingBrush>
+                    </Image.OpacityMask>
+                </Image>
             </StackPanel>
             <WrapPanel>
                 <Button Content="{Binding [OpenSave], Source={StaticResource Localization}, Mode=OneWay}" Click="OnChooseOpen" />
@@ -138,26 +153,11 @@
         <Border Grid.Row="1" Background="#152438" Padding="12,9" Margin="0,0,0,10">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" IsHitTestVisible="False">
-                    <Image MaxWidth="150" MaxHeight="48" Margin="0,-11,0,-11" VerticalAlignment="Center"
+                    <Image MaxWidth="150" MaxHeight="48" Margin="0,-11,-8,-11" VerticalAlignment="Center"
                            Stretch="Uniform" ImageFailed="Image_ImageFailed">
                         <Image.Source>
                             <BitmapImage DecodePixelWidth="200" UriSource="flashmen_1.jpg" />
                         </Image.Source>
-                    </Image>
-                    <Image x:Name="LauncherOrb" Visibility="Collapsed" VerticalAlignment="Center" Margin="6,-11,-5,-11"
-                           Stretch="Fill" UseLayoutRounding="True" SnapsToDevicePixels="True"
-                           RenderOptions.BitmapScalingMode="NearestNeighbor">
-                        <Image.OpacityMask>
-                            <DrawingBrush Viewbox="0,0,64,64" ViewboxUnits="Absolute" Stretch="Fill">
-                                <DrawingBrush.Drawing>
-                                    <GeometryDrawing Brush="Black">
-                                        <GeometryDrawing.Geometry>
-                                            <EllipseGeometry Center="32,32" RadiusX="30" RadiusY="30" />
-                                        </GeometryDrawing.Geometry>
-                                    </GeometryDrawing>
-                                </DrawingBrush.Drawing>
-                            </DrawingBrush>
-                        </Image.OpacityMask>
                     </Image>
                 </StackPanel>
                 <StackPanel>
