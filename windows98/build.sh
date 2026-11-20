@@ -17,11 +17,6 @@ mkdir -p test-output
   -Wl,--entry,_WinMainCRTStartup@0,--major-os-version,4,--minor-os-version,0 \
   -Wl,--major-subsystem-version,4,--minor-subsystem-version,0 \
   -Wl,--disable-dynamicbase,--disable-nxcompat,--stack,1048576 \
-  src/win98.c src/launcher_animation.c src/d3core.c src/d3files.c src/sha256.c test-output/version.o \
+  src/win98.c src/d3core.c src/d3files.c src/sha256.c test-output/version.o \
   -lkernel32 -luser32 -lgdi32 -lcomdlg32 -lcomctl32 -lgcc \
   -o D3EDIT98.EXE
-
-for frame in ../pics/Anim[0-8].[Bb][Mm][Pp]; do
-  [ -f "$frame" ] || continue
-  cp "$frame" .
-done

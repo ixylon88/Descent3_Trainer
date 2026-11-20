@@ -39,8 +39,7 @@ Für dieselbe historische Eingabedatei und dieselben Optionen wurde zusätzlich 
 - Kein CLR-, TLS- oder moderner Load-Configuration-Initialisierungsblock.
 - Keine CRT-, .NET-, MFC-, UCRT- oder KernelEx-Abhängigkeit.
 - Ausschließlich `KERNEL32`, `USER32`, `GDI32`, `COMDLG32` und `COMCTL32`.
-- Alle importierten Funktionen stehen auf der expliziten Liste klassischer APIs.
-  Die EXE verwendet benannte Importe.
+- Alle 49 importierten Funktionen stehen auf der expliziten Liste klassischer APIs; keine ordinalen Importe.
 
 Der Compiler war GCC/MinGW-w64 13.2.0, Ziel i386 mit x87, ohne SSE. Die EXE verwendet einen eigenen `WinMainCRTStartup`-Einstieg und ist ungefähr 37 KiB groß. Die Versionsangaben allein wären kein ausreichender Kompatibilitätsnachweis; deshalb werden auch Abhängigkeiten und Initialisierungsverzeichnisse geprüft.
 
