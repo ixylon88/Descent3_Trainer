@@ -146,7 +146,19 @@
                     </Image>
                     <Image x:Name="LauncherOrb" Visibility="Collapsed" VerticalAlignment="Center" Margin="6,-11,-5,-11"
                            Stretch="Fill" UseLayoutRounding="True" SnapsToDevicePixels="True"
-                           RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                           RenderOptions.BitmapScalingMode="NearestNeighbor">
+                        <Image.OpacityMask>
+                            <DrawingBrush Viewbox="0,0,64,64" ViewboxUnits="Absolute" Stretch="Fill">
+                                <DrawingBrush.Drawing>
+                                    <GeometryDrawing Brush="Black">
+                                        <GeometryDrawing.Geometry>
+                                            <EllipseGeometry Center="32,32" RadiusX="30" RadiusY="30" />
+                                        </GeometryDrawing.Geometry>
+                                    </GeometryDrawing>
+                                </DrawingBrush.Drawing>
+                            </DrawingBrush>
+                        </Image.OpacityMask>
+                    </Image>
                 </StackPanel>
                 <StackPanel>
                     <TextBlock x:Name="SaveTitle" Text="{Binding [NoSave], Source={StaticResource Localization}, Mode=OneWay}"
