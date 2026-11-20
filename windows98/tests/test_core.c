@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 #include <stdio.h>
+#include <float.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -215,10 +216,27 @@ static void table_tests(const char *dir){
 }
 static void number_tests(void){
     float f;D3I32 n;char s[64];check(d3_number("100,125",&f) && f==100.125f,"decimal comma accepted");check(d3_number("200.5",&f) && f==200.5f,"decimal point accepted");
-    check(!d3_number("1,2.3",&f) && !d3_number("NaN",&f) && !d3_number("1000000001",&f),"malformed or excessive decimal inputs rejected");
+    check(!d3_number("1,2.3",&f) && !d3_number("NaN",&f) && !d3_number("3.4028236E+38",&f) && !d3_number("1e+",&f),"malformed or overflowing inputs rejected");
+    check(d3_number("1,25e+12",&f) && f==1.25e12f,"scientific notation accepts a decimal comma");
+    d3_format_float(s,FLT_MAX);
+    check(d3_number(s,&f) && f==FLT_MAX,"maximum Float32 value rounds back from its displayed text");
     check(d3_integer("-2147483648",(-2147483647-1),2147483647,&n) && n==(-2147483647-1),"signed minimum score accepted");
     check(!d3_integer("2147483648",(-2147483647-1),2147483647,&n) && !d3_integer("65536",0,65535,&n),"integer overflow rejected");
     d3_format_float(s,100.125f);check(!strcmp(s,"100.125"),"decimal formatting");
+}
+static void storage_max_test(const char *path) {
+    D3Buffer source=read_file(path),out,again;
+    D3Game *game=parse(&source),*saved;
+    D3Options options;
+    d3_current(game,&options);
+    options.energy=options.shields=FLT_MAX;
+    check(d3_edit(game,&options,&out),"maximum energy and shields can be saved");
+    saved=parse(&out);
+    d3_current(saved,&options);
+    check(options.energy==FLT_MAX && options.shields==FLT_MAX,"maximum Float32 energy and shields reopen exactly");
+    check(d3_edit(saved,&options,&again) && again.size==out.size && d3_equal(again.data,out.data,out.size),
+          "maximum Float32 values survive an unchanged resave");
+    d3_free(again.data);d3_free(saved);d3_free(out.data);d3_free(game);d3_free(source.data);
 }
 int main(int argc,char **argv){
     const char *names[]={"fixture98","fixture98-noeffects","fixture98-guided","fixture98-snapshot","fixture98-v1","fixture98-v0"};char path[260],work[260];int i;
@@ -228,6 +246,6 @@ int main(int argc,char **argv){
     snprintf(path,260,"%s/fixture98-guidebot",argv[1]);guidebot_tests(path);
     localization_test();
     snprintf(work,260,"%s/io-%ld",argv[1],(long)getpid());if(mkdir(work,0700))return 2;
-    snprintf(path,260,"%s/fixture98",argv[1]);file_tests(path,work);table_tests(work);check(rmdir(work)==0,"all temporary file-test artifacts cleaned");
+    snprintf(path,260,"%s/fixture98",argv[1]);storage_max_test(path);file_tests(path,work);table_tests(work);check(rmdir(work)==0,"all temporary file-test artifacts cleaned");
     printf("\n%d assertions passed. Windows 98 runtime and in-game loading remain untested.\n",assertions);return 0;
 }

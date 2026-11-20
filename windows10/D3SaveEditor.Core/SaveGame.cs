@@ -364,7 +364,7 @@ namespace D3SaveEditor.Core {
         private void ValidatePlayer() {
             int p=PlayerOffset;
             if(Array.IndexOf(Bytes,(byte)0,p+64,20)<0)throw new FormatProblem(Text("Callsign"));
-            if(!Finite(Energy) || Energy<0 || Energy>1000000000f || !Finite(Afterburner) || Afterburner<0 || Afterburner>1000000)
+            if(!Finite(Energy) || Energy<0 || !Finite(Afterburner) || Afterburner<0 || Afterburner>1000000)
                 throw new FormatProblem(Text("PlayerValues"));
             if(I16(Bytes,p+136)!=(PlayerObject.Handle&0x7ff))throw new FormatProblem(Text("PlayerObject"));
             int ship=I32(Bytes,p+60);
@@ -437,7 +437,7 @@ namespace D3SaveEditor.Core {
                edit.CountermeasureCounts==null || edit.CountermeasureCounts.Length!=CountermeasureTypes.Count ||
                edit.UnlockShips==null || edit.UnlockShips.Length!=StandardShips.Count)
                 throw new ArgumentException(Text("MissingOptions"));
-            if(!Finite(edit.Energy) || edit.Energy<0 || edit.Energy>1000000000 || !Finite(edit.Shields) || edit.Shields<0 || edit.Shields>1000000000 ||
+            if(!Finite(edit.Energy) || edit.Energy<0 || !Finite(edit.Shields) || edit.Shields<0 ||
                !Finite(edit.AfterburnerSeconds) || edit.AfterburnerSeconds<0 || edit.AfterburnerSeconds>1000000)
                 throw new FormatProblem(Text("PlayerNumberRange"));
             uint originalMask=U32(Bytes,PlayerOffset+168);

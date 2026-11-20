@@ -27,6 +27,7 @@ DE/EN schaltet die Sprache um. Die Anleitung steht im Reiter Hilfe / Help.
 
 MAXIMA
 Energie und Schild: normal jeweils 200.
+Float-Max setzt 3.40282347E+38 im Spielstand. Die HUD-Anzeige kann ueberlaufen.
 Nachbrenner: normal 5 Sekunden.
 Max bei Munition nutzt geladene Schiffslimits, sonst 65535.
 Schiffslimits laden liest Table.gam oder d3.hog aus deiner Installation.

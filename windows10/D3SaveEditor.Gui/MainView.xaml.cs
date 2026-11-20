@@ -154,7 +154,7 @@ namespace D3SaveEditor.Gui
             {
                 var original = game.CurrentOptions();
                 EnergyInput.Text = FormatFloat(original.Energy);
-                ShieldsInput.Text = FormatFloat(Math.Max(0, Math.Min(1000000000, original.Shields)));
+                ShieldsInput.Text = FormatFloat(Math.Max(0, original.Shields));
                 AfterburnerInput.Text = FormatFloat(original.AfterburnerSeconds);
                 LivesInput.Text = original.Lives.ToString();
                 ScoreInput.Text = original.Score.ToString();
@@ -347,6 +347,8 @@ namespace D3SaveEditor.Gui
 
         private void OnMaxEnergy(object sender, RoutedEventArgs e) => EnergyInput.Text = "200";
         private void OnMaxShields(object sender, RoutedEventArgs e) => ShieldsInput.Text = "200";
+        private void OnEnergyStorageMax(object sender, RoutedEventArgs e) => EnergyInput.Text = FormatFloat(float.MaxValue);
+        private void OnShieldsStorageMax(object sender, RoutedEventArgs e) => ShieldsInput.Text = FormatFloat(float.MaxValue);
         private void OnMaxAfterburner(object sender, RoutedEventArgs e) => AfterburnerInput.Text = "5";
 
         private void OnWeaponChanged(object sender, PropertyChangedEventArgs e)
@@ -493,13 +495,18 @@ namespace D3SaveEditor.Gui
 
         private static float ReadFloat(TextBox input, float original, float maximum, string name)
         {
-            if (input.Text.Trim() == FormatFloat(original))
+            string text = input.Text.Trim();
+            if (text == FormatFloat(original))
                 return original;
+            if (text == FormatFloat(maximum))
+                return maximum;
 
-            float value;
-            if (float.TryParse(input.Text, NumberStyles.Float, CultureInfo.CurrentCulture, out value)
-                && !float.IsNaN(value) && value >= 0 && value <= maximum)
-                return value;
+            if (double.TryParse(text, NumberStyles.Float, CultureInfo.CurrentCulture, out double number) && number >= 0)
+            {
+                float value = (float)number;
+                if (value <= maximum)
+                    return value;
+            }
 
             throw new FormatProblem(T("FloatRange", name, maximum));
         }
@@ -516,8 +523,8 @@ namespace D3SaveEditor.Gui
         private EditOptions ReadOptions()
         {
             var options = game.CurrentOptions();
-            options.Energy = ReadFloat(EnergyInput, options.Energy, 1000000000, T("Energy"));
-            options.Shields = ReadFloat(ShieldsInput, options.Shields, 1000000000, T("Shields"));
+            options.Energy = ReadFloat(EnergyInput, options.Energy, float.MaxValue, T("Energy"));
+            options.Shields = ReadFloat(ShieldsInput, options.Shields, float.MaxValue, T("Shields"));
             options.AfterburnerSeconds = ReadFloat(AfterburnerInput, options.AfterburnerSeconds, 1000000, T("Afterburner"));
             options.Lives = (byte)ReadInteger(LivesInput.Text, 0, 255, T("Lives"));
             options.Score = ReadInteger(ScoreInput.Text, int.MinValue, int.MaxValue, T("Score"));

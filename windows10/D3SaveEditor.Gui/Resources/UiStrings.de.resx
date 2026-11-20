@@ -530,4 +530,10 @@ Karte: {5} Einträge · Inventar: {6} Arten · Gegenmaßnahmen: {7} Arten
   <data name="CountermeasureHint" xml:space="preserve">
     <value>Die Limits gelten für alle Schiffe. Weitere gespeicherte Gegenmaßnahmen bleiben im Bestand.</value>
   </data>
+  <data name="PlayerFloatMax" xml:space="preserve">
+    <value>Float-Max</value>
+  </data>
+  <data name="PlayerFloatMaxTip" xml:space="preserve">
+    <value>Setzt den größten endlichen Float32-Wert im Spielstand. Die HUD-Anzeige kann dabei überlaufen.</value>
+  </data>
 </root>

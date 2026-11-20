@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 #include "d3core.h"
 #include "d3text.h"
+#include <float.h>
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -255,7 +256,7 @@ static int valid_player(D3Game *g,D3U32 p,const D3Object *o){
     for(i=0;i<20;i++)if(g->data[p+64+i]==0)break;if(i==20)return 0;
     ship=(D3I32)d3_u32(g->data+p+60);if(ship<0 || ship>=g->ship_count || !g->ships[ship][0])return 0;
     energy=d3_float(g->data+p+104);ab=d3_float(g->data+p+348);
-    if(!d3_finite(energy) || energy<0 || energy>1e9f || !d3_finite(ab) || ab<0 || ab>1e6f)return 0;
+    if(!d3_finite(energy) || energy<0 || !d3_finite(ab) || ab<0 || ab>1e6f)return 0;
     if(d3_u16(g->data+p+136)!=(o->handle&0x7ffu))return 0;
     primary=(D3I32)d3_u32(g->data+p+216);secondary=(D3I32)d3_u32(g->data+p+228);
     if(primary<0 || primary>9 || secondary<10 || secondary>19)return 0;
@@ -457,7 +458,7 @@ int d3_edit(D3Game *g,const D3Options *o,D3Buffer *out){
     const char *error=0;out->data=0;out->size=0;
     error=edit_guidebot(g,o,bot_values,bot_flags,patches,&n);
     if (error) return fail(g,error);
-    if(!d3_finite(o->energy) || o->energy<0 || o->energy>1e9f || !d3_finite(o->shields) || o->shields<0 || o->shields>1e9f || !d3_finite(o->afterburner) || o->afterburner<0 || o->afterburner>1e6f || o->lives<0 || o->lives>255)return fail(g,T(PLAYER_VALUES));
+    if(!d3_finite(o->energy) || o->energy<0 || !d3_finite(o->shields) || o->shields<0 || !d3_finite(o->afterburner) || o->afterburner<0 || o->afterburner>1e6f || o->lives<0 || o->lives>255)return fail(g,T(PLAYER_VALUES));
     oldmask=d3_u32(g->data+g->player+168);for(i=0;i<10;i++)if(o->owned[i])primaries++;
     if(!primaries && (oldmask&1023))return fail(g,T(PRIMARY_REQUIRED));
     permissions=d3_ship_permissions(g);
@@ -557,14 +558,42 @@ int d3_limits_table(const D3U8 *data,D3U32 size,const char *ship,D3U16 caps[21],
 }
 
 int d3_number(const char *text,float *value){
-    double n=0,scale=1;int digits=0,point=0,negative=0;const char *p=text;
-    while(*p==' ' || *p=='\t')p++;if(*p=='+' || *p=='-'){negative=*p=='-';p++;}
-    for(;*p && *p!=' ' && *p!='\t';p++){
-        if(*p=='.' || *p==','){if(point)return 0;point=1;continue;}
-        if(*p<'0' || *p>'9' || ++digits>20)return 0;
-        if(point){scale*=10;n+=(*p-'0')/scale;}else{n=n*10+(*p-'0');if(n>1e9)return 0;}
+    double n=0;
+    int digits=0,point=0,negative=0,decimal_places=0,exponent=0;
+    const char *p=text;
+    while (*p==' ' || *p=='\t') p++;
+    if (*p=='+' || *p=='-') { negative=*p=='-'; p++; }
+    for (; *p && *p!=' ' && *p!='\t' && *p!='e' && *p!='E'; p++) {
+        if (*p=='.' || *p==',') {
+            if (point) return 0;
+            point=1;
+            continue;
+        }
+        if (*p<'0' || *p>'9' || ++digits>40) return 0;
+        n=n*10+(*p-'0');
+        decimal_places+=point;
     }
-    while(*p==' ' || *p=='\t')p++;if(*p || !digits || n>1e9)return 0;*value=(float)(negative?-n:n);return d3_finite(*value);
+    if (*p=='e' || *p=='E') {
+        int sign=1;
+        p++;
+        if (*p=='+' || *p=='-') { sign=*p=='-' ? -1 : 1; p++; }
+        if (*p<'0' || *p>'9') return 0;
+        while (*p>='0' && *p<='9') {
+            exponent=exponent*10+(*p++-'0');
+            if (exponent>100) return 0;
+        }
+        exponent*=sign;
+    }
+    while (*p==' ' || *p=='\t') p++;
+    if (*p || !digits) return 0;
+    exponent-=decimal_places;
+    for (; exponent>0; exponent--) n*=10;
+    for (; exponent<0; exponent++) n/=10;
+    /* Nine-digit spellings of FLT_MAX can lie just above it. Reject at the midpoint to overflow. */
+    if (n>=(double)FLT_MAX+0x1p103) return 0;
+    if (n>FLT_MAX) n=FLT_MAX;
+    *value=(float)(negative ? -n : n);
+    return 1;
 }
 int d3_integer(const char *text,D3I32 minimum,D3I32 maximum,D3I32 *value){
     const char *p=text;int negative=0,digits=0;D3U32 n=0,limit;D3I32 v;
@@ -575,11 +604,30 @@ int d3_integer(const char *text,D3I32 minimum,D3I32 maximum,D3I32 *value){
 }
 void d3_format_u32(char *dest,D3U32 n){char tmp[16];int count=0,i;do{tmp[count++]=(char)('0'+n%10);n/=10;}while(n);for(i=0;i<count;i++)dest[i]=tmp[count-i-1];dest[count]=0;}
 void d3_format_i32(char *dest,D3I32 n){if(n<0){*dest++='-';d3_format_u32(dest,0u-(D3U32)n);}else d3_format_u32(dest,(D3U32)n);}
+static void format_large_float(char *dest,double number) {
+    D3U32 significand,exponent=0;
+    char digits[16];
+    int i,last=8;
+    while (number>=10) { number/=10; exponent++; }
+    significand=(D3U32)(number*1e8+0.5);
+    if (significand==1000000000u) { significand/=10; exponent++; }
+    d3_format_u32(digits,significand);
+    while (last>0 && digits[last]=='0') last--;
+    *dest++=digits[0];
+    if (last>0) {
+        *dest++='.';
+        for (i=1; i<=last; i++) *dest++=digits[i];
+    }
+    *dest++='E';
+    *dest++='+';
+    d3_format_u32(dest,exponent);
+}
 void d3_format_float(char *dest,float f){
     D3U32 whole,fraction;char *p;int i;
     if(!d3_finite(f)){d3_string(dest,32,"ungueltig");return;}
-    if(f>1e9f || f< -1e9f){d3_string(dest,32,f<0?"<-1e9":">1e9");return;}
-    if(f<0){*dest++='-';f=-f;}whole=(D3U32)f;fraction=(D3U32)(((double)f-whole)*1000+0.5);if(fraction==1000){whole++;fraction=0;}
+    if(f<0){*dest++='-';f=-f;}
+    if(f>1e9f){format_large_float(dest,f);return;}
+    whole=(D3U32)f;fraction=(D3U32)(((double)f-whole)*1000+0.5);if(fraction==1000){whole++;fraction=0;}
     d3_format_u32(dest,whole);if(!fraction)return;p=dest+d3_length(dest);*p++='.';
     for(i=100;i>=1;i/=10){*p++=(char)('0'+fraction/(D3U32)i);fraction%=(D3U32)i;}*p=0;while(p>dest && p[-1]=='0')*--p=0;
 }

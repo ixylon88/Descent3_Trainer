@@ -55,6 +55,13 @@ namespace D3SaveEditor.Tests
                 Check(!off.Invulnerable && !off.IsCloaked && off.InvulnerableTime == 0 && off.CloakTime == 0 && !off.HasQuad && !off.HasEquipment("Afterburner"), name + ": effects and equipment can be disabled");
             }
             var baseBytes = File.ReadAllBytes(Path.Combine(dir, "fixture32")); var valid = SaveGame.Parse(baseBytes);
+            var maximum = valid.CurrentOptions();
+            maximum.Energy = maximum.Shields = float.MaxValue;
+            var atMaximum = valid.Edit(maximum).Parsed;
+            Check(atMaximum.Energy == float.MaxValue && atMaximum.Shields == float.MaxValue, "maximum Float32 energy and shields reopen exactly");
+            Check(atMaximum.Edit(atMaximum.CurrentOptions()).Bytes.SequenceEqual(atMaximum.Bytes), "maximum Float32 values survive an unchanged resave");
+            maximum.Energy = float.PositiveInfinity;
+            Reject(() => valid.Edit(maximum), "infinite energy is rejected");
             var missingShip = valid.CurrentOptions(); missingShip.UnlockBlackPyro = true;
             Reject(() => valid.Edit(missingShip), "Black Pyro unlock requires a saved definition");
             Reject(() => SaveGame.Parse(Changed(baseBytes, 32, BitConverter.GetBytes((short)3))), "unknown version rejected");

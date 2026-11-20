@@ -35,7 +35,9 @@ Die Bedienung des Reiters **Inventar / Schiffe** steht in der
 
 ## Was „maximieren“ bedeutet
 
-**Schild/Energie:** Die normalen Quelltext-Maxima betragen jeweils 200. Höhere Werte können bei Bedarf manuell eingegeben werden.
+Bei Schild und Energie setzt **Max 200** das normale Maximum. **Float-Max**
+setzt rund `3,40282347 × 10^38`, den größten endlichen Float32-Wert im
+Spielstand. Die HUD-Anzeige des Spiels kann dabei überlaufen.
 
 **Munition:** Der Spielstand enthält die aktuellen Mengen, aber nicht die normalen Kapazitäten des Schiffs. Diese stehen in den proprietären Spieldaten. Deshalb sind zwei Varianten vorhanden:
 
