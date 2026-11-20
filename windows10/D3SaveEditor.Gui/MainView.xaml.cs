@@ -349,10 +349,11 @@ namespace D3SaveEditor.Gui
         }
 
         private void OnMaxEnergy(object sender, RoutedEventArgs e) => EnergyInput.Text = "200";
+        private void OnEnergyStorageMax(object sender, RoutedEventArgs e) => EnergyInput.Text = "999999";
         private void OnMaxShields(object sender, RoutedEventArgs e) => ShieldsInput.Text = "200";
-        private void OnEnergyStorageMax(object sender, RoutedEventArgs e) => EnergyInput.Text = FormatFloat(float.MaxValue);
-        private void OnShieldsStorageMax(object sender, RoutedEventArgs e) => ShieldsInput.Text = FormatFloat(float.MaxValue);
+        private void OnShieldsStorageMax(object sender, RoutedEventArgs e) => ShieldsInput.Text = "999999";
         private void OnMaxAfterburner(object sender, RoutedEventArgs e) => AfterburnerInput.Text = "5";
+        private void OnAfterburnerStorageMax(object sender, RoutedEventArgs e) => AfterburnerInput.Text = "999999";
 
         private void OnWeaponChanged(object sender, PropertyChangedEventArgs e)
         {

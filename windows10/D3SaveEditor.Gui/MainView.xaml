@@ -184,17 +184,20 @@
                                 <TextBox x:Name="EnergyInput" Grid.Column="1" Style="{StaticResource NumericInput}" TextChanged="OnInputChanged" />
                                 <Button Grid.Column="2" Content="Max 200" Click="OnMaxEnergy" />
                                 <Button x:Name="EnergyStorageMaxButton" Grid.Column="3" Click="OnEnergyStorageMax"
-                                        Content="{Binding [PlayerFloatMax], Source={StaticResource Localization}, Mode=OneWay}"
-                                        ToolTip="{Binding [PlayerFloatMaxTip], Source={StaticResource Localization}, Mode=OneWay}" />
+                                        Content="{Binding [Player1MMax], Source={StaticResource Localization}, Mode=OneWay}"
+                                        ToolTip="{Binding [Player1MMaxTip], Source={StaticResource Localization}, Mode=OneWay}" />
                                 <Label Grid.Row="1" Style="{StaticResource ValueLabel}" Content="{Binding [Shields], Source={StaticResource Localization}, Mode=OneWay}" Target="{Binding ElementName=ShieldsInput}" />
                                 <TextBox x:Name="ShieldsInput" Grid.Row="1" Grid.Column="1" Style="{StaticResource NumericInput}" TextChanged="OnInputChanged" />
                                 <Button Grid.Row="1" Grid.Column="2" Content="Max 200" Click="OnMaxShields" />
                                 <Button x:Name="ShieldsStorageMaxButton" Grid.Row="1" Grid.Column="3" Click="OnShieldsStorageMax"
-                                        Content="{Binding [PlayerFloatMax], Source={StaticResource Localization}, Mode=OneWay}"
-                                        ToolTip="{Binding [PlayerFloatMaxTip], Source={StaticResource Localization}, Mode=OneWay}" />
+                                        Content="{Binding [Player1MMax], Source={StaticResource Localization}, Mode=OneWay}"
+                                        ToolTip="{Binding [Player1MMaxTip], Source={StaticResource Localization}, Mode=OneWay}" />
                                 <Label Grid.Row="2" Style="{StaticResource ValueLabel}" Content="{Binding [AfterburnerSeconds], Source={StaticResource Localization}, Mode=OneWay}" Target="{Binding ElementName=AfterburnerInput}" />
                                 <TextBox x:Name="AfterburnerInput" Grid.Row="2" Grid.Column="1" Style="{StaticResource NumericInput}" TextChanged="OnInputChanged" />
                                 <Button Grid.Row="2" Grid.Column="2" Content="{Binding [FillAfterburner], Source={StaticResource Localization}, Mode=OneWay}" Click="OnMaxAfterburner" />
+                                <Button x:Name="AfterBurnderMaxButton" Grid.Row="2" Grid.Column="3" Click="OnAfterburnerStorageMax"
+                                        Content="{Binding [Player1MMax], Source={StaticResource Localization}, Mode=OneWay}"
+                                        ToolTip="{Binding [Player1MMaxTip], Source={StaticResource Localization}, Mode=OneWay}" />
                                 <Label Grid.Row="3" Style="{StaticResource ValueLabel}" Content="{Binding [Lives], Source={StaticResource Localization}, Mode=OneWay}" Target="{Binding ElementName=LivesInput}" />
                                 <TextBox x:Name="LivesInput" Grid.Row="3" Grid.Column="1" Style="{StaticResource NumericInput}" TextChanged="OnInputChanged" />
                                 <Label Grid.Row="4" Style="{StaticResource ValueLabel}" Content="{Binding [Score], Source={StaticResource Localization}, Mode=OneWay}" Target="{Binding ElementName=ScoreInput}" />

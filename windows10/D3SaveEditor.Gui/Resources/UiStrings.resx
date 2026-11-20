@@ -530,10 +530,10 @@ Map: {5} entries · Inventory: {6} types · Countermeasures: {7} types
   <data name="CountermeasureHint" xml:space="preserve">
     <value>These limits apply to all ships. Extra saved countermeasure types stay in the loadout.</value>
   </data>
-  <data name="PlayerFloatMax" xml:space="preserve">
-    <value>Float max</value>
+  <data name="Player1MMax" xml:space="preserve">
+    <value>1M</value>
   </data>
-  <data name="PlayerFloatMaxTip" xml:space="preserve">
-    <value>Sets the largest finite Float32 value in the save. The HUD may overflow.</value>
+  <data name="Player1MMaxTip" xml:space="preserve">
+    <value>Sets a value of 1 million in the save. The HUD may overflow.</value>
   </data>
 </root>
