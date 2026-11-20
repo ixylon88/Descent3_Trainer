@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 #include "d3core.h"
+#include "d3text.h"
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -10,6 +11,18 @@ void d3_free(void *p) { if(p)HeapFree(GetProcessHeap(),0,p); }
 void *d3_alloc(D3U32 bytes) { return calloc(1,bytes ? bytes : 1); }
 void d3_free(void *p) { free(p); }
 #endif
+
+static int english;
+static const char *const editor_texts[][2] = {
+    {"", ""},
+#define D3_TEXT(key, de, en) {de, en},
+#include "d3strings.inc"
+#undef D3_TEXT
+};
+
+const char *d3_text(D3Text key) { return editor_texts[key][english]; }
+int d3_is_english(void) { return english; }
+void d3_set_english(int enabled) { english=enabled!=0; }
 
 const char *d3_weapon_names[20]={"Laser","Vauss","Microwave","Plasma","Fusion","Super Laser","Mass Driver","Napalm","EMD Gun","Omega","Concussion","Homing","Impact Mortar","Smart","Mega","Frag","Guided","Napalm Rocket","Cyclone","Black Shark"};
 const D3Supply d3_cargo_items[D3_CARGO_TYPES] = {
@@ -256,12 +269,12 @@ static int valid_player(D3Game *g,D3U32 p,const D3Object *o){
 int d3_parse(D3Game *g,const D3U8 *data,D3U32 size){
     D3Object o,next,best;D3U32 p,end,best_player=0;int expected,matches=0,candidates=0;
     d3_zero(g,sizeof(*g));g->data=data;g->size=size;
-    if(!data || size<600 || size>D3_MAX_SAVE)return fail(g,"Keine unterstuetzte Datei (600 Byte bis 32 MiB).");
-    if(!header(g))return fail(g,"Unbekannter oder beschaedigter Kopf-, Bild- oder Kartenblock (Format 0 bis 2 erwartet).");
+    if(!data || size<600 || size>D3_MAX_SAVE)return fail(g,T(UNSUPPORTED_SAVE));
+    if(!header(g))return fail(g,T(HEADER_ERROR));
     for(p=g->map+g->map_count;p+7<size;p++){
         if(data[p]!=11 || data[p+1]!=219 || data[p+2]!=186 || data[p+3]!=0 || data[p+4]!=4)continue;
         if(!object(data,size,p,g->version,&o) || o.id!=0 || (o.handle&0x7ffu)>=1500 || (o.batteries!=0 && o.batteries!=21))continue;
-        if(++candidates>64)return fail(g,"Zu viele moegliche Spielerobjekte. Datei wird nicht bearbeitet.");
+        if(++candidates>64)return fail(g,T(POSSIBLE_OBJECTS));
         end=o.end;expected=(int)(o.handle&0x7ffu)+1;
         while(end+5<size && d3_u32(data+end)==0xBADB0Bu && expected<1500){
             if(!object(data,size,end,g->version,&next) || (next.type!=255 && (next.handle&0x7ffu)!=(D3U32)expected)){end=size;break;}
@@ -270,8 +283,8 @@ int d3_parse(D3Game *g,const D3U8 *data,D3U32 size){
         if(end+2+496>size || d3_u16(data+end)!=496)continue;
         if(valid_player(g,end+2,&o)){matches++;best=o;best_player=end+2;}
     }
-    if(matches!=1)return fail(g,matches ? "Mehrere passende Spielerbloecke. Bearbeitung abgelehnt." : "Kein passender historischer 32-Bit-Spielerblock (496 Byte) gefunden.");
-    if(!valid_player(g,best_player,&best))return fail(g,"Spielerblock konnte nicht erneut bestaetigt werden.");
+    if(matches!=1)return fail(g,matches ? T(AMBIGUOUS_PLAYER) : T(NO_HISTORICAL_PLAYER));
+    if(!valid_player(g,best_player,&best))return fail(g,T(PLAYER_RECHECK));
     g->player=best_player;g->object=best;d3_string(g->callsign,20,(const char*)data+best_player+64);find_guidebot(g);g->error=0;return 1;
 }
 const char *d3_ship(const D3Game *g){return g->ships[d3_u32(g->data+g->player+60)];}
@@ -370,20 +383,20 @@ static const char *set_supplies(const D3Game *g,const D3Options *options,D3Inven
         int id=ids[i];
         int index,old_count;
         if (count==-1 || (count==0)!=removing) continue;
-        if (id<0) return "Die Gegenstands- oder Gegenmassnahmendefinition fehlt im Spielstand.";
+        if (id<0) return T(SUPPLY_DEFINITION);
         index=find_item(inv,type,id);
         old_count=index<0 ? 0 : inv->items[index].count;
         if (count==old_count) continue;
-        if (count<0 || (count>items[i].maximum && count>old_count)) return "Ungueltige Inventarmenge. Bitte das angezeigte Limit beachten.";
+        if (count<0 || (count>items[i].maximum && count>old_count)) return T(SUPPLY_RANGE);
         if (count==0) {
             remove_item(inv,type,id);
         } else if (index>=0) {
             inv->items[index].count=count;
         } else {
             int pickup=countermeasure ? g->countermeasure_pickups[i] : id;
-            if (pickup<0) return "Die Aufsammeldefinition der Gegenmassnahme fehlt im Spielstand.";
+            if (pickup<0) return T(PICKUP_DEFINITION);
             if (!add_item(inv,type,id,pickup,count,flags,items[i].key,items[i].name))
-                return "Inventar voll (maximal 10 Arten pro Liste).";
+                return T(INVENTORY_FULL);
         }
     }
     return 0;
@@ -411,21 +424,21 @@ static const char *edit_guidebot(const D3Game *g,const D3Options *o,D3U8 *values
     int i,count,requested=o->rename_guidebot || o->guidebot_chatter>=0;
     for (i=0; i<D3_GUIDEBOT_POWERUPS; i++) if (o->guidebot_counts[i]!=-1) requested=1;
     if (!requested) return 0;
-    if (!offset) return "Kein bearbeitbarer Guide-Bot-Zustand im Spielstand.";
+    if (!offset) return T(BOT_EDIT_UNAVAILABLE);
     d3_copy(values,g->data+offset,BOT_ITEMS+D3_GUIDEBOT_POWERUPS);
     if (o->rename_guidebot) {
         for (i=0; i<BOT_ITEMS && o->guidebot_name[i]; i++) {
             D3U8 ch=(D3U8)o->guidebot_name[i];
             if (ch<32 || ch==127) break;
         }
-        if (i==0 || i==BOT_ITEMS || o->guidebot_name[i]) return "Der Guide-Bot-Name muss 1 bis 7 ANSI-Zeichen enthalten.";
+        if (i==0 || i==BOT_ITEMS || o->guidebot_name[i]) return T(BOT_NAME_RANGE);
         d3_zero(values,BOT_ITEMS);
         d3_copy(values,o->guidebot_name,(D3U32)i);
     }
     for (i=0; i<D3_GUIDEBOT_POWERUPS; i++) {
         count=o->guidebot_counts[i];
         if (count==-1) continue;
-        if (count<0 || count>D3_GUIDEBOT_MAX_COUNT) return "Guide-Bot-Mengen muessen zwischen 0 und 127 liegen.";
+        if (count<0 || count>D3_GUIDEBOT_MAX_COUNT) return T(BOT_COUNTS_RANGE);
         values[BOT_ITEMS+i]=(D3U8)count;
     }
     if (!d3_equal(values,g->data+offset,BOT_ITEMS+D3_GUIDEBOT_POWERUPS))
@@ -445,13 +458,13 @@ int d3_edit(D3Game *g,const D3Options *o,D3Buffer *out){
     const char *error=0;out->data=0;out->size=0;
     error=edit_guidebot(g,o,bot_values,bot_flags,patches,&n);
     if (error) return fail(g,error);
-    if(!d3_finite(o->energy) || o->energy<0 || o->energy>1e9f || !d3_finite(o->shields) || o->shields<0 || o->shields>1e9f || !d3_finite(o->afterburner) || o->afterburner<0 || o->afterburner>1e6f || o->lives<0 || o->lives>255)return fail(g,"Ungueltiger Spielerwert.");
+    if(!d3_finite(o->energy) || o->energy<0 || o->energy>1e9f || !d3_finite(o->shields) || o->shields<0 || o->shields>1e9f || !d3_finite(o->afterburner) || o->afterburner<0 || o->afterburner>1e6f || o->lives<0 || o->lives>255)return fail(g,T(PLAYER_VALUES));
     oldmask=d3_u32(g->data+g->player+168);for(i=0;i<10;i++)if(o->owned[i])primaries++;
-    if(!primaries && (oldmask&1023))return fail(g,"Mindestens eine Primaerwaffe muss vorhanden bleiben.");
+    if(!primaries && (oldmask&1023))return fail(g,T(PRIMARY_REQUIRED));
     permissions=d3_ship_permissions(g);
     if (o->unlock_black_pyro || o->prefer_black_pyro) {
         D3U32 bit=d3_ship_permission_bit(g,D3_BLACK_PYRO);
-        if (!bit) return fail(g,"Die Schiffsdefinition Black Pyro fehlt im Spielstand.");
+        if (!bit) return fail(g,T(BLACK_PYRO_MISSING));
         /* A reset leaves the user free to re-enable individual ships before saving. */
         if (o->prefer_black_pyro) permissions &= ~SHIP_PERMISSION_MASK;
         permissions |= bit;
@@ -460,12 +473,12 @@ int d3_edit(D3Game *g,const D3Options *o,D3Buffer *out){
         D3U32 bit;
         if (!o->unlock_ships[i]) continue;
         bit=d3_ship_permission_bit(g,d3_standard_ships[i]);
-        if (!bit) return fail(g,"Die Schiffsdefinition fehlt im Spielstand.");
+        if (!bit) return fail(g,T(SHIP_DEFINITION));
         permissions|=bit;
     }
-    if(o->quad>=0 && g->object.batteries!=21) return fail(g,"Quad-Laser nicht zuweisbar: Waffenbatterien fehlen.");
+    if(o->quad>=0 && g->object.batteries!=21) return fail(g,T(QUAD_UNAVAILABLE));
     lists=(D3Inventory*)d3_alloc(2*sizeof(*lists));inv_bytes=(D3U8*)d3_alloc(2*D3_INVENTORY_BYTES);verify=(D3Game*)d3_alloc(sizeof(*verify));
-    if(!lists || !inv_bytes || !verify){error="Nicht genug Arbeitsspeicher.";goto cleanup;}
+    if(!lists || !inv_bytes || !verify){error=T(OUT_OF_MEMORY);goto cleanup;}
     d3_copy(&lists[0],&g->inventory,sizeof(*lists));
     d3_copy(&lists[1],&g->countermeasures,sizeof(*lists));
     /* Remove first to allow replacements in a full inventory. */
@@ -473,7 +486,7 @@ int d3_edit(D3Game *g,const D3Options *o,D3Buffer *out){
         if (!equipment(&lists[0],g->cooler_id,"AB Cooler",128,o->cooler,removing) ||
             !equipment(&lists[0],g->converter_id,"Energy to Shield Converter",131,o->converter,removing) ||
             !equipment(&lists[0],g->quad_id,"Quad Laser",132,o->quad,removing)) {
-            error="Ausruestungsdefinition fehlt oder Inventar ist voll (maximal 10 Arten).";goto cleanup;
+            error=T(EQUIPMENT_UNAVAILABLE);goto cleanup;
         }
         error=set_supplies(g,o,&lists[0],0,removing);
         if (error) goto cleanup;
@@ -482,7 +495,7 @@ int d3_edit(D3Game *g,const D3Options *o,D3Buffer *out){
     }
     if (o->active_countermeasure_weapon_id>=0) {
         int selected=find_item(&lists[1],OBJ_WEAPON,o->active_countermeasure_weapon_id);
-        if (selected<0) {error="Die gewaehlte Gegenmassnahme muss im Bestand vorhanden sein.";goto cleanup;}
+        if (selected<0) {error=T(COUNTERMEASURE_NOT_OWNED);goto cleanup;}
         lists[1].selected=selected;
     }
     if(o->quad>=0){
@@ -506,21 +519,21 @@ int d3_edit(D3Game *g,const D3Options *o,D3Buffer *out){
         flags=d3_u32(effect+3)&~(1u|512u|1024u|4096u);if(o->cloak)flags|=1;d3_put32(effect+3,flags);d3_put_float(effect+3+12,o->cloak?1e9f:0);d3_put_float(effect+3+36,0);d3_put_float(effect+3+40,0);
         add_patch(patches,&n,g->object.effect_record,g->object.has_effect?167:1,effect,167);
     }
-    if(o->reveal_map){map=(D3U8*)d3_alloc(g->map_count);if(!map){error="Nicht genug Arbeitsspeicher.";goto cleanup;}for(i=0;i<(int)g->map_count;i++)map[i]=1;add_patch(patches,&n,g->map,g->map_count,map,g->map_count);}
+    if(o->reveal_map){map=(D3U8*)d3_alloc(g->map_count);if(!map){error=T(OUT_OF_MEMORY);goto cleanup;}for(i=0;i<(int)g->map_count;i++)map[i]=1;add_patch(patches,&n,g->map,g->map_count,map,g->map_count);}
     d3_put_float(shield,o->shields);add_patch(patches,&n,g->object.shield,4,shield,4);add_patch(patches,&n,g->player,496,raw,496);
     for(i=0;i<n;i++)for(j=i+1;j<n;j++)if(patches[j].start<patches[i].start){temp=patches[i];patches[i]=patches[j];patches[j]=temp;}
     total=g->size;source_pos=0;
     for(i=0;i<n;i++){
-        if(patches[i].start<source_pos || patches[i].start>g->size || patches[i].length>g->size-patches[i].start){error="Ueberlappende Aenderungen.";goto cleanup;}
+        if(patches[i].start<source_pos || patches[i].start>g->size || patches[i].length>g->size-patches[i].start){error=T(OVERLAPPING_EDITS);goto cleanup;}
         source_pos=patches[i].start+patches[i].length;total=total-patches[i].length+patches[i].size;
     }
-    if(total>D3_MAX_SAVE){error="Die Ausgabedatei ist zu gross.";goto cleanup;}
-    out->data=(D3U8*)d3_alloc(total);if(!out->data){error="Nicht genug Arbeitsspeicher.";goto cleanup;}out->size=total;source_pos=dest_pos=0;
+    if(total>D3_MAX_SAVE){error=T(OUTPUT_TOO_LARGE);goto cleanup;}
+    out->data=(D3U8*)d3_alloc(total);if(!out->data){error=T(OUT_OF_MEMORY);goto cleanup;}out->size=total;source_pos=dest_pos=0;
     for(i=0;i<n;i++){
         d3_copy(out->data+dest_pos,g->data+source_pos,patches[i].start-source_pos);dest_pos+=patches[i].start-source_pos;
         d3_copy(out->data+dest_pos,patches[i].bytes,patches[i].size);dest_pos+=patches[i].size;source_pos=patches[i].start+patches[i].length;
     }d3_copy(out->data+dest_pos,g->data+source_pos,g->size-source_pos);
-    if(!d3_parse(verify,out->data,out->size)){error="Bearbeitete Ausgabe konnte nicht erneut eingelesen werden.";goto cleanup;}
+    if(!d3_parse(verify,out->data,out->size)){error=T(OUTPUT_INVALID);goto cleanup;}
 cleanup:
     d3_free(lists);d3_free(inv_bytes);d3_free(verify);d3_free(map);
     if(error){d3_free(out->data);out->data=0;out->size=0;return fail(g,error);}g->error=0;return 1;
@@ -529,19 +542,19 @@ cleanup:
 int d3_limits_table(const D3U8 *data,D3U32 size,const char *ship,D3U16 caps[21],int *found,const char **error){
     Reader r=reader(data,size,0),s;D3U32 start,length,end;int type,version,i,j,cap;char name[512];D3U16 values[21];*error=0;
     while(r.p<r.n && r.ok){
-        type=u8(&r);start=r.p;length=(D3U32)i32(&r);if(length<4 || start>size || length>size-start){*error="Ungueltige Laenge einer Spieldatenseite.";return 0;}end=start+length;
+        type=u8(&r);start=r.p;length=(D3U32)i32(&r);if(length<4 || start>size || length>size-start){*error=T(DATA_PAGE_LENGTH);return 0;}end=start+length;
         if(type==6){
-            s=reader(data,end,r.p);version=i16(&s);if(version<1 || version>6){*error="Unbekannte Version einer Schiffsdefinition.";return 0;}
+            s=reader(data,end,r.p);version=i16(&s);if(version<1 || version>6){*error=T(SHIP_VERSION);return 0;}
             z(&s,name,512);for(i=0;i<6;i++)z(&s,0,0);skip(&s,8+68+12);
             for(i=0;i<21;i++){
-                u8(&s);for(j=0;j<3;j++)z(&s,0,0);cap=i32(&s);if(cap<0 || cap>65535){*error="Unbekannte Munitionsgrenze.";return 0;}values[i]=(D3U16)cap;
+                u8(&s);for(j=0;j<3;j++)z(&s,0,0);cap=i32(&s);if(cap<0 || cap>65535){*error=T(AMMO_LIMIT);return 0;}values[i]=(D3U16)cap;
                 skip(&s,version>=6?211:210);for(j=0;j<16;j++)z(&s,0,0);
             }
-            if(!s.ok || s.p!=end){*error="Beschaedigte Schiffsdefinition.";return 0;}
+            if(!s.ok || s.p!=end){*error=T(SHIP_CORRUPT);return 0;}
             if(d3_string_iequal(name,ship)){d3_copy(caps,values,sizeof(values));*found=1;}
         }r.p=end;
     }
-    if(!r.ok){*error="Spieldatentabelle ist abgeschnitten.";return 0;}return 1;
+    if(!r.ok){*error=T(TABLE_TRUNCATED);return 0;}return 1;
 }
 
 int d3_number(const char *text,float *value){

@@ -6,11 +6,22 @@
 #include <sys/stat.h>
 #include "../src/d3core.h"
 #include "../src/d3files.h"
+#include "../src/d3text.h"
 extern int d3_test_move_count,d3_test_fail_move_a,d3_test_fail_move_b;
 static int assertions;
 static void check(int ok,const char *message){if(!ok){fprintf(stderr,"FAIL: %s\n",message);exit(1);}assertions++;printf("PASS: %s\n",message);}
 static D3Buffer read_file(const char *path){D3Buffer b;const char *error;if(!d3_read_file(path,&b,&error)){fprintf(stderr,"%s: %s\n",path,error);exit(1);}return b;}
 static D3Game *parse(const D3Buffer *b){D3Game *g=d3_alloc(sizeof(*g));if(!d3_parse(g,b->data,b->size)){fprintf(stderr,"Parse: %s\n",g->error);exit(1);}return g;}
+static void localization_test(void) {
+    D3Game *game=d3_alloc(sizeof(*game));
+    d3_set_english(1);
+    check(!d3_parse(game,0,0) && strstr(game->error,"Unsupported save size")==game->error,
+          "English parser errors follow the interface language");
+    d3_set_english(0);
+    check(!d3_parse(game,0,0) && strstr(game->error,"Keine unterstuetzte Datei")==game->error,
+          "German parser errors follow the interface language");
+    d3_free(game);
+}
 static void write_bytes(const char *p,const D3U8 *bytes,D3U32 n){FILE *f=fopen(p,"wb");if(!f || fwrite(bytes,1,n,f)!=n || fclose(f))exit(2);}
 static void hash_hex(const D3U8 hash[32],char out[65]){int i;for(i=0;i<32;i++)sprintf(out+2*i,"%02x",hash[i]);out[64]=0;}
 static void hash_test(void){
@@ -213,6 +224,7 @@ int main(int argc,char **argv){
     for(i=0;i<6;i++){snprintf(path,260,"%s/%s",argv[1],names[i]);fixture(path,i==0 && argc>2?argv[2]:0);}
     snprintf(path,260,"%s/fixture98-loadout",argv[1]);loadout_tests(path);
     snprintf(path,260,"%s/fixture98-guidebot",argv[1]);guidebot_tests(path);
+    localization_test();
     snprintf(work,260,"%s/io-%ld",argv[1],(long)getpid());if(mkdir(work,0700))return 2;
     snprintf(path,260,"%s/fixture98",argv[1]);file_tests(path,work);table_tests(work);check(rmdir(work)==0,"all temporary file-test artifacts cleaned");
     printf("\n%d assertions passed. Windows 98 runtime and in-game loading remain untested.\n",assertions);return 0;

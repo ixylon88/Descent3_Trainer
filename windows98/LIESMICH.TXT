@@ -23,6 +23,7 @@ uebernimmt das Spiel ihn beim naechsten passenden Briefing automatisch.
 In der Hauptkampagne ist der Wechsel von Level 1 zu 2 bestaetigt.
 Guide-Bot bearbeitet Name, Funkmeldungen und Vorraete (0 bis 127),
 wenn der Skriptblock eindeutig zum Guide-Bot des Spielers passt.
+DE/EN schaltet die Sprache um. Die Anleitung steht im Reiter Hilfe / Help.
 
 MAXIMA
 Energie und Schild: normal jeweils 200.

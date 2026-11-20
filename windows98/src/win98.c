@@ -6,9 +6,10 @@
 #include <commctrl.h>
 #include <commdlg.h>
 #include "d3core.h"
+#include "d3text.h"
 #include "d3files.h"
 
-enum {ID_OPEN=100,ID_SAVE,ID_COPY,ID_RESET,ID_LIMITS,ID_HELP,ID_TAB,
+enum {ID_OPEN=100,ID_SAVE,ID_COPY,ID_RESET,ID_LIMITS,ID_LANGUAGE,ID_TAB,
 ID_ENERGY=120,ID_SHIELDS,ID_AB,ID_LIVES,ID_SCORE,ID_ENERGY_MAX,ID_SHIELD_MAX,ID_AB_MAX,
 ID_GOD=140,ID_CLOAK,ID_COOLER,ID_CONVERTER,ID_QUAD,ID_MAP,ID_GOD_RENEW,ID_CLOAK_RENEW,
 ID_PRIMARY=160,ID_SECONDARY,ID_CHECK,
@@ -18,9 +19,9 @@ ID_CARGO_COUNT=320,ID_COUNTERMEASURE_COUNT=330,ID_SHIP_UNLOCK=340,ID_BLACK_PYRO_
 ID_COUNTERMEASURE_OWN=360,ID_COUNTERMEASURE_MAX=370,ID_COUNTERMEASURE_ACTIVE=380,ID_ALL_COUNTERMEASURES,ID_NONE_COUNTERMEASURES,ID_CAP_COUNTERMEASURES,
 ID_GUIDEBOT_NAME=390,ID_GUIDEBOT_CHATTER,ID_GUIDEBOT_SUPPLY=400};
 enum {PLAYER_PAGE,PRIMARY_PAGE,SECONDARY_PAGE,COUNTERMEASURE_PAGE,INVENTORY_PAGE,GUIDEBOT_PAGE,REVIEW_PAGE,HELP_PAGE};
-typedef struct {HWND hwnd;int page,needs_file;} Widget;
+typedef struct {HWND hwnd;int page,needs_file;D3Text caption;} Widget;
 static HINSTANCE instance;
-static HWND main_window,tab,info,status,hint,review;
+static HWND main_window,tab,info,status,hint,review,language_button;
 static HFONT font,title_font;
 static Widget widgets[256];static int widget_count,selected_page,loading,dirty;
 static HWND energy,shields,afterburner,lives,score,god,cloak,cooler,converter,quad,full_map,god_time,cloak_time,map_info;
@@ -40,15 +41,17 @@ static D3U8 original_hash[32];
 static char opened_path[260],energy_text[48],shield_text[48],ab_text[48],caps_ship[128];
 static D3U16 caps[21];static int caps_loaded;
 static int god_request=-1,cloak_request=-1,cooler_request=-1,converter_request=-1,quad_request=-1;
+static const D3Text page_names[]={D3_TEXT_PLAYER_TAB,D3_TEXT_PRIMARY_TAB,D3_TEXT_SECONDARY_TAB,
+    D3_TEXT_COUNTERMEASURE_TAB,D3_TEXT_INVENTORY_TAB,D3_TEXT_GUIDEBOT_TAB,D3_TEXT_REVIEW_TAB,D3_TEXT_HELP_TAB};
 
 static int checked(HWND h){return SendMessageA(h,BM_GETCHECK,0,0)==BST_CHECKED;}
 static void check(HWND h,int on){SendMessageA(h,BM_SETCHECK,on?BST_CHECKED:BST_UNCHECKED,0);}
 static void text(HWND h,const char *s){SetWindowTextA(h,s);}
 static void get_text(HWND h,char *s,int cap){GetWindowTextA(h,s,cap);}
 static void set_status(const char *s){text(status,s);}
-static void error_box(const char *s){set_status(s);MessageBoxA(main_window,s,"Descent 3 Editor - Fehler",MB_OK|MB_ICONEXCLAMATION);}
-static void changed(void){if(!loading && game){dirty=1;SetWindowTextA(main_window,"* Descent 3 Savegame Editor - Windows 98");set_status("Aenderungen noch nicht gespeichert.");}}
-static int discard(void){return !dirty || MessageBoxA(main_window,"Nicht gespeicherte Aenderungen verwerfen?","Aenderungen",MB_YESNO|MB_ICONQUESTION)==IDYES;}
+static void error_box(const char *s){set_status(s);MessageBoxA(main_window,s,T(ERROR_TITLE),MB_OK|MB_ICONEXCLAMATION);}
+static void changed(void){if(!loading && game){dirty=1;SetWindowTextA(main_window,"* Descent 3 Savegame Editor - Windows 98");set_status(T(DIRTY));}}
+static int discard(void){return !dirty || MessageBoxA(main_window,T(DISCARD_QUESTION),T(CHANGES),MB_YESNO|MB_ICONQUESTION)==IDYES;}
 static HWND control(const char *cls,const char *label,DWORD style,int x,int y,int w,int h,int id,int page,int needs_file){
     HWND hwnd=CreateWindowExA(d3_string_equal(cls,"EDIT")?WS_EX_CLIENTEDGE:0,cls,label,WS_CHILD|WS_VISIBLE|style,x,y,w,h,main_window,(HMENU)(INT_PTR)id,instance,0);
     SendMessageA(hwnd,WM_SETFONT,(WPARAM)font,TRUE);
@@ -62,6 +65,23 @@ static HWND edit(int x,int y,int w,int id,int page,int numeric){
     HWND h=control("EDIT","",ES_AUTOHSCROLL|WS_TABSTOP|(numeric?ES_NUMBER:0),x,y,w,22,id,page,1);SendMessageA(h,EM_LIMITTEXT,40,0);return h;
 }
 static void group(const char *s,int x,int y,int w,int h,int page){control("BUTTON",s,BS_GROUPBOX,x,y,w,h,0,page,0);}
+static HWND remember_caption(HWND hwnd,D3Text caption) {
+    widgets[widget_count-1].caption=caption;
+    return hwnd;
+}
+static HWND local_label(D3Text caption,int x,int y,int w,int h,int page) {
+    return remember_caption(label(d3_text(caption),x,y,w,h,page),caption);
+}
+static HWND local_button(D3Text caption,int x,int y,int w,int id,int page,int needs_file) {
+    return remember_caption(button(d3_text(caption),x,y,w,id,page,needs_file),caption);
+}
+static HWND local_checkbox(D3Text caption,int x,int y,int w,int id,int page) {
+    return remember_caption(checkbox(d3_text(caption),x,y,w,id,page),caption);
+}
+static void local_group(D3Text caption,int x,int y,int w,int h,int page) {
+    group(d3_text(caption),x,y,w,h,page);
+    widgets[widget_count-1].caption=caption;
+}
 static void apply_visibility(void){int i;for(i=0;i<widget_count;i++)if(widgets[i].page>=0)ShowWindow(widgets[i].hwnd,widgets[i].page==selected_page?SW_SHOW:SW_HIDE);ShowWindow(hint,selected_page==PRIMARY_PAGE || selected_page==SECONDARY_PAGE?SW_SHOW:SW_HIDE);}
 static void enable_controls(void){int i;for(i=0;i<widget_count;i++)if(widgets[i].needs_file)EnableWindow(widgets[i].hwnd,game!=0);}
 static int use_caps(void){return game && caps_loaded && d3_string_iequal(caps_ship,d3_ship(game));}
@@ -71,9 +91,9 @@ static void refresh_weapons(int normalize){
     if(!game)return;
     for(i=0;i<20;i++){
         EnableWindow(ammo[i],checked(owned[i]) && uses_ammo(i));EnableWindow(max_buttons[i],checked(owned[i]) && uses_ammo(i));
-        if(!uses_ammo(i))text(cap_labels[i],"Energiewaffe");else if(use_caps()){d3_format_u32(buffer,caps[i]);text(cap_labels[i],buffer);}else text(cap_labels[i],"nicht geladen");
+        if(!uses_ammo(i))text(cap_labels[i],T(ENERGY_WEAPON));else if(use_caps()){d3_format_u32(buffer,caps[i]);text(cap_labels[i],buffer);}else text(cap_labels[i],T(LIMIT_NOT_LOADED));
     }
-    text(hint,use_caps()?"Schiffslimit fuellt vorhandene Munitionswaffen auf. Max fuellt eine Zeile.":"Schiffslimit braucht Spieldaten fuer das aktuelle Schiff. Max pro Zeile setzt bis dahin 65.535.");
+    text(hint,use_caps()?T(LIMITS_HINT):T(LIMITS_MISSING_HINT));
     if(normalize){
         loading=1;p=(int)SendMessageA(primary,CB_GETCURSEL,0,0);
         if(p<0 || !checked(owned[p])){for(first=0;first<10;first++)if(checked(owned[first]))break;SendMessageA(primary,CB_SETCURSEL,first==10?(WPARAM)-1:(WPARAM)first,0);}
@@ -83,7 +103,7 @@ static void refresh_weapons(int normalize){
     }
 }
 static void append_number(char *out,D3U32 capacity,D3U32 value){char s[24];d3_format_u32(s,value);d3_append(out,capacity,s);}
-static void effect_label(HWND h,int request,int on,float duration){char s[100],n[48];if(request>=0){text(h,request?"Beim Speichern: 1.000.000.000 s Restdauer":"Beim Speichern: inaktiv");return;}if(!on){text(h,"Gespeichert: inaktiv");return;}if(duration>=1e8f){text(h,"Gespeichert: lange Restdauer");return;}d3_string(s,100,"Gespeichert: ");d3_format_float(n,duration);d3_append(s,100,n);d3_append(s,100," s Restdauer");text(h,s);}
+static void effect_label(HWND h,int request,int on,float duration){char s[100],n[48];if(request>=0){text(h,request?T(EFFECT_LONG_PENDING):T(EFFECT_OFF_PENDING));return;}if(!on){text(h,T(EFFECT_OFF));return;}if(duration>=1e8f){text(h,T(EFFECT_LONG));return;}d3_string(s,100,T(SAVED_PREFIX));d3_format_float(n,duration);d3_append(s,100,n);d3_append(s,100,T(REMAINING));text(h,s);}
 static void refresh_effect_timers(void) {
     effect_label(god_time,god_request,d3_god(game),d3_float(game->data+game->player+116));
     effect_label(cloak_time,cloak_request,d3_cloak(game),game->object.has_effect?d3_float(game->data+game->object.effect+12):0);
@@ -93,11 +113,11 @@ static void refresh_effect_timers(void) {
 static void file_report(char *out,D3U32 cap){
     int i;char hash[65];const char *hex="0123456789abcdef";
     for(i=0;i<32;i++){hash[2*i]=hex[original_hash[i]>>4];hash[2*i+1]=hex[original_hash[i]&15];}hash[64]=0;
-    d3_string(out,cap,"DATEI\r\n");d3_append(out,cap,opened_path);d3_append(out,cap,"\r\n\r\nSHA-256: ");d3_append(out,cap,hash);
-    d3_append(out,cap,"\r\nFormat: ");append_number(out,cap,(D3U32)game->version);d3_append(out,cap,"; historischer Spielerblock: 496 Byte\r\nSpieler: ");d3_append(out,cap,game->callsign);
-    d3_append(out,cap,"\r\nSchiff: ");d3_append(out,cap,d3_ship(game));
-    d3_append(out,cap,"\r\nInventararten: ");append_number(out,cap,(D3U32)game->inventory.count);
-    d3_append(out,cap," | Gegenmassnahmen: ");append_number(out,cap,(D3U32)game->countermeasures.count);d3_append(out,cap," Arten\r\n");
+    d3_string(out,cap,T(FILE_HEADING));d3_append(out,cap,opened_path);d3_append(out,cap,"\r\n\r\nSHA-256: ");d3_append(out,cap,hash);
+    d3_append(out,cap,"\r\nFormat: ");append_number(out,cap,(D3U32)game->version);d3_append(out,cap,T(PLAYER_LAYOUT));d3_append(out,cap,game->callsign);
+    d3_append(out,cap,T(SHIP_LABEL));d3_append(out,cap,d3_ship(game));
+    d3_append(out,cap,T(ITEM_TYPES));append_number(out,cap,(D3U32)game->inventory.count);
+    d3_append(out,cap,T(MEASURE_TYPES));append_number(out,cap,(D3U32)game->countermeasures.count);d3_append(out,cap,T(TYPE_SUFFIX));
 }
 static void load_supply_counts(HWND *inputs,int countermeasure,int size) {
     int i,count;
@@ -165,7 +185,7 @@ static void load_countermeasures(void) {
     SendMessageA(countermeasure_active,CB_RESETCONTENT,0,0);
     SendMessageA(extra_countermeasures,LB_RESETCONTENT,0,0);
     countermeasure_choice_count=0;
-    add_countermeasure_choice(-1,"Keine Gegenmassnahme");
+    add_countermeasure_choice(-1,T(NO_COUNTERMEASURE));
     for (i=0; i<D3_COUNTERMEASURE_TYPES; i++) {
         if (d3_supply_count(game,1,i)<0) continue;
         index=add_countermeasure_choice(i,d3_countermeasure_types[i].name);
@@ -241,53 +261,83 @@ static void select_black_pyro(void) {
     refresh_ship_controls();
     changed();
 }
+static void refresh_ship_labels(void) {
+    int i;
+    char name[64];
+    for (i=0; i<D3_STANDARD_SHIPS; i++) {
+        d3_string(name,sizeof(name),d3_standard_ships[i]);
+        if (!d3_ship_permission_bit(game,d3_standard_ships[i])) d3_append(name,sizeof(name),T(MISSING_SUFFIX));
+        text(unlock_ships[i],name);
+    }
+    d3_string(name,sizeof(name),D3_BLACK_PYRO);
+    if (!d3_ship_permission_bit(game,D3_BLACK_PYRO)) d3_append(name,sizeof(name),T(MISSING_SUFFIX));
+    text(unlock_black_pyro,name);
+}
 static void load_inventory_values(void) {
     int i;
     D3U32 bit,permissions=d3_ship_permissions(game);
-    char name[64];
     load_supply_counts(cargo_counts,0,D3_CARGO_TYPES);
     load_countermeasures();
     for (i=0; i<D3_STANDARD_SHIPS; i++) {
         bit=d3_ship_permission_bit(game,d3_standard_ships[i]);
         check(unlock_ships[i],(permissions & bit)!=0);
-        d3_string(name,sizeof(name),d3_standard_ships[i]);
-        if (!bit) d3_append(name,sizeof(name)," (fehlt)");
-        text(unlock_ships[i],name);
     }
     bit=d3_ship_permission_bit(game,D3_BLACK_PYRO);
     check(unlock_black_pyro,(permissions & bit)!=0);
-    text(unlock_black_pyro,bit ? D3_BLACK_PYRO : D3_BLACK_PYRO " (fehlt)");
+    refresh_ship_labels();
     prefer_black_pyro=0;
     refresh_ship_controls();
     SendMessageA(saved_inventory,LB_RESETCONTENT,0,0);
     for (i=0; i<game->inventory.count; i++) add_inventory_row(saved_inventory,&game->inventory.items[i]);
     if (!game->inventory.count)
-        SendMessageA(saved_inventory,LB_ADDSTRING,0,(LPARAM)"Das Inventar ist leer.");
+        SendMessageA(saved_inventory,LB_ADDSTRING,0,(LPARAM)T(INVENTORY_EMPTY));
+}
+static void refresh_guidebot_text(void) {
+    const D3GuideBot *bot=&game->guidebot;
+    char value[48],line[112];
+    text(guidebot_info,bot->offset ? T(BOT_INFO) : T(BOT_UNAVAILABLE));
+    line[0]=0;
+    if (bot->offset) {
+        d3_format_float(value,bot->shields);
+        d3_string(line,sizeof(line),T(BOT_SHIELDS));d3_append(line,sizeof(line),value);
+    }
+    text(guidebot_shield,line);
 }
 static void load_guidebot_values(void) {
     const D3GuideBot *bot=&game->guidebot;
     int i,available=bot->offset!=0;
-    char value[48],line[112];
-    text(guidebot_info,available ? "Name, Funkmeldungen und Vorraete im gespeicherten Level. Mengen von 0 bis 127." :
-        "Dieser Spielstand enthaelt keinen eindeutig erkannten Guide-Bot-Zustand.");
+    char value[24];
+    refresh_guidebot_text();
     text(guidebot_name,bot->name);
     EnableWindow(guidebot_name,available);
     check(guidebot_chatter,bot->chatter);
     EnableWindow(guidebot_chatter,available);
-    line[0]=0;
-    if (available) {
-        d3_format_float(value,bot->shields);
-        d3_string(line,sizeof(line),"Gespeicherter Schildwert: ");d3_append(line,sizeof(line),value);
-    }
-    text(guidebot_shield,line);
     for (i=0; i<D3_GUIDEBOT_POWERUPS; i++) {
         d3_format_u32(value,bot->counts[i]);
         text(guidebot_supplies[i],available ? value : "-");
         EnableWindow(guidebot_supplies[i],available);
     }
 }
+static void refresh_map_text(void) {
+    char line[192];
+    int i,visible=0;
+    for (i=0; i<=game->highest_room; i++) if (game->data[game->map+i]) visible++;
+    d3_string(line,sizeof(line),T(MAP_PREFIX));
+    append_number(line,sizeof(line),(D3U32)visible);
+    d3_append(line,sizeof(line),T(OF));
+    append_number(line,sizeof(line),(D3U32)(game->highest_room+1));
+    d3_append(line,sizeof(line),T(ROOM_SUFFIX));
+    text(map_info,line);
+}
+static void refresh_review_text(void) {
+    char report[1400];
+    file_report(report,sizeof(report));
+    d3_append(report,sizeof(report),"\r\n");
+    d3_append(report,sizeof(report),dirty ? T(DIRTY) : T(NO_CHANGES));
+    text(review,report);
+}
 static void load_values(void){
-    D3Options o;int i,visible=0,has_second=0;char s[1400],n[48];
+    D3Options o;int i,has_second=0;char s[1400],n[48];
     if(!game)return;loading=1;enable_controls();d3_current(game,&o);
     d3_format_float(energy_text,o.energy);d3_format_float(shield_text,o.shields);d3_format_float(ab_text,o.afterburner);text(energy,energy_text);text(shields,shield_text);text(afterburner,ab_text);
     d3_format_u32(n,(D3U32)o.lives);text(lives,n);d3_format_i32(n,o.score);text(score,n);
@@ -299,20 +349,18 @@ static void load_values(void){
     SendMessageA(primary,CB_SETCURSEL,o.primary,0);SendMessageA(secondary,CB_SETCURSEL,has_second?(WPARAM)(o.secondary-9):0,0);
     god_request=cloak_request=cooler_request=converter_request=quad_request=-1;
     refresh_effect_timers();
-    for(i=0;i<=game->highest_room;i++)if(game->data[game->map+i])visible++;
-    d3_string(s,1400,"Gespeichert sichtbar: ");append_number(s,1400,(D3U32)visible);d3_append(s,1400," von ");append_number(s,1400,(D3U32)(game->highest_room+1));d3_append(s,1400," Raumplaetzen.\r\nOhne Haken bleibt die Erkundung erhalten.");text(map_info,s);
+    refresh_map_text();
     d3_string(s,1400,opened_path);d3_append(s,1400,"\r\n");d3_append(s,1400,game->callsign);d3_append(s,1400," | ");d3_append(s,1400,d3_ship(game));d3_append(s,1400," | ");d3_append(s,1400,game->mission);d3_append(s,1400," / Level ");append_number(s,1400,(D3U32)game->level);text(info,s);
-    file_report(s,1400);d3_append(s,1400,"\r\nKeine geplanten Aenderungen.");text(review,s);
-    dirty=0;SetWindowTextA(main_window,"Descent 3 Savegame Editor - Windows 98");refresh_weapons(0);loading=0;
+    dirty=0;refresh_review_text();SetWindowTextA(main_window,"Descent 3 Savegame Editor - Windows 98");refresh_weapons(0);loading=0;
 }
 static int load_path(const char *path,int ask){
     D3Buffer bytes;D3Game *parsed;const char *error;char full[260];DWORD n;
     if(ask && !discard())return 0;
-    n=GetFullPathNameA(path,260,full,0);if(!n || n>=260){error_box("Ungueltiger oder zu langer ANSI-Dateipfad.");return 0;}
+    n=GetFullPathNameA(path,260,full,0);if(!n || n>=260){error_box(T(INVALID_PATH));return 0;}
     if(!d3_read_file(full,&bytes,&error)){error_box(error);return 0;}
-    parsed=(D3Game*)d3_alloc(sizeof(*parsed));if(!parsed){d3_free(bytes.data);error_box("Nicht genug Arbeitsspeicher.");return 0;}
+    parsed=(D3Game*)d3_alloc(sizeof(*parsed));if(!parsed){d3_free(bytes.data);error_box(T(OUT_OF_MEMORY));return 0;}
     if(!d3_parse(parsed,bytes.data,bytes.size)){error_box(parsed->error);d3_free(parsed);d3_free(bytes.data);return 0;}
-    d3_free(game);d3_free(opened.data);game=parsed;opened=bytes;d3_string(opened_path,260,full);d3_sha256(bytes.data,bytes.size,original_hash);load_values();set_status("Spielstand geladen. Original unveraendert.");return 1;
+    d3_free(game);d3_free(opened.data);game=parsed;opened=bytes;d3_string(opened_path,260,full);d3_sha256(bytes.data,bytes.size,original_hash);load_values();set_status(T(LOADED));return 1;
 }
 static int dialog_path(char path[260],int save,const char *title,const char *filter){
     OPENFILENAMEA ofn;BOOL ok;d3_zero(&ofn,sizeof(ofn));
@@ -320,9 +368,9 @@ static int dialog_path(char path[260],int save,const char *title,const char *fil
     ofn.lStructSize=76;ofn.hwndOwner=main_window;ofn.lpstrFile=path;ofn.nMaxFile=260;ofn.lpstrFilter=filter;ofn.nFilterIndex=1;ofn.lpstrTitle=title;
     ofn.Flags=OFN_EXPLORER|OFN_PATHMUSTEXIST|OFN_NOCHANGEDIR|(save?OFN_OVERWRITEPROMPT:OFN_FILEMUSTEXIST);
     ok=save?GetSaveFileNameA(&ofn):GetOpenFileNameA(&ofn);
-    if(!ok && CommDlgExtendedError())error_box("Der Dateidialog konnte nicht geoeffnet werden.");return ok!=0;
+    if(!ok && CommDlgExtendedError())error_box(T(DIALOG_FAILED));return ok!=0;
 }
-static void choose_open(void){char path[260];path[0]=0;if(dialog_path(path,0,"Descent-3-Spielstand oeffnen (z.B. saveg000)","Spielstaende (saveg*)\0saveg*\0Alle Dateien\0*.*\0\0"))load_path(path,1);}
+static void choose_open(void){char path[260];path[0]=0;if(dialog_path(path,0,T(OPEN_TITLE),T(OPEN_FILTER)))load_path(path,1);}
 static int read_float(HWND h,const char *initial,float original,float *value){char s[64];get_text(h,s,64);if(d3_string_equal(s,initial)){*value=original;return 1;}return d3_number(s,value);}
 static int read_supply_counts(HWND *inputs,int countermeasure,const D3Supply *items,int size,int *counts) {
     int i,current,maximum;
@@ -378,112 +426,159 @@ static void report_supply_counts(char *report,D3U32 size,const D3Supply *items,c
 }
 static int build_output(D3Buffer *out){
     D3Options o;char s[4096],n[48];int i;
-    if(!game)return 0;if(!read_options(&o)){error_box("Ungueltige Zahl. Bitte Spielerwerte, Munition und Mengen pruefen.");return 0;}
+    if(!game)return 0;if(!read_options(&o)){error_box(T(INVALID_NUMBER));return 0;}
     if(!d3_edit(game,&o,out)){error_box(game->error);return 0;}
-    file_report(s,4096);d3_append(s,4096,"\r\nGEPRUEFTE AUSGABE\r\nGroesse: ");append_number(s,4096,game->size);d3_append(s,4096," -> ");append_number(s,4096,out->size);d3_append(s,4096," Byte\r\n");
-    if(out->size==game->size && d3_equal(out->data,game->data,out->size))d3_append(s,4096,"Keine Aenderung. Ausgabe ist byte-identisch.\r\n");
+    file_report(s,4096);d3_append(s,4096,T(VERIFIED_HEADING));append_number(s,4096,game->size);d3_append(s,4096," -> ");append_number(s,4096,out->size);d3_append(s,4096,T(SIZE_SUFFIX));
+    if(out->size==game->size && d3_equal(out->data,game->data,out->size))d3_append(s,4096,T(IDENTICAL));
     else{
-        d3_append(s,4096,"Energie: ");d3_format_float(n,o.energy);d3_append(s,4096,n);d3_append(s,4096," | Schild: ");d3_format_float(n,o.shields);d3_append(s,4096,n);d3_append(s,4096,"\r\n");
+        d3_append(s,4096,T(ENERGY_PREFIX));d3_format_float(n,o.energy);d3_append(s,4096,n);d3_append(s,4096,T(SHIELD_PREFIX));d3_format_float(n,o.shields);d3_append(s,4096,n);d3_append(s,4096,"\r\n");
         for(i=0;i<20;i++)if(o.owned[i]){d3_append(s,4096,d3_weapon_names[i]);d3_append(s,4096,": ");append_number(s,4096,o.ammo[i]);d3_append(s,4096,"\r\n");}
-        if(o.god>=0)d3_append(s,4096,o.god?"God-Mode: lange Restdauer\r\n":"God-Mode: aus\r\n");
-        if(o.cloak>=0)d3_append(s,4096,o.cloak?"Tarnung: lange Restdauer\r\n":"Tarnung: aus\r\n");
-        if(o.cooler>=0)d3_append(s,4096,o.cooler?"Kuehler hinzufuegen\r\n":"Kuehler entfernen\r\n");
-        if(o.converter>=0)d3_append(s,4096,o.converter?"Konverter hinzufuegen\r\n":"Konverter entfernen\r\n");
-        if(o.quad>=0)d3_append(s,4096,o.quad?"Quad-Laser an\r\n":"Quad-Laser aus\r\n");if(o.reveal_map)d3_append(s,4096,"Karte vollstaendig aufdecken\r\n");
+        if(o.god>=0)d3_append(s,4096,o.god?T(GOD_LONG):T(GOD_OFF));
+        if(o.cloak>=0)d3_append(s,4096,o.cloak?T(CLOAK_LONG):T(CLOAK_OFF));
+        if(o.cooler>=0)d3_append(s,4096,o.cooler?T(COOLER_ADD):T(COOLER_REMOVE));
+        if(o.converter>=0)d3_append(s,4096,o.converter?T(CONVERTER_ADD):T(CONVERTER_REMOVE));
+        if(o.quad>=0)d3_append(s,4096,o.quad?T(QUAD_ON):T(QUAD_OFF));if(o.reveal_map)d3_append(s,4096,T(MAP_REVEALED));
         report_supply_counts(s,sizeof(s),d3_cargo_items,o.cargo_counts,D3_CARGO_TYPES);
         report_supply_counts(s,sizeof(s),d3_countermeasure_types,o.countermeasure_counts,D3_COUNTERMEASURE_TYPES);
         if (o.active_countermeasure_weapon_id>=0) {
             SendMessageA(countermeasure_active,WM_GETTEXT,sizeof(n),(LPARAM)n);
-            d3_append(s,sizeof(s),"Aktive Gegenmassnahme: ");d3_append(s,sizeof(s),n);d3_append(s,sizeof(s),"\r\n");
+            d3_append(s,sizeof(s),T(ACTIVE_COUNTERMEASURE_REPORT));d3_append(s,sizeof(s),n);d3_append(s,sizeof(s),"\r\n");
         }
         for (i=0; i<D3_STANDARD_SHIPS; i++) {
             if (!o.unlock_ships[i]) continue;
-            d3_append(s,sizeof(s),d3_standard_ships[i]);d3_append(s,sizeof(s)," freischalten\r\n");
+            d3_append(s,sizeof(s),d3_standard_ships[i]);d3_append(s,sizeof(s),T(UNLOCK_SHIP_SUFFIX));
         }
-        if (o.prefer_black_pyro) d3_append(s,sizeof(s),"Schiffsfreigaben auf Black Pyro zuruecksetzen und angewaehlte Schiffe erlauben\r\n");
-        else if (o.unlock_black_pyro) d3_append(s,sizeof(s),"Black Pyro freischalten\r\n");
-        if (o.rename_guidebot || o.guidebot_chatter>=0) d3_append(s,sizeof(s),"Guide-Bot-Eigenschaften bearbeiten\r\n");
+        if (o.prefer_black_pyro) d3_append(s,sizeof(s),T(RESET_PERMISSIONS));
+        else if (o.unlock_black_pyro) d3_append(s,sizeof(s),T(UNLOCK_BLACK_PYRO));
+        if (o.rename_guidebot || o.guidebot_chatter>=0) d3_append(s,sizeof(s),T(EDIT_BOT_PROPERTIES));
         for (i=0; i<D3_GUIDEBOT_POWERUPS; i++) {
             if (o.guidebot_counts[i]<0) continue;
-            d3_append(s,sizeof(s),"Guide-Bot-Vorraete bearbeiten\r\n");
+            d3_append(s,sizeof(s),T(EDIT_BOT_SUPPLIES));
             break;
         }
     }
-    d3_append(s,4096,"\r\nAusgabe wurde erneut erfolgreich eingelesen.");text(review,s);set_status("Pruefung bestanden. Ausgabe konnte erneut gelesen werden.");return 1;
+    d3_append(s,4096,T(OUTPUT_REREAD));text(review,s);set_status(T(VERIFIED));return 1;
 }
 static void save_game(int copy){
     char path[260],s[900];D3Buffer out;D3WriteReport report;
     if(!build_output(&out))return;d3_string(path,260,opened_path);
-    if(copy){d3_append(path,260,".edited");if(!dialog_path(path,1,"Bearbeiteten Spielstand als Kopie speichern","Alle Dateien\0*.*\0\0")){d3_free(out.data);return;}}
+    if(copy){d3_append(path,260,".edited");if(!dialog_path(path,1,T(COPY_TITLE),T(ALL_FILES_FILTER))){d3_free(out.data);return;}}
     if(!d3_write_file(opened_path,original_hash,path,&out,&report)){
         d3_string(s,900,report.error);if(report.recovery[0]){d3_append(s,900,"\r\nOriginal-Backup: ");d3_append(s,900,report.recovery);}error_box(s);d3_free(out.data);return;
     }
     /* Install the already validated output snapshot without discarding edits. */
     d3_free(opened.data);opened=out;d3_parse(game,opened.data,opened.size);d3_string(opened_path,260,path);d3_sha256(opened.data,opened.size,original_hash);load_values();
-    d3_string(s,900,"Gespeichert.");if(report.backup[0]){d3_append(s,900," Backup: ");d3_append(s,900,report.backup);}set_status(s);
+    d3_string(s,900,T(SAVED));if(report.backup[0]){d3_append(s,900," Backup: ");d3_append(s,900,report.backup);}set_status(s);
 }
 static void choose_limits(void){
     char path[260];D3U16 parsed[21];const char *error;if(!game)return;path[0]=0;
-    if(!dialog_path(path,0,"Table.gam, d3.hog oder ein Missionsarchiv waehlen","Spieldaten\0*.gam;*.hog;*.mn3\0Alle Dateien\0*.*\0\0"))return;
-    if(!d3_load_limits_file(path,d3_ship(game),parsed,&error)){error_box(error);return;}d3_copy(caps,parsed,42);d3_string(caps_ship,128,d3_ship(game));caps_loaded=1;refresh_weapons(0);set_status("Schiffslimits geladen. Max verwendet jetzt diese normalen Kapazitaeten.");
+    if(!dialog_path(path,0,T(LIMITS_TITLE),T(GAME_DATA_FILTER)))return;
+    if(!d3_load_limits_file(path,d3_ship(game),parsed,&error)){error_box(error);return;}d3_copy(caps,parsed,42);d3_string(caps_ship,128,d3_ship(game));caps_loaded=1;refresh_weapons(0);set_status(T(LIMITS_LOADED));
 }
 static void maximum_one(int i,int storage){char s[24];d3_format_u32(s,(!storage && use_caps())?caps[i]:65535);text(ammo[i],s);changed();}
 static void select_all(int first,int on){int i;for(i=first;i<first+10;i++){check(owned[i],on);if(!on)text(ammo[i],"0");}refresh_weapons(1);changed();}
-static void max_all(int first,int storage){int i;if(!storage && !use_caps()){error_box("Bitte zuerst passende Schiffslimits aus Table.gam / d3.hog laden.");return;}for(i=first;i<first+10;i++)if(checked(owned[i]) && uses_ammo(i))maximum_one(i,storage);}
-static void show_help(void) {
-    selected_page=HELP_PAGE;
-    SendMessageA(tab,TCM_SETCURSEL,HELP_PAGE,0);
-    apply_visibility();
+static void max_all(int first,int storage){int i;if(!storage && !use_caps()){error_box(T(LOAD_LIMITS_FIRST));return;}for(i=first;i<first+10;i++)if(checked(owned[i]) && uses_ammo(i))maximum_one(i,storage);}
+static void label_tabs(UINT message) {
+    TCITEMA item;
+    int i;
+    d3_zero(&item,sizeof(item));
+    item.mask=TCIF_TEXT;
+    for (i=0; i<(int)(sizeof(page_names)/sizeof(page_names[0])); i++) {
+        item.pszText=(LPSTR)d3_text(page_names[i]);
+        SendMessageA(tab,message,(WPARAM)i,(LPARAM)&item);
+    }
+}
+static void rename_first_choice(HWND combo,const char *caption) {
+    LRESULT selection=SendMessageA(combo,CB_GETCURSEL,0,0);
+    SendMessageA(combo,CB_DELETESTRING,0,0);
+    SendMessageA(combo,CB_INSERTSTRING,0,(LPARAM)caption);
+    SendMessageA(combo,CB_SETCURSEL,(WPARAM)selection,0);
+}
+static void apply_language(int english) {
+    int i;
+    d3_set_english(english);
+    loading=1;
+    label_tabs(TCM_SETITEMA);
+    for (i=0; i<widget_count; i++)
+        if (widgets[i].caption!=D3_TEXT_NONE) text(widgets[i].hwnd,d3_text(widgets[i].caption));
+    rename_first_choice(secondary,T(NO_SECONDARY));
+    if (game) {
+        if (countermeasure_choice_count>0) rename_first_choice(countermeasure_active,T(NO_COUNTERMEASURE));
+        if (!game->inventory.count) {
+            SendMessageA(saved_inventory,LB_RESETCONTENT,0,0);
+            SendMessageA(saved_inventory,LB_ADDSTRING,0,(LPARAM)T(INVENTORY_EMPTY));
+        }
+        refresh_ship_labels();
+        refresh_guidebot_text();
+        refresh_map_text();
+        refresh_effect_timers();
+        refresh_weapons(0);
+        refresh_review_text();
+        set_status(dirty ? T(DIRTY) : T(LOADED));
+    } else {
+        text(info,T(NO_SAVE));
+        text(review,T(REVIEW_HINT));
+        set_status(T(READY));
+    }
+    loading=0;
+}
+static void open_language_menu(void) {
+    HMENU menu=CreatePopupMenu();
+    RECT anchor;
+    int chosen=0,english=d3_is_english();
+    if (!menu) return;
+    if (GetWindowRect(language_button,&anchor) &&
+        AppendMenuA(menu,MF_STRING | (english ? 0 : MF_CHECKED),1,"&Deutsch") &&
+        AppendMenuA(menu,MF_STRING | (english ? MF_CHECKED : 0),2,"&English"))
+        chosen=TrackPopupMenu(menu,TPM_LEFTALIGN|TPM_RETURNCMD,anchor.left,anchor.bottom,0,main_window,0);
+    DestroyMenu(menu);
+    if (chosen) apply_language(chosen==2);
 }
 static void help_page(void) {
-    group("Spielstaende oeffnen und speichern",24,146,710,83,HELP_PAGE);
-    label("Im Spiel speichern und das Spiel beenden. Danach eine Datei wie saveg000 aus dem Ordner savegame oeffnen. "
-          "Beim Ueberschreiben entsteht eine datierte Sicherung. Eine Kopie mit Endung .edited vor dem Laden in einen savegNNN-Slot umbenennen.",
+    local_group(D3_TEXT_HELP_SAVES,24,146,710,83,HELP_PAGE);
+    local_label(D3_TEXT_HELP_OPEN,
           38,167,681,54,HELP_PAGE);
-    group("Waffen und Gegenmassnahmen",24,232,710,70,HELP_PAGE);
-    label("Schiffslimits laden liest normale Munitionsgrenzen aus Table.gam, d3.hog oder einem Missionsarchiv. "
-          "Vorhandene: Schiffslimit fuellt Waffen damit auf. Fuer Gegenmassnahmen gelten die angezeigten Spiellimits.",38,253,681,42,HELP_PAGE);
-    group("Unverwundbarkeit und Tarnung",24,305,710,65,HELP_PAGE);
-    label("Das Haekchen schaltet den Effekt ein oder aus. Verlaengern setzt die Restdauer eines aktiven Effekts "
-          "beim Speichern auf 1.000.000.000 Sekunden.",38,326,681,37,HELP_PAGE);
-    group("Black Pyro und Guide-Bot",24,373,710,83,HELP_PAGE);
-    label("Nur Black Pyro erlauben waehlt die anderen Schiffe ab. Das Spiel uebernimmt den Black Pyro beim passenden Briefing. "
-          "Der Reiter Guide-Bot bearbeitet Name, Funkmeldungen und Vorraete, wenn der Skriptzustand erkannt wurde.",38,394,681,53,HELP_PAGE);
+    local_group(D3_TEXT_HELP_LOADOUT,24,232,710,70,HELP_PAGE);
+    local_label(D3_TEXT_HELP_LIMITS,38,253,681,42,HELP_PAGE);
+    local_group(D3_TEXT_HELP_EFFECTS,24,305,710,65,HELP_PAGE);
+    local_label(D3_TEXT_HELP_TIMERS,38,326,681,37,HELP_PAGE);
+    local_group(D3_TEXT_HELP_SHIPS_AND_BOT,24,373,710,83,HELP_PAGE);
+    local_label(D3_TEXT_HELP_PYRO_AND_BOT,38,394,681,53,HELP_PAGE);
 }
 static void player_page(void){
-    group("Versorgung",24,146,338,181,0);
-    label("Energie",38,170,100,18,0);energy=edit(145,166,100,ID_ENERGY,0,0);button("Max 200",255,165,92,ID_ENERGY_MAX,0,1);
-    label("Schild",38,198,100,18,0);shields=edit(145,194,100,ID_SHIELDS,0,0);button("Max 200",255,193,92,ID_SHIELD_MAX,0,1);
-    label("Nachbrenner (s)",38,226,100,18,0);afterburner=edit(145,222,100,ID_AB,0,0);button("Voll (5 s)",255,221,92,ID_AB_MAX,0,1);
-    label("Leben",38,254,100,18,0);lives=edit(145,250,100,ID_LIVES,0,1);
-    label("Punktestand",38,282,100,18,0);score=edit(145,278,155,ID_SCORE,0,0);
-    group("Ausruestung",24,335,338,119,0);cooler=checkbox("Nachbrenner-Kuehler",38,356,300,ID_COOLER,0);converter=checkbox("Energie -> Schild-Konverter",38,384,300,ID_CONVERTER,0);quad=checkbox("Quad-Laser",38,412,300,ID_QUAD,0);
-    group("Effekte",378,146,356,151,0);god=checkbox("God-Mode / unverwundbar",392,167,213,ID_GOD,0);god_renew=button("Verlaengern",610,165,109,ID_GOD_RENEW,0,1);god_time=label("",392,191,327,18,0);
-    cloak=checkbox("Cloaked-Mode / getarnt",392,226,213,ID_CLOAK,0);cloak_renew=button("Verlaengern",610,224,109,ID_CLOAK_RENEW,0,1);cloak_time=label("",392,250,327,18,0);
-    group("Karte",378,308,356,146,0);full_map=checkbox("Gesamte Karte aufdecken",392,331,325,ID_MAP,0);map_info=label("",392,365,326,55,0);
+    local_group(D3_TEXT_SUPPLIES,24,146,338,181,0);
+    local_label(D3_TEXT_ENERGY,38,170,100,18,0);energy=edit(145,166,100,ID_ENERGY,0,0);button("Max 200",255,165,92,ID_ENERGY_MAX,0,1);
+    local_label(D3_TEXT_SHIELDS,38,198,100,18,0);shields=edit(145,194,100,ID_SHIELDS,0,0);button("Max 200",255,193,92,ID_SHIELD_MAX,0,1);
+    local_label(D3_TEXT_AFTERBURNER,38,226,100,18,0);afterburner=edit(145,222,100,ID_AB,0,0);local_button(D3_TEXT_FILL_AFTERBURNER,255,221,92,ID_AB_MAX,0,1);
+    local_label(D3_TEXT_LIVES,38,254,100,18,0);lives=edit(145,250,100,ID_LIVES,0,1);
+    local_label(D3_TEXT_SCORE,38,282,100,18,0);score=edit(145,278,155,ID_SCORE,0,0);
+    local_group(D3_TEXT_EQUIPMENT,24,335,338,119,0);cooler=local_checkbox(D3_TEXT_COOLER,38,356,300,ID_COOLER,0);converter=local_checkbox(D3_TEXT_CONVERTER,38,384,300,ID_CONVERTER,0);quad=local_checkbox(D3_TEXT_QUAD_LASERS,38,412,300,ID_QUAD,0);
+    local_group(D3_TEXT_EFFECTS,378,146,356,151,0);god=local_checkbox(D3_TEXT_INVULNERABILITY,392,167,213,ID_GOD,0);god_renew=local_button(D3_TEXT_EXTEND_EFFECT,610,165,109,ID_GOD_RENEW,0,1);god_time=label("",392,191,327,18,0);
+    cloak=local_checkbox(D3_TEXT_CLOAK,392,226,213,ID_CLOAK,0);cloak_renew=local_button(D3_TEXT_EXTEND_EFFECT,610,224,109,ID_CLOAK_RENEW,0,1);cloak_time=label("",392,250,327,18,0);
+    local_group(D3_TEXT_MAP,378,308,356,146,0);full_map=local_checkbox(D3_TEXT_REVEAL_MAP,392,331,325,ID_MAP,0);map_info=label("",392,365,326,55,0);
 }
 static void weapon_page(int first,int page){
-    int i,y;HWND combo;label("Aktive Waffe:",28,151,100,18,page);
+    int i,y;HWND combo;local_label(D3_TEXT_ACTIVE_WEAPON,28,151,100,18,page);
     combo=control("COMBOBOX","",CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP,131,147,230,200,first?ID_SECONDARY:ID_PRIMARY,page,1);
-    if(first){secondary=combo;SendMessageA(combo,CB_ADDSTRING,0,(LPARAM)"Keine Sekundaerwaffe");}else primary=combo;
+    if(first){secondary=combo;SendMessageA(combo,CB_ADDSTRING,0,(LPARAM)T(NO_SECONDARY));}else primary=combo;
     for(i=first;i<first+10;i++)SendMessageA(combo,CB_ADDSTRING,0,(LPARAM)d3_weapon_names[i]);
-    label("Vorhanden",28,181,75,18,page);label("Waffe",110,181,180,18,page);label("Munition / Stueck",298,181,115,18,page);label("Max",423,181,65,18,page);label("Schiffslimit",512,181,185,18,page);
+    local_label(D3_TEXT_OWNED,28,181,75,18,page);local_label(D3_TEXT_WEAPON,110,181,180,18,page);local_label(D3_TEXT_AMMO,298,181,115,18,page);label("Max",423,181,65,18,page);local_label(D3_TEXT_SHIP_LIMIT,512,181,185,18,page);
     for(i=first;i<first+10;i++){
         y=201+(i-first)*23;owned[i]=checkbox("",51,y,35,ID_OWN+i,page);label(d3_weapon_names[i],110,y+2,180,18,page);
         ammo[i]=edit(298,y-1,106,ID_AMMO+i,page,1);SendMessageA(ammo[i],EM_LIMITTEXT,5,0);
-        max_buttons[i]=control("BUTTON","Max",BS_PUSHBUTTON|WS_TABSTOP,420,y-1,70,22,ID_MAX+i,page,1);cap_labels[i]=label("nicht geladen",512,y+2,185,18,page);
+        max_buttons[i]=control("BUTTON","Max",BS_PUSHBUTTON|WS_TABSTOP,420,y-1,70,22,ID_MAX+i,page,1);cap_labels[i]=local_label(D3_TEXT_LIMIT_NOT_LOADED,512,y+2,185,18,page);
     }
-    button("Alle auswaehlen",28,437,130,first?ID_ALL_SEC:ID_ALL_PRI,page,1);button("Alle abwaehlen",166,437,130,first?ID_NONE_SEC:ID_NONE_PRI,page,1);
-    button("Vorhandene: Schiffslimit",304,437,204,first?ID_CAP_SEC:ID_CAP_PRI,page,1);button("Vorhandene: 65.535",516,437,204,first?ID_STORE_SEC:ID_STORE_PRI,page,1);
+    local_button(D3_TEXT_SELECT_ALL,28,437,130,first?ID_ALL_SEC:ID_ALL_PRI,page,1);local_button(D3_TEXT_CLEAR_ALL,166,437,130,first?ID_NONE_SEC:ID_NONE_PRI,page,1);
+    local_button(D3_TEXT_FILL_SHIP_LIMIT,304,437,204,first?ID_CAP_SEC:ID_CAP_PRI,page,1);local_button(D3_TEXT_FILL_STORAGE,516,437,204,first?ID_STORE_SEC:ID_STORE_PRI,page,1);
 }
 static void countermeasure_page(void) {
     int page=COUNTERMEASURE_PAGE,i,y;
     char value[24];
-    label("Aktive Gegenmassnahme:",28,151,153,18,page);
+    local_label(D3_TEXT_ACTIVE_COUNTERMEASURE,28,151,153,18,page);
     countermeasure_active=control("COMBOBOX","",CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP,
         180,147,230,235,ID_COUNTERMEASURE_ACTIVE,page,1);
-    label("Vorhanden",28,181,75,18,page);label("Gegenmassnahme",110,181,180,18,page);
-    label("Menge",298,181,115,18,page);label("Max",423,181,65,18,page);label("Spiellimit",512,181,185,18,page);
+    local_label(D3_TEXT_OWNED,28,181,75,18,page);local_label(D3_TEXT_COUNTERMEASURE,110,181,180,18,page);
+    local_label(D3_TEXT_COUNT,298,181,115,18,page);label("Max",423,181,65,18,page);local_label(D3_TEXT_GAME_LIMIT,512,181,185,18,page);
     for (i=0; i<D3_COUNTERMEASURE_TYPES; i++) {
         y=201+i*23;
         countermeasure_owned[i]=checkbox("",51,y,35,ID_COUNTERMEASURE_OWN+i,page);
@@ -494,66 +589,67 @@ static void countermeasure_page(void) {
         d3_format_u32(value,(D3U32)d3_countermeasure_types[i].maximum);
         label(value,512,y+2,185,18,page);
     }
-    button("Alle auswaehlen",28,326,130,ID_ALL_COUNTERMEASURES,page,1);
-    button("Alle abwaehlen",166,326,130,ID_NONE_COUNTERMEASURES,page,1);
-    button("Vorhandene: Spiellimit",304,326,204,ID_CAP_COUNTERMEASURES,page,1);
-    label("Die Limits gelten fuer alle Schiffe. Weitere gespeicherte Gegenmassnahmen bleiben im Bestand.",28,359,701,18,page);
+    local_button(D3_TEXT_SELECT_ALL,28,326,130,ID_ALL_COUNTERMEASURES,page,1);
+    local_button(D3_TEXT_CLEAR_ALL,166,326,130,ID_NONE_COUNTERMEASURES,page,1);
+    local_button(D3_TEXT_FILL_GAME_LIMIT,304,326,204,ID_CAP_COUNTERMEASURES,page,1);
+    local_label(D3_TEXT_COUNTERMEASURE_HINT,28,359,701,18,page);
     extra_countermeasures=control("LISTBOX","",LBS_NOINTEGRALHEIGHT|WS_BORDER|WS_VSCROLL|WS_HSCROLL|WS_TABSTOP,
         28,383,701,73,0,page,1);
     SendMessageA(extra_countermeasures,LB_SETHORIZONTALEXTENT,2800,0);
 }
 static void inventory_page(int page) {
     int i,y;
-    group("Gegenstaende",24,146,338,181,page);
+    local_group(D3_TEXT_ITEMS,24,146,338,181,page);
     for (i=0; i<D3_CARGO_TYPES; i++) {
         y=172+i*25;
         label(d3_cargo_items[i].name,38,y+2,172,18,page);
         cargo_counts[i]=edit(217,y,130,ID_CARGO_COUNT+i,page,1);
         SendMessageA(cargo_counts[i],EM_LIMITTEXT,7,0);
     }
-    label("0 entfernt den Eintrag. Kuehler, Konverter und\r\nQuad-Laser stehen im Spieler-Tab.",38,232,309,40,page);
-    group("Schiffsfreigaben",378,146,356,181,page);
+    local_label(D3_TEXT_CARGO_HINT,38,232,309,40,page);
+    local_group(D3_TEXT_SHIP_PERMISSIONS,378,146,356,190,page);
     for (i=0; i<D3_STANDARD_SHIPS; i++)
         unlock_ships[i]=checkbox(d3_standard_ships[i],392,166+i*17,325,ID_SHIP_UNLOCK+i,page);
     unlock_black_pyro=checkbox(D3_BLACK_PYRO,392,217,325,ID_BLACK_PYRO_UNLOCK,page);
-    prefer_black_pyro_button=button("Nur Black Pyro erlauben",392,240,198,ID_BLACK_PYRO_PREFER,page,1);
-    label("Der Knopf waehlt alle anderen Schiffe ab. Da der Black Pyro im Auswahlmenue fehlt, "
-          "uebernimmt ihn das Spiel als einziges erlaubtes Schiff beim passenden Briefing automatisch.",392,270,325,53,page);
-    label("Gespeicherte Eintraege",28,337,697,18,page);
-    saved_inventory=control("LISTBOX","",LBS_NOINTEGRALHEIGHT|WS_BORDER|WS_VSCROLL|WS_HSCROLL|WS_TABSTOP,28,355,701,101,0,page,1);
+    prefer_black_pyro_button=local_button(D3_TEXT_BLACK_PYRO_ONLY,392,240,198,ID_BLACK_PYRO_PREFER,page,1);
+    local_label(D3_TEXT_BLACK_PYRO_HINT,392,270,325,64,page);
+    local_label(D3_TEXT_SAVED_ENTRIES,28,344,697,18,page);
+    saved_inventory=control("LISTBOX","",LBS_NOINTEGRALHEIGHT|WS_BORDER|WS_VSCROLL|WS_HSCROLL|WS_TABSTOP,28,362,701,94,0,page,1);
     SendMessageA(saved_inventory,LB_SETHORIZONTALEXTENT,2800,0);
 }
 static void guidebot_page(void) {
-    const char *supplies[]={"Feuerloescher","Go Wingnut","Fernsteuerung","Begleitschutz","Antivirus"};
+    const D3Text supplies[]={D3_TEXT_BOT_EXTINGUISHER,D3_TEXT_BOT_WINGNUT,D3_TEXT_BOT_CONTROL,
+        D3_TEXT_BOT_GUARDIAN,D3_TEXT_BOT_ANTIVIRUS};
     int i,y,page=GUIDEBOT_PAGE;
     guidebot_info=label("",28,150,701,31,page);
-    group("Eigenschaften",24,186,338,161,page);
+    local_group(D3_TEXT_PROPERTIES,24,186,338,161,page);
     label("Name",38,214,124,18,page);
     guidebot_name=edit(171,210,172,ID_GUIDEBOT_NAME,page,0);
     SendMessageA(guidebot_name,EM_LIMITTEXT,7,0);
-    guidebot_chatter=checkbox("Regelmaessige Funkmeldungen",38,243,303,ID_GUIDEBOT_CHATTER,page);
+    guidebot_chatter=local_checkbox(D3_TEXT_BOT_CHATTER,38,243,303,ID_GUIDEBOT_CHATTER,page);
     guidebot_shield=label("",38,271,303,34,page);
-    group("Vorraete",378,186,356,161,page);
+    local_group(D3_TEXT_BOT_SUPPLIES,378,186,356,161,page);
     for (i=0; i<D3_GUIDEBOT_POWERUPS; i++) {
         y=210+i*25;
-        label(supplies[i],392,y+4,198,18,page);
+        local_label(supplies[i],392,y+4,198,18,page);
         guidebot_supplies[i]=edit(606,y,111,ID_GUIDEBOT_SUPPLY+i,page,1);
         SendMessageA(guidebot_supplies[i],EM_LIMITTEXT,3,0);
     }
 }
 static void make_ui(void){
-    TCITEMA item;HWND heading;int i;const char *names[]={"Spieler","Primaerwaffen","Sekundaerwaffen","Gegenmassnahmen","Inventar / Schiffe","Guide-Bot","Datei / Pruefung","Hilfe"};
+    HWND heading;
     font=(HFONT)GetStockObject(DEFAULT_GUI_FONT);title_font=CreateFontA(-18,0,0,0,FW_BOLD,0,0,0,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH|FF_SWISS,"MS Sans Serif");
     heading=label("DESCENT 3  -  SAVEGAME EDITOR / WINDOWS 98",12,10,736,25,-1);SendMessageA(heading,WM_SETFONT,(WPARAM)title_font,TRUE);
-    button("Oeffnen...",12,42,105,ID_OPEN,-1,0);button("Speichern + Backup",123,42,144,ID_SAVE,-1,1);button("Kopie speichern...",273,42,128,ID_COPY,-1,1);
-    button("Originalwerte",407,42,105,ID_RESET,-1,1);button("Schiffslimits laden...",518,42,150,ID_LIMITS,-1,1);button("Hilfe",674,42,74,ID_HELP,-1,0);
-    info=label("Noch kein Spielstand geoeffnet. Im Spiel speichern, dann saveg000 usw. oeffnen.",12,76,736,34,-1);
+    local_button(D3_TEXT_OPEN,12,42,88,ID_OPEN,-1,0);local_button(D3_TEXT_SAVE,106,42,134,ID_SAVE,-1,1);local_button(D3_TEXT_COPY,246,42,128,ID_COPY,-1,1);
+    local_button(D3_TEXT_RESET,380,42,100,ID_RESET,-1,1);local_button(D3_TEXT_LOAD_LIMITS,486,42,144,ID_LIMITS,-1,1);
+    language_button=local_button(D3_TEXT_LANGUAGE,636,42,112,ID_LANGUAGE,-1,0);
+    info=label(T(NO_SAVE),12,76,736,34,-1);
     tab=control(WC_TABCONTROLA,"",WS_TABSTOP|WS_CLIPSIBLINGS,12,114,736,355,ID_TAB,-1,0);
-    d3_zero(&item,sizeof(item));item.mask=TCIF_TEXT;for(i=0;i<(int)(sizeof(names)/sizeof(names[0]));i++){item.pszText=(LPSTR)names[i];SendMessageA(tab,TCM_INSERTITEMA,(WPARAM)i,(LPARAM)&item);}
+    label_tabs(TCM_INSERTITEMA);
     player_page();weapon_page(0,PRIMARY_PAGE);weapon_page(10,SECONDARY_PAGE);countermeasure_page();inventory_page(INVENTORY_PAGE);guidebot_page();help_page();
-    button("Aenderungen pruefen",28,147,178,ID_CHECK,REVIEW_PAGE,1);
-    review=control("EDIT","Geplante Aenderungen und Dateidaten erscheinen hier.\r\n\r\nDer Editor bearbeitet vorhandene Spielstaende; er erzeugt keinen\r\nvollstaendigen Levelzustand allein aus dem Quelltext.",ES_MULTILINE|ES_READONLY|ES_AUTOVSCROLL|WS_VSCROLL|WS_HSCROLL,28,180,701,276,0,REVIEW_PAGE,0);
-    hint=label("",12,475,736,16,-1);status=label("Bereit.",12,495,736,32,-1);
+    local_button(D3_TEXT_CHECK_CHANGES,28,147,178,ID_CHECK,REVIEW_PAGE,1);
+    review=control("EDIT",T(REVIEW_HINT),ES_MULTILINE|ES_READONLY|ES_AUTOVSCROLL|WS_VSCROLL|WS_HSCROLL,28,180,701,276,0,REVIEW_PAGE,0);
+    hint=label("",12,475,736,16,-1);status=local_label(D3_TEXT_READY,12,495,736,32,-1);
     enable_controls();selected_page=0;apply_visibility();
 }
 static LRESULT CALLBACK window_proc(HWND hwnd,UINT message,WPARAM w,LPARAM l){
@@ -563,7 +659,7 @@ static LRESULT CALLBACK window_proc(HWND hwnd,UINT message,WPARAM w,LPARAM l){
     case WM_NOTIFY:notify=(NMHDR*)l;if(notify->idFrom==ID_TAB && notify->code==TCN_SELCHANGE){selected_page=(int)SendMessageA(tab,TCM_GETCURSEL,0,0);apply_visibility();}return 0;
     case WM_COMMAND:
         id=LOWORD(w);code=HIWORD(w);if(loading)return 0;
-        if(id==ID_OPEN){choose_open();return 0;}if(id==ID_HELP){show_help();return 0;}if(!game)return 0;
+        if(id==ID_OPEN){choose_open();return 0;}if(id==ID_LANGUAGE){open_language_menu();return 0;}if(!game)return 0;
         if(code==EN_CHANGE){
             if(id>=ID_COUNTERMEASURE_COUNT && id<ID_COUNTERMEASURE_COUNT+D3_COUNTERMEASURE_TYPES){refresh_countermeasures(1);changed();}
             if((id>=ID_ENERGY && id<=ID_SCORE) || (id>=ID_AMMO && id<ID_AMMO+20) ||
@@ -583,7 +679,7 @@ static LRESULT CALLBACK window_proc(HWND hwnd,UINT message,WPARAM w,LPARAM l){
         if(id>=ID_OWN && id<ID_OWN+20){i=id-ID_OWN;if(!checked(owned[i]))text(ammo[i],"0");refresh_weapons(1);changed();return 0;}
         if(id>=ID_MAX && id<ID_MAX+20){maximum_one(id-ID_MAX,0);return 0;}
         switch(id){
-        case ID_SAVE:save_game(0);break;case ID_COPY:save_game(1);break;case ID_RESET:load_values();set_status("Originalwerte geladen.");break;case ID_LIMITS:choose_limits();break;
+        case ID_SAVE:save_game(0);break;case ID_COPY:save_game(1);break;case ID_RESET:load_values();set_status(T(VALUES_RESET));break;case ID_LIMITS:choose_limits();break;
         case ID_CHECK:if(build_output(&out))d3_free(out.data);break;
         case ID_ENERGY_MAX:text(energy,"200");changed();break;case ID_SHIELD_MAX:text(shields,"200");changed();break;case ID_AB_MAX:text(afterburner,"5");changed();break;
         case ID_GOD:case ID_GOD_RENEW:god_request=checked(god);refresh_effect_timers();changed();break;

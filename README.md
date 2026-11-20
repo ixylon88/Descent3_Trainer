@@ -28,6 +28,8 @@ verschiedene Eigenschaften. Die Editoren konvertieren keine Speicherformate.
 - Gespeicherte Kartensichtbarkeit vollständig aufdecken.
 - Normale Munitionslimits aus eigenen Spieldaten lesen; alternativ 65.535 als technisches Maximum setzen.
 - Geplante Ausgabe prüfen und beim Überschreiben Backups anlegen.
+- Deutsch und Englisch über das Sprachmenü umschalten. **Hilfe** enthält die
+  Bedienhinweise als eigenen Reiter.
 
 Die genauen Voraussetzungen, Grenzen und Bedienhinweise stehen in den jeweiligen
 README-Dateien. Proprietäre Spieldaten und echte Spielstände sind nicht enthalten.

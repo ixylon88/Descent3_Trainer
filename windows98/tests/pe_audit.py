@@ -14,11 +14,12 @@ ALLOW = {
         'GetCommandLineA','GetFileAttributesA','GetFileSize','GetFullPathNameA','GetLocalTime',
         'GetModuleHandleA','GetProcessHeap','GetTempFileNameA','HeapAlloc','HeapFree',
         'MoveFileA','ReadFile','SetFilePointer','WriteFile','lstrcmpiA'},
-    'user32.dll': {'AdjustWindowRectEx','CreateWindowExA','DefWindowProcA','DestroyWindow',
-        'DispatchMessageA','EnableWindow','GetMessageA','GetSystemMetrics','GetWindowTextA',
+    'user32.dll': {'AdjustWindowRectEx','AppendMenuA','CreatePopupMenu','CreateWindowExA',
+        'DefWindowProcA','DestroyMenu','DestroyWindow','DispatchMessageA','EnableWindow',
+        'GetMessageA','GetSystemMetrics','GetWindowRect','GetWindowTextA',
         'IsDialogMessageA','LoadCursorA','LoadIconA','MessageBoxA','PostQuitMessage',
         'RegisterClassA','SendMessageA','SetWindowTextA','ShowWindow','SystemParametersInfoA',
-        'TranslateMessage','UpdateWindow','wsprintfA'},
+        'TrackPopupMenu','TranslateMessage','UpdateWindow','wsprintfA'},
 }
 
 def audit(path):
