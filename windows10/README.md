@@ -12,6 +12,20 @@
 
 **Kopie speichern…** legt stattdessen eine weitere Datei an. Der vorgeschlagene Name endet auf `.edited`. Damit Descent 3 diese Kopie als Slot anzeigt, muss sie im passenden Spielstandsordner unter einem Namen wie `saveg001` liegen. Vorhandene Dateien werden auch bei diesem Speichervorgang gesichert. `.cnt`-Dateien werden nicht verändert.
 
+### Optionale Launcher-Animation
+
+Für den Ball neben dem Bild oben rechts werden die neun Original-BMPs
+`Anim0.bmp` bis `Anim8.bmp` aus dem
+[Descent-3-Launcher](https://github.com/DescentDevelopers/Descent3/tree/de4bebf5f2d2523261956d0f28603e426eb88c63/legacy/D3Launch/res)
+lokal bereitgestellt. Die Dateien können direkt neben `D3SaveEditor.exe`
+liegen. Beim lokalen Build werden sie aus `pics/` im Repo-Hauptordner in den
+Ausgabeordner kopiert. Git ignoriert diese lokalen Frames.
+
+Beim Start lädt der Editor alle neun Frames in den Speicher. Sind sie vollständig
+und lesbar, wechselt der Ball alle 100 ms zum nächsten Frame und behält seine
+ursprünglichen 64 × 64 Pixel. Bei einer unvollständigen oder unlesbaren Folge
+bleibt der Ball ausgeblendet.
+
 ## Funktionen
 
 | Bereich | Möglichkeiten |

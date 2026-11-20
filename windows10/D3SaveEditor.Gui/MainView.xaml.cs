@@ -26,6 +26,7 @@ namespace D3SaveEditor.Gui
         private readonly WeaponGroup primary = new WeaponGroup(0, false);
         private readonly WeaponGroup secondary = new WeaponGroup(10, true);
         private readonly HashSet<CheckBox> touchedEffects = new HashSet<CheckBox>();
+        private LauncherAnimation launcherAnimation;
         private SupplyRow[] cargoRows;
         private CountermeasureGroup countermeasures;
         private ShipRow[] shipRows;
@@ -50,6 +51,19 @@ namespace D3SaveEditor.Gui
             SecondaryWeaponEditor.Content = secondary;
             foreach (var row in primary.Rows.Concat(secondary.Rows))
                 row.PropertyChanged += OnWeaponChanged;
+            Loaded += OnViewLoaded;
+        }
+
+        private void OnViewLoaded(object sender, RoutedEventArgs e)
+        {
+            Loaded -= OnViewLoaded;
+            launcherAnimation = LauncherAnimation.TryStart(LauncherOrb, AppDomain.CurrentDomain.BaseDirectory);
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            launcherAnimation?.Stop();
+            base.OnClosed(e);
         }
 
         private void Image_ImageFailed(object sender, ExceptionRoutedEventArgs e)

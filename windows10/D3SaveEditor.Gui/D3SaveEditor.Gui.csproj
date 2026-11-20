@@ -16,6 +16,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\D3SaveEditor.Core\D3SaveEditor.Core.csproj" />
+    <InternalsVisibleTo Include="D3SaveEditor.Tests" />
+    <Content Include="..\..\pics\Anim?.bmp" Link="%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
   </ItemGroup>
 
   <!-- build: put the images listed here in the respective folder -->

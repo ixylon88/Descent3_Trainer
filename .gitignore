@@ -17,3 +17,6 @@
 /windows10/**/bin/
 /windows10/**/obj/
 /windows10/**/*.csproj.user
+
+# Optional launcher frames supplied locally
+/pics/Anim[0-8].[Bb][Mm][Pp]

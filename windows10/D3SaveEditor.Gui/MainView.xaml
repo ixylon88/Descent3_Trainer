@@ -137,12 +137,17 @@
 
         <Border Grid.Row="1" Background="#152438" Padding="12,9" Margin="0,0,0,10">
             <DockPanel>
-                <Image DockPanel.Dock="Right" MaxWidth="150" MaxHeight="48" Margin="-11,-11" VerticalAlignment="Center"
-                       Stretch="Uniform" ImageFailed="Image_ImageFailed" IsHitTestVisible="False">
-                    <Image.Source>
-                        <BitmapImage DecodePixelWidth="200" UriSource="flashmen_1.jpg" />
-                    </Image.Source>
-                </Image>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" IsHitTestVisible="False">
+                    <Image x:Name="LauncherOrb" Visibility="Collapsed" VerticalAlignment="Center" Margin="8,0"
+                           Stretch="Fill" UseLayoutRounding="True" SnapsToDevicePixels="True"
+                           RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                    <Image MaxWidth="150" MaxHeight="48" Margin="0,-11,-11,-11" VerticalAlignment="Center"
+                           Stretch="Uniform" ImageFailed="Image_ImageFailed">
+                        <Image.Source>
+                            <BitmapImage DecodePixelWidth="200" UriSource="flashmen_1.jpg" />
+                        </Image.Source>
+                    </Image>
+                </StackPanel>
                 <StackPanel>
                     <TextBlock x:Name="SaveTitle" Text="{Binding [NoSave], Source={StaticResource Localization}, Mode=OneWay}"
                                FontWeight="SemiBold" Foreground="White" TextTrimming="CharacterEllipsis" />
