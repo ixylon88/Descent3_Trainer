@@ -41,6 +41,8 @@ Einträge des Spielerinventars. Im Reiter **Gegenmaßnahmen** lassen sich der
 Bestand und die aktive Gegenmaßnahme einstellen. Die Menge `0` entfernt einen
 bearbeitbaren Eintrag. **Vorhandene: Spiellimit** füllt Chaff, Bouncing Betty,
 Seeker Mine und Proximity Mine bis 12 Stück auf. Beim Gunboy sind es 4.
+Die 20 Standardwaffen und fünf Gegenmaßnahmen verwenden in beiden Sprachen
+die Namen aus der [Descent-3-Zeichenkettendatei](https://github.com/DescentDevelopers/Descent3/blob/de4bebf5f2d2523261956d0f28603e426eb88c63/scripts/data/fullhog/D3.STR).
 Die Originalbeschreibungen, Symbole und Flags vorhandener Einträge bleiben bei
 Mengenänderungen erhalten. Neu angelegte Einträge erhalten einen Textnamen und
 ein leeres Symbolfeld.

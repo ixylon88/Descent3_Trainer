@@ -570,7 +570,7 @@ namespace D3SaveEditor.Gui
                 var row = rows[i];
                 if (!row.CanEdit)
                     continue;
-                int count = ReadInteger(row.CountText, 0, row.Maximum, row.Item.Name);
+                int count = ReadInteger(row.CountText, 0, row.Maximum, row.Item.DisplayName);
                 if (count != row.OriginalCount)
                     counts[i] = count;
             }

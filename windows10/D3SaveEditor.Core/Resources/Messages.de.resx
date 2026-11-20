@@ -289,4 +289,79 @@
   <data name="EquipmentRemoved" xml:space="preserve">
     <value>{0} entfernen</value>
   </data>
+  <data name="WeaponLaser" xml:space="preserve">
+    <value>Laser</value>
+  </data>
+  <data name="WeaponVauss" xml:space="preserve">
+    <value>Vauss</value>
+  </data>
+  <data name="WeaponMicrowave" xml:space="preserve">
+    <value>Mikrowellen</value>
+  </data>
+  <data name="WeaponPlasma" xml:space="preserve">
+    <value>Plasma</value>
+  </data>
+  <data name="WeaponFusion" xml:space="preserve">
+    <value>Fusion</value>
+  </data>
+  <data name="WeaponSuperLaser" xml:space="preserve">
+    <value>Superlaser</value>
+  </data>
+  <data name="WeaponMassDriver" xml:space="preserve">
+    <value>Massetreiber</value>
+  </data>
+  <data name="WeaponNapalm" xml:space="preserve">
+    <value>Napalm</value>
+  </data>
+  <data name="WeaponEMDGun" xml:space="preserve">
+    <value>EMD-Kanone</value>
+  </data>
+  <data name="WeaponOmega" xml:space="preserve">
+    <value>Omega</value>
+  </data>
+  <data name="WeaponConcussion" xml:space="preserve">
+    <value>Erschütterung</value>
+  </data>
+  <data name="WeaponHoming" xml:space="preserve">
+    <value>Zielpeil</value>
+  </data>
+  <data name="WeaponImpactMortar" xml:space="preserve">
+    <value>Granatwerfer</value>
+  </data>
+  <data name="WeaponSmart" xml:space="preserve">
+    <value>Smart</value>
+  </data>
+  <data name="WeaponMega" xml:space="preserve">
+    <value>Mega</value>
+  </data>
+  <data name="WeaponFrag" xml:space="preserve">
+    <value>Frag</value>
+  </data>
+  <data name="WeaponGuided" xml:space="preserve">
+    <value>Fernlenk</value>
+  </data>
+  <data name="WeaponNapalmRocket" xml:space="preserve">
+    <value>Napalmrakete</value>
+  </data>
+  <data name="WeaponCyclone" xml:space="preserve">
+    <value>Zyklon</value>
+  </data>
+  <data name="WeaponBlackShark" xml:space="preserve">
+    <value>Black Shark</value>
+  </data>
+  <data name="CountermeasureChaff" xml:space="preserve">
+    <value>Störspreu</value>
+  </data>
+  <data name="CountermeasureBetty" xml:space="preserve">
+    <value>Hüpfende Betty</value>
+  </data>
+  <data name="CountermeasureSeekerMine" xml:space="preserve">
+    <value>Suchermine</value>
+  </data>
+  <data name="CountermeasureGunBoy" xml:space="preserve">
+    <value>GunBoy</value>
+  </data>
+  <data name="CountermeasureProxMine" xml:space="preserve">
+    <value>Nahmine</value>
+  </data>
 </root>

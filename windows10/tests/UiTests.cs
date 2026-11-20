@@ -53,7 +53,7 @@ namespace D3SaveEditor.Tests
                 Update(view);
                 SelectWeapon(tabs, 0);
                 Update(view);
-                Check(WeaponCheck(tabs, "Concussion").IsChecked == false, "Choosing no secondary removes its ownership");
+                Check(WeaponCheck(tabs, "Erschütterung").IsChecked == false, "Choosing no secondary removes its ownership");
                 WeaponCheck(tabs, "Black Shark").SetCurrentValue(ToggleButton.IsCheckedProperty, true);
                 Update(view);
                 Text(Find<TextBox>(tabs, box => AutomationProperties.GetName(box) == "Munition Black Shark"), "65535");
@@ -71,9 +71,9 @@ namespace D3SaveEditor.Tests
 
                 tabs.SelectedItem = Field<TabItem>(view, "CountermeasureTab");
                 Update(view);
-                Check(Equals(Find<ComboBox>(tabs, box => box.Name == "ActiveWeapon").SelectedItem, "Bouncing Betty"),
+                Check(Equals(Find<ComboBox>(tabs, box => box.Name == "ActiveWeapon").SelectedItem, "Hüpfende Betty"),
                     "The saved countermeasure selection is visible");
-                var chaffInput = Find<TextBox>(tabs, box => AutomationProperties.GetName(box) == "Menge Chaff");
+                var chaffInput = Find<TextBox>(tabs, box => AutomationProperties.GetName(box) == "Menge Störspreu");
                 Check(chaffInput.Text == "2", "Saved Chaff count is displayed");
                 var countInputs = Descendants(tabs).OfType<TextBox>()
                     .Where(box => AutomationProperties.GetName(box).StartsWith("Menge ", StringComparison.Ordinal)).ToArray();
@@ -90,14 +90,15 @@ namespace D3SaveEditor.Tests
                     "Selecting the available countermeasures re-enables their controls");
                 Click(Find<Button>(tabs, button => Equals(button.Content, "Vorhandene: Spiellimit")));
                 Update(view);
-                Check(chaffInput.Text == "12" && Find<TextBox>(tabs, box => AutomationProperties.GetName(box) == "Menge Gunboy").Text == "4",
+                Check(chaffInput.Text == "12" && Find<TextBox>(tabs, box => AutomationProperties.GetName(box) == "Menge GunBoy").Text == "4",
                     "Countermeasure fill uses the individual game limits");
-                WeaponCheck(tabs, "Bouncing Betty").SetCurrentValue(ToggleButton.IsCheckedProperty, false);
+                WeaponCheck(tabs, "Hüpfende Betty").SetCurrentValue(ToggleButton.IsCheckedProperty, false);
                 SelectWeapon(tabs, 4);
                 ChangeLanguage(view, "en");
                 Update(view);
                 Check(Equals(Field<TabItem>(view, "CountermeasureTab").Header, "Countermeasures") &&
-                    Equals(Find<ComboBox>(tabs, box => box.Name == "ActiveWeapon").SelectedItem, "Gunboy") &&
+                    Equals(Find<ComboBox>(tabs, box => box.Name == "ActiveWeapon").SelectedItem, "GunBoy") &&
+                    Find<ComboBox>(tabs, box => box.Name == "ActiveWeapon").Items.Contains("Bouncing Betty") &&
                     Find<TextBox>(tabs, box => AutomationProperties.GetName(box) == "Count for Chaff").Text == "12",
                     "English updates captions and preserves draft values and active selection");
                 ChangeLanguage(view, "de");

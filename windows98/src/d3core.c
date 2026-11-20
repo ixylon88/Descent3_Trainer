@@ -24,7 +24,6 @@ const char *d3_text(D3Text key) { return editor_texts[key][english]; }
 int d3_is_english(void) { return english; }
 void d3_set_english(int enabled) { english=enabled!=0; }
 
-const char *d3_weapon_names[20]={"Laser","Vauss","Microwave","Plasma","Fusion","Super Laser","Mass Driver","Napalm","EMD Gun","Omega","Concussion","Homing","Impact Mortar","Smart","Mega","Frag","Guided","Napalm Rocket","Cyclone","Black Shark"};
 const D3Supply d3_cargo_items[D3_CARGO_TYPES] = {
     {"Forcewall", "Force Wall", 0, 1000000},
     {"GoWingNut", "Go Wingnut", 0, 1000000}

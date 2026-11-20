@@ -86,7 +86,6 @@ typedef struct {
     D3U32 size;
 } D3Buffer;
 
-extern const char *d3_weapon_names[20];
 extern const D3Supply d3_cargo_items[D3_CARGO_TYPES];
 extern const D3Supply d3_countermeasure_types[D3_COUNTERMEASURE_TYPES];
 extern const char *const d3_standard_ships[D3_STANDARD_SHIPS];

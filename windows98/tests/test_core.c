@@ -15,9 +15,11 @@ static D3Game *parse(const D3Buffer *b){D3Game *g=d3_alloc(sizeof(*g));if(!d3_pa
 static void localization_test(void) {
     D3Game *game=d3_alloc(sizeof(*game));
     d3_set_english(1);
+    check(!strcmp(T(WEAPON_MASS_DRIVER),"Mass Driver") && !strcmp(T(COUNTERMEASURE_CHAFF),"Chaff"),"English loadout names are available");
     check(!d3_parse(game,0,0) && strstr(game->error,"Unsupported save size")==game->error,
           "English parser errors follow the interface language");
     d3_set_english(0);
+    check(!strcmp(T(WEAPON_MASS_DRIVER),"Massetreiber") && !strcmp(T(COUNTERMEASURE_CHAFF),"St\xF6rspreu"),"German loadout names use ANSI game spellings");
     check(!d3_parse(game,0,0) && strstr(game->error,"Keine unterstuetzte Datei")==game->error,
           "German parser errors follow the interface language");
     d3_free(game);

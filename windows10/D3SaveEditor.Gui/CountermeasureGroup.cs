@@ -25,7 +25,7 @@ namespace D3SaveEditor.Gui
         }
 
         internal int WeaponId { get; }
-        public string Name => Item.Name;
+        public string Name => Item.DisplayName;
         public string AmmoLabel => T("CountLabel", Name);
         public bool CanToggle => CanEdit;
         public bool CanEditAmmo => CanEdit && Owned;
@@ -54,7 +54,12 @@ namespace D3SaveEditor.Gui
         }
 
         internal void Fill() => Ammo = Item.Maximum.ToString(CultureInfo.CurrentCulture);
-        internal void RefreshAmmoLabel() => Notify(nameof(AmmoLabel));
+        internal override void RefreshText()
+        {
+            base.RefreshText();
+            Notify(nameof(Name));
+            Notify(nameof(AmmoLabel));
+        }
     }
 
     internal sealed class CountermeasureGroup : BindableItem
@@ -107,7 +112,7 @@ namespace D3SaveEditor.Gui
             Notify(nameof(MaxPresentLabel));
             Notify(nameof(Hint));
             foreach (var row in Rows)
-                row.RefreshAmmoLabel();
+                row.RefreshText();
         }
 
         public int SelectedIndex

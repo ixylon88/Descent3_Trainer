@@ -83,10 +83,10 @@ namespace D3SaveEditor.Tests
                 GuideBotTests(File.ReadAllBytes(Path.Combine(dir, name)));
             FileTests(dir, baseBytes);
             TableTests(dir);
-            LocalizationTest();
+            LocalizationTest(Path.Combine(dir, "fixture32-loadout"));
             Console.WriteLine("\n" + passed + " assertions passed. No real in-game save/load test has been performed.");
         }
-        private static void LocalizationTest()
+        private static void LocalizationTest(string fixture)
         {
             var original = CultureInfo.CurrentUICulture;
             try
@@ -101,6 +101,22 @@ namespace D3SaveEditor.Tests
                     Check(message?.StartsWith(prefix, StringComparison.Ordinal) == true,
                         "Parser errors resolve resources for " + language);
                 }
+
+                var game = SaveGame.Parse(File.ReadAllBytes(fixture));
+                var edit = game.CurrentOptions();
+                edit.CountermeasureCounts[2] = 3;
+                edit.ActiveCountermeasureWeaponId = game.CountermeasureWeaponId(2);
+                CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("de");
+                var german = game.Edit(edit);
+                Check(SaveGame.WeaponDisplayName(6) == "Massetreiber" && SaveGame.CountermeasureTypes[0].DisplayName == "Störspreu",
+                    "German loadout names use the game translations");
+                Check(german.Changes.Any(change => change.StartsWith("Aktive Gegenmaßnahme: Suchermine", StringComparison.Ordinal)),
+                    "The change report uses the localized active countermeasure name");
+                CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("en");
+                var english = game.Edit(edit);
+                Check(SaveGame.WeaponDisplayName(6) == "Mass Driver" && SaveGame.CountermeasureTypes[0].DisplayName == "Chaff",
+                    "English loadout names use the game translations");
+                Check(german.Bytes.SequenceEqual(english.Bytes), "Loadout edits are byte-identical across interface languages");
             }
             finally { CultureInfo.CurrentUICulture = original; }
         }

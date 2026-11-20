@@ -43,6 +43,14 @@ static D3U16 caps[21];static int caps_loaded;
 static int god_request=-1,cloak_request=-1,cooler_request=-1,converter_request=-1,quad_request=-1;
 static const D3Text page_names[]={D3_TEXT_PLAYER_TAB,D3_TEXT_PRIMARY_TAB,D3_TEXT_SECONDARY_TAB,
     D3_TEXT_COUNTERMEASURE_TAB,D3_TEXT_INVENTORY_TAB,D3_TEXT_GUIDEBOT_TAB,D3_TEXT_REVIEW_TAB,D3_TEXT_HELP_TAB};
+static const D3Text weapon_names[]={
+    D3_TEXT_WEAPON_LASER,D3_TEXT_WEAPON_VAUSS,D3_TEXT_WEAPON_MICROWAVE,D3_TEXT_WEAPON_PLASMA,D3_TEXT_WEAPON_FUSION,
+    D3_TEXT_WEAPON_SUPER_LASER,D3_TEXT_WEAPON_MASS_DRIVER,D3_TEXT_WEAPON_NAPALM,D3_TEXT_WEAPON_EMD_GUN,D3_TEXT_WEAPON_OMEGA,
+    D3_TEXT_WEAPON_CONCUSSION,D3_TEXT_WEAPON_HOMING,D3_TEXT_WEAPON_IMPACT_MORTAR,D3_TEXT_WEAPON_SMART,D3_TEXT_WEAPON_MEGA,
+    D3_TEXT_WEAPON_FRAG,D3_TEXT_WEAPON_GUIDED,D3_TEXT_WEAPON_NAPALM_ROCKET,D3_TEXT_WEAPON_CYCLONE,D3_TEXT_WEAPON_BLACK_SHARK
+};
+static const D3Text countermeasure_names[]={D3_TEXT_COUNTERMEASURE_CHAFF,D3_TEXT_COUNTERMEASURE_BETTY,
+    D3_TEXT_COUNTERMEASURE_SEEKER_MINE,D3_TEXT_COUNTERMEASURE_GUNBOY,D3_TEXT_COUNTERMEASURE_PROX_MINE};
 
 static int checked(HWND h){return SendMessageA(h,BM_GETCHECK,0,0)==BST_CHECKED;}
 static void check(HWND h,int on){SendMessageA(h,BM_SETCHECK,on?BST_CHECKED:BST_UNCHECKED,0);}
@@ -179,19 +187,18 @@ static int add_countermeasure_choice(int row,const char *name) {
     }
     return index;
 }
-static void load_countermeasures(void) {
+static void load_countermeasure_choices(void) {
     const D3Inventory *list=&game->countermeasures;
     const D3Item *active=list->count ? &list->items[list->selected] : 0;
     int i,j,index,selection=0;
     char id[32];
-    load_supply_counts(countermeasure_counts,1,D3_COUNTERMEASURE_TYPES);
     SendMessageA(countermeasure_active,CB_RESETCONTENT,0,0);
     SendMessageA(extra_countermeasures,LB_RESETCONTENT,0,0);
     countermeasure_choice_count=0;
     add_countermeasure_choice(-1,T(NO_COUNTERMEASURE));
     for (i=0; i<D3_COUNTERMEASURE_TYPES; i++) {
         if (d3_supply_count(game,1,i)<0) continue;
-        index=add_countermeasure_choice(i,d3_countermeasure_types[i].name);
+        index=add_countermeasure_choice(i,d3_text(countermeasure_names[i]));
         if (index>=0 && active && active->type==5 && active->id==game->countermeasure_ids[i]) selection=index;
     }
     for (i=0; i<list->count; i++) {
@@ -204,6 +211,10 @@ static void load_countermeasures(void) {
         if (index>=0 && item==active) selection=index;
     }
     SendMessageA(countermeasure_active,CB_SETCURSEL,(WPARAM)selection,0);
+}
+static void load_countermeasures(void) {
+    load_supply_counts(countermeasure_counts,1,D3_COUNTERMEASURE_TYPES);
+    load_countermeasure_choices();
     refresh_countermeasures(0);
 }
 static void set_countermeasure_count(int i,int count) {
@@ -419,11 +430,12 @@ static int read_options(D3Options *o){
     o->primary=(int)SendMessageA(primary,CB_GETCURSEL,0,0);i=(int)SendMessageA(secondary,CB_GETCURSEL,0,0);if(i>0)o->secondary=i+9;
     o->god=god_request;o->cloak=cloak_request;o->cooler=cooler_request;o->converter=converter_request;o->quad=quad_request;o->reveal_map=checked(full_map);return 1;
 }
-static void report_supply_counts(char *report,D3U32 size,const D3Supply *items,const int *counts,int length) {
-    int i;
+static void report_supply_counts(char *report,D3U32 size,const int *counts,int countermeasures) {
+    int i,length=countermeasures ? D3_COUNTERMEASURE_TYPES : D3_CARGO_TYPES;
     for (i=0; i<length; i++) {
         if (counts[i]<0) continue;
-        d3_append(report,size,items[i].name);d3_append(report,size,": ");
+        const char *name=countermeasures ? d3_text(countermeasure_names[i]) : d3_cargo_items[i].name;
+        d3_append(report,size,name);d3_append(report,size,": ");
         append_number(report,size,(D3U32)counts[i]);d3_append(report,size,"\r\n");
     }
 }
@@ -435,14 +447,14 @@ static int build_output(D3Buffer *out){
     if(out->size==game->size && d3_equal(out->data,game->data,out->size))d3_append(s,4096,T(IDENTICAL));
     else{
         d3_append(s,4096,T(ENERGY_PREFIX));d3_format_float(n,o.energy);d3_append(s,4096,n);d3_append(s,4096,T(SHIELD_PREFIX));d3_format_float(n,o.shields);d3_append(s,4096,n);d3_append(s,4096,"\r\n");
-        for(i=0;i<20;i++)if(o.owned[i]){d3_append(s,4096,d3_weapon_names[i]);d3_append(s,4096,": ");append_number(s,4096,o.ammo[i]);d3_append(s,4096,"\r\n");}
+        for(i=0;i<20;i++)if(o.owned[i]){d3_append(s,4096,d3_text(weapon_names[i]));d3_append(s,4096,": ");append_number(s,4096,o.ammo[i]);d3_append(s,4096,"\r\n");}
         if(o.god>=0)d3_append(s,4096,o.god?T(GOD_LONG):T(GOD_OFF));
         if(o.cloak>=0)d3_append(s,4096,o.cloak?T(CLOAK_LONG):T(CLOAK_OFF));
         if(o.cooler>=0)d3_append(s,4096,o.cooler?T(COOLER_ADD):T(COOLER_REMOVE));
         if(o.converter>=0)d3_append(s,4096,o.converter?T(CONVERTER_ADD):T(CONVERTER_REMOVE));
         if(o.quad>=0)d3_append(s,4096,o.quad?T(QUAD_ON):T(QUAD_OFF));if(o.reveal_map)d3_append(s,4096,T(MAP_REVEALED));
-        report_supply_counts(s,sizeof(s),d3_cargo_items,o.cargo_counts,D3_CARGO_TYPES);
-        report_supply_counts(s,sizeof(s),d3_countermeasure_types,o.countermeasure_counts,D3_COUNTERMEASURE_TYPES);
+        report_supply_counts(s,sizeof(s),o.cargo_counts,0);
+        report_supply_counts(s,sizeof(s),o.countermeasure_counts,1);
         if (o.active_countermeasure_weapon_id>=0) {
             SendMessageA(countermeasure_active,WM_GETTEXT,sizeof(n),(LPARAM)n);
             d3_append(s,sizeof(s),T(ACTIVE_COUNTERMEASURE_REPORT));d3_append(s,sizeof(s),n);d3_append(s,sizeof(s),"\r\n");
@@ -491,11 +503,23 @@ static void label_tabs(UINT message) {
         SendMessageA(tab,message,(WPARAM)i,(LPARAM)&item);
     }
 }
-static void rename_first_choice(HWND combo,const char *caption) {
+static void refresh_weapon_choices(HWND combo,int first) {
+    int i;
     LRESULT selection=SendMessageA(combo,CB_GETCURSEL,0,0);
-    SendMessageA(combo,CB_DELETESTRING,0,0);
-    SendMessageA(combo,CB_INSERTSTRING,0,(LPARAM)caption);
+    SendMessageA(combo,CB_RESETCONTENT,0,0);
+    if (first) SendMessageA(combo,CB_ADDSTRING,0,(LPARAM)T(NO_SECONDARY));
+    for (i=first; i<first+10; i++) SendMessageA(combo,CB_ADDSTRING,0,(LPARAM)d3_text(weapon_names[i]));
     SendMessageA(combo,CB_SETCURSEL,(WPARAM)selection,0);
+}
+static void refresh_countermeasure_choices(void) {
+    int i,selected=(int)SendMessageA(countermeasure_active,CB_GETCURSEL,0,0);
+    int choice=selected>=0 && selected<countermeasure_choice_count ? countermeasure_choices[selected] : -1;
+    load_countermeasure_choices();
+    for (i=0; i<countermeasure_choice_count; i++) {
+        if (countermeasure_choices[i]!=choice) continue;
+        SendMessageA(countermeasure_active,CB_SETCURSEL,(WPARAM)i,0);
+        break;
+    }
 }
 static void apply_language(int english) {
     int i;
@@ -504,9 +528,10 @@ static void apply_language(int english) {
     label_tabs(TCM_SETITEMA);
     for (i=0; i<widget_count; i++)
         if (widgets[i].caption!=D3_TEXT_NONE) text(widgets[i].hwnd,d3_text(widgets[i].caption));
-    rename_first_choice(secondary,T(NO_SECONDARY));
+    refresh_weapon_choices(primary,0);
+    refresh_weapon_choices(secondary,10);
     if (game) {
-        if (countermeasure_choice_count>0) rename_first_choice(countermeasure_active,T(NO_COUNTERMEASURE));
+        refresh_countermeasure_choices();
         if (!game->inventory.count) {
             SendMessageA(saved_inventory,LB_RESETCONTENT,0,0);
             SendMessageA(saved_inventory,LB_ADDSTRING,0,(LPARAM)T(INVENTORY_EMPTY));
@@ -563,11 +588,11 @@ static void player_page(void){
 static void weapon_page(int first,int page){
     int i,y;HWND combo;local_label(D3_TEXT_ACTIVE_WEAPON,28,151,100,18,page);
     combo=control("COMBOBOX","",CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP,131,147,230,200,first?ID_SECONDARY:ID_PRIMARY,page,1);
-    if(first){secondary=combo;SendMessageA(combo,CB_ADDSTRING,0,(LPARAM)T(NO_SECONDARY));}else primary=combo;
-    for(i=first;i<first+10;i++)SendMessageA(combo,CB_ADDSTRING,0,(LPARAM)d3_weapon_names[i]);
+    if(first)secondary=combo;else primary=combo;
+    refresh_weapon_choices(combo,first);
     local_label(D3_TEXT_OWNED,28,181,75,18,page);local_label(D3_TEXT_WEAPON,110,181,180,18,page);local_label(D3_TEXT_AMMO,298,181,115,18,page);label("Max",423,181,65,18,page);local_label(D3_TEXT_SHIP_LIMIT,512,181,185,18,page);
     for(i=first;i<first+10;i++){
-        y=201+(i-first)*23;owned[i]=checkbox("",51,y,35,ID_OWN+i,page);label(d3_weapon_names[i],110,y+2,180,18,page);
+        y=201+(i-first)*23;owned[i]=checkbox("",51,y,35,ID_OWN+i,page);local_label(weapon_names[i],110,y+2,180,18,page);
         ammo[i]=edit(298,y-1,106,ID_AMMO+i,page,1);SendMessageA(ammo[i],EM_LIMITTEXT,5,0);
         max_buttons[i]=control("BUTTON","Max",BS_PUSHBUTTON|WS_TABSTOP,420,y-1,70,22,ID_MAX+i,page,1);cap_labels[i]=local_label(D3_TEXT_LIMIT_NOT_LOADED,512,y+2,185,18,page);
     }
@@ -585,7 +610,7 @@ static void countermeasure_page(void) {
     for (i=0; i<D3_COUNTERMEASURE_TYPES; i++) {
         y=201+i*23;
         countermeasure_owned[i]=checkbox("",51,y,35,ID_COUNTERMEASURE_OWN+i,page);
-        label(d3_countermeasure_types[i].name,110,y+2,180,18,page);
+        local_label(countermeasure_names[i],110,y+2,180,18,page);
         countermeasure_counts[i]=edit(298,y-1,106,ID_COUNTERMEASURE_COUNT+i,page,1);
         SendMessageA(countermeasure_counts[i],EM_LIMITTEXT,7,0);
         countermeasure_max[i]=control("BUTTON","Max",BS_PUSHBUTTON|WS_TABSTOP,420,y-1,70,22,ID_COUNTERMEASURE_MAX+i,page,1);

@@ -44,7 +44,7 @@ namespace D3SaveEditor.Gui
         }
 
         public int Index { get; }
-        public string Name => SaveGame.WeaponNames[Index];
+        public string Name => SaveGame.WeaponDisplayName(Index);
         public string AmmoLabel => T("AmmoLabel", Name);
         public bool CanToggle => true;
         public bool UsesAmmo => SaveGame.UsesAmmo(Index);
@@ -72,7 +72,11 @@ namespace D3SaveEditor.Gui
             set => SetField(ref limit, value);
         }
 
-        internal void RefreshText() => Notify(nameof(AmmoLabel));
+        internal void RefreshText()
+        {
+            Notify(nameof(Name));
+            Notify(nameof(AmmoLabel));
+        }
     }
 
     internal sealed class WeaponGroup : BindableItem
@@ -157,7 +161,7 @@ namespace D3SaveEditor.Gui
             set => SetField(ref countText, value);
         }
         public string Hint => CanEdit ? T("SupplyRange", Maximum) : T("SupplyMissing");
-        internal void RefreshText() => Notify(nameof(Hint));
+        internal virtual void RefreshText() => Notify(nameof(Hint));
     }
 
     internal sealed class ShipRow : BindableItem

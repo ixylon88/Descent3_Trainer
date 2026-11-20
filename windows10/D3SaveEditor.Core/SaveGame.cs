@@ -72,6 +72,7 @@ namespace D3SaveEditor.Core {
     public sealed class SupplyItem {
         internal readonly string Key, Pickup;
         public string Name { get; }
+        public string DisplayName => Pickup == null ? Name : Text("Countermeasure" + Key);
         public int Maximum { get; }
 
         internal SupplyItem(string key, string name, int maximum, string pickup = null) {
@@ -229,6 +230,7 @@ namespace D3SaveEditor.Core {
             "Laser", "Vauss", "Microwave", "Plasma", "Fusion", "Super Laser", "Mass Driver", "Napalm", "EMD Gun", "Omega",
             "Concussion", "Homing", "Impact Mortar", "Smart", "Mega", "Frag", "Guided", "Napalm Rocket", "Cyclone", "Black Shark"
         };
+        public static string WeaponDisplayName(int index) { return Text("Weapon" + WeaponNames[index].Replace(" ", "")); }
         public static bool UsesAmmo(int index) {
             return (index >= 10 && index < 20) || index == 1 || index == 6 || index == 7;
         }
@@ -501,7 +503,8 @@ namespace D3SaveEditor.Core {
                 if (selected < 0) throw new FormatProblem(Text("CountermeasureNotOwned"));
                 if (selected != countermeasures.Selected) {
                     countermeasures.Selected = selected;
-                    result.Changes.Add(Text("ActiveCountermeasure", countermeasures.Items[selected].Name));
+                    var definition = CountermeasureTypes.FirstOrDefault(item => SupplyId(item) == id);
+                    result.Changes.Add(Text("ActiveCountermeasure", definition?.DisplayName ?? countermeasures.Items[selected].Name));
                 }
             }
             AddInventoryPatch(raw, Layout.Inventory, inventory, patches);
@@ -565,14 +568,14 @@ namespace D3SaveEditor.Core {
                 if (!counts[i].HasValue || (counts[i].Value == 0) != removing) continue;
                 SupplyItem item = items[i];
                 int id = SupplyId(item);
-                if (id < 0) throw new FormatProblem(Text("SupplyMissing", item.Name));
+                if (id < 0) throw new FormatProblem(Text("SupplyMissing", item.DisplayName));
                 var saved = block.Items.Find(entry => entry.Type == item.Type && entry.Id == id);
                 int oldCount = saved == null ? 0 : saved.Count;
                 int count = counts[i].Value;
                 if (count == oldCount) continue;
                 int maximum = Math.Max(oldCount, item.Maximum);
                 if (count < 0 || count > maximum)
-                    throw new FormatProblem(Text("SupplyBounds", item.Name, maximum));
+                    throw new FormatProblem(Text("SupplyBounds", item.DisplayName, maximum));
 
                 if (count == 0) {
                     block.Remove(item.Type, id);
@@ -589,7 +592,7 @@ namespace D3SaveEditor.Core {
                         Description = item.Name, Icon = ""
                     });
                 }
-                result.Changes.Add(item.Name + ": " + oldCount + " → " + count);
+                result.Changes.Add(item.DisplayName + ": " + oldCount + " → " + count);
             }
         }
         internal static byte[] ApplyPatches(byte[] source,List<Patch> patches) {
