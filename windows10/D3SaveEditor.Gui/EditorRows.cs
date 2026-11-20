@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using D3SaveEditor.Core;
+using static D3SaveEditor.Gui.UiText;
 
 namespace D3SaveEditor.Gui
 {
@@ -39,12 +40,12 @@ namespace D3SaveEditor.Gui
         internal WeaponRow(int index)
         {
             Index = index;
-            limit = UsesAmmo ? "nicht geladen" : "Energiewaffe";
+            limit = UsesAmmo ? T("LimitUnavailable") : T("EnergyWeapon");
         }
 
         public int Index { get; }
         public string Name => SaveGame.WeaponNames[Index];
-        public string AmmoLabel => "Munition " + Name;
+        public string AmmoLabel => T("AmmoLabel", Name);
         public bool CanToggle => true;
         public bool UsesAmmo => SaveGame.UsesAmmo(Index);
         public bool CanEditAmmo => Owned && UsesAmmo;
@@ -70,6 +71,8 @@ namespace D3SaveEditor.Gui
             get => limit;
             set => SetField(ref limit, value);
         }
+
+        internal void RefreshText() => Notify(nameof(AmmoLabel));
     }
 
     internal sealed class WeaponGroup : BindableItem
@@ -81,18 +84,17 @@ namespace D3SaveEditor.Gui
         {
             FirstChoice = hasNoneChoice ? 1 : 0;
             Rows = Enumerable.Range(firstIndex, 10).Select(index => new WeaponRow(index)).ToArray();
-            var choices = Rows.Select(row => row.Name);
-            Choices = hasNoneChoice ? new[] { "Keine Sekundärwaffe" }.Concat(choices).ToArray() : choices.ToArray();
         }
 
         public int FirstChoice { get; }
         public WeaponRow[] Rows { get; }
-        public string[] Choices { get; }
-        public string ActiveLabel => "Aktive Waffe";
-        public string NameHeading => "Waffe";
-        public string CountHeading => "Munition";
-        public string LimitHeading => "Schiffslimit";
-        public string MaxPresentLabel => "Vorhandene: Schiffslimit";
+        public string[] Choices => FirstChoice == 0 ? Rows.Select(row => row.Name).ToArray() :
+            new[] { T("NoSecondary") }.Concat(Rows.Select(row => row.Name)).ToArray();
+        public string ActiveLabel => T("ActiveWeapon");
+        public string NameHeading => T("Weapon");
+        public string CountHeading => T("Ammo");
+        public string LimitHeading => T("ShipLimit");
+        public string MaxPresentLabel => T("FillShipLimit");
         public Visibility StorageMaximumVisibility => Visibility.Visible;
         public string[] ExtraEntries => Array.Empty<string>();
 
@@ -116,6 +118,19 @@ namespace D3SaveEditor.Gui
 
             int firstOwned = Array.FindIndex(Rows, row => row.Owned);
             SelectedIndex = firstOwned < 0 ? FirstChoice - 1 : FirstChoice + firstOwned;
+        }
+
+        internal void RefreshText()
+        {
+            Notify(nameof(Choices));
+            Notify(nameof(SelectedIndex));
+            Notify(nameof(ActiveLabel));
+            Notify(nameof(NameHeading));
+            Notify(nameof(CountHeading));
+            Notify(nameof(LimitHeading));
+            Notify(nameof(MaxPresentLabel));
+            foreach (var row in Rows)
+                row.RefreshText();
         }
     }
 
@@ -141,23 +156,26 @@ namespace D3SaveEditor.Gui
             get => countText;
             set => SetField(ref countText, value);
         }
-        public string Hint => CanEdit ? $"Menge von 0 bis {Maximum:N0}" : "Die passende Definition fehlt in diesem Spielstand.";
+        public string Hint => CanEdit ? T("SupplyRange", Maximum) : T("SupplyMissing");
+        internal void RefreshText() => Notify(nameof(Hint));
     }
 
     internal sealed class ShipRow : BindableItem
     {
         private bool allowed;
         private bool canUnlock;
+        private readonly string name;
 
         internal ShipRow(SaveGame game, string name)
         {
             Defined = game.IsShipDefined(name);
             allowed = game.IsShipAllowed(name);
             canUnlock = Defined && !allowed;
-            Label = Defined ? name : name + " (fehlt)";
+            this.name = name;
         }
 
-        public string Label { get; }
+        public string Label => Defined ? name : T("Missing", name);
+        internal void RefreshText() => Notify(nameof(Label));
         internal bool Defined { get; }
         public bool CanUnlock
         {
@@ -173,15 +191,17 @@ namespace D3SaveEditor.Gui
 
     internal sealed class GuideBotSupplyRow : BindableItem
     {
+        private readonly string labelKey;
         private string countText;
 
-        internal GuideBotSupplyRow(string name, int count)
+        internal GuideBotSupplyRow(string labelKey, int count)
         {
-            Name = name;
+            this.labelKey = labelKey;
             countText = count.ToString(CultureInfo.CurrentCulture);
         }
 
-        public string Name { get; }
+        public string Name => T(labelKey);
+        internal void RefreshText() => Notify(nameof(Name));
         public string CountText
         {
             get => countText;

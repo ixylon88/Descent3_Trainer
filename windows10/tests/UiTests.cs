@@ -81,6 +81,14 @@ namespace D3SaveEditor.Tests
                     "Countermeasure fill uses the individual game limits");
                 WeaponCheck(tabs, "Bouncing Betty").SetCurrentValue(ToggleButton.IsCheckedProperty, false);
                 SelectWeapon(tabs, 4);
+                ChangeLanguage(view, "en");
+                Update(view);
+                Check(Equals(Field<TabItem>(view, "CountermeasureTab").Header, "Countermeasures") &&
+                    Equals(Find<ComboBox>(tabs, box => box.Name == "ActiveWeapon").SelectedItem, "Gunboy") &&
+                    Find<TextBox>(tabs, box => AutomationProperties.GetName(box) == "Count for Chaff").Text == "12",
+                    "English updates captions and preserves draft values and active selection");
+                ChangeLanguage(view, "de");
+                Update(view);
 
                 tabs.SelectedItem = Field<TabItem>(view, "InventoryTab");
                 Update(view);
@@ -148,6 +156,13 @@ namespace D3SaveEditor.Tests
         private static TextBox CountInput(ItemsControl items, int index) =>
             Find<TextBox>(items.ItemContainerGenerator.ContainerFromIndex(index), box => box.Name == "SupplyCount");
         private static void Click(Button button) => button.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
+        private static void ChangeLanguage(MainView view, string code)
+        {
+            var button = Field<Button>(view, "LanguageButton");
+            Click(button);
+            var item = button.ContextMenu.Items.Cast<MenuItem>().Single(entry => Equals(entry.Tag, code));
+            item.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+        }
         private static void Text(TextBox input, string text) => input.SetCurrentValue(TextBox.TextProperty, text);
 
         private static void Update(Window window)

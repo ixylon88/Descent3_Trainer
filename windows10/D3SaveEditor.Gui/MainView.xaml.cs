@@ -10,8 +10,10 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
+using static D3SaveEditor.Gui.UiText;
 
 namespace D3SaveEditor.Gui
 {
@@ -34,7 +36,9 @@ namespace D3SaveEditor.Gui
 
         public MainView()
         {
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("de");
             InitializeComponent();
+            UiText.Apply(Resources);
             //LoadIconWithFallback("d3_orb__2006+2.ico");
             PrimaryWeaponEditor.Content = primary;
             SecondaryWeaponEditor.Content = secondary;
@@ -75,7 +79,7 @@ namespace D3SaveEditor.Gui
                 string fullPath = Path.GetFullPath(path);
                 var parsed = SaveFiles.Open(fullPath);
                 LoadGame(parsed, fullPath);
-                Status.Text = "Spielstand geladen. Das Original wurde nicht verändert.";
+                Status.Text = T("Loaded");
                 return true;
             }
             catch (Exception ex)
@@ -94,8 +98,8 @@ namespace D3SaveEditor.Gui
         {
             var dialog = new OpenFileDialog
             {
-                Title = "Descent-3-Spielstand öffnen (z. B. saveg000)",
-                Filter = "Spielstände (saveg*)|saveg*|Alle Dateien (*.*)|*.*",
+                Title = T("OpenTitle"),
+                Filter = $"{T("OpenFilter")}|saveg*|{T("AllFiles")}|*.*",
                 CheckFileExists = true
             };
             if (dialog.ShowDialog(this) == true)
@@ -124,14 +128,14 @@ namespace D3SaveEditor.Gui
 
         private bool MaybeDiscard()
         {
-            return !dirty || MessageBox.Show(this, "Die Änderungen sind noch nicht gespeichert. Verwerfen?",
-                "Ungespeicherte Änderungen", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
+            return !dirty || MessageBox.Show(this, T("DiscardQuestion"),
+                T("UnsavedChanges"), MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
         }
 
         private void OnReset(object sender, RoutedEventArgs e)
         {
             LoadValues();
-            Status.Text = "Originalwerte geladen.";
+            Status.Text = T("ValuesReset");
         }
 
         private void LoadGame(SaveGame parsed, string fullPath)
@@ -159,12 +163,7 @@ namespace D3SaveEditor.Gui
                 QuadInput.IsChecked = game.HasQuad;
                 MapInput.IsChecked = false;
 
-                SetEquipmentAvailability(CoolerInput, game.FindEquipment("Afterburner") >= 0,
-                    "Passiver Nachbrenner-Kühler im Inventar.", "Die Definition „Afterburner“ fehlt im Spielstand.");
-                SetEquipmentAvailability(ConverterInput, game.FindEquipment("Converter") >= 0,
-                    "Auswählbarer Energie-Schild-Konverter im Inventar.", "Die Definition „Converter“ fehlt im Spielstand.");
-                SetEquipmentAvailability(QuadInput, game.FindEquipment("QuadLaser") >= 0 && game.SupportsQuad,
-                    "Setzt Inventargegenstand und beide Laser-Waffenbatterien.", "Gegenstandsdefinition oder Waffenbatterien fehlen.");
+                RefreshEquipmentAvailability();
 
                 foreach (var row in primary.Rows.Concat(secondary.Rows))
                 {
@@ -179,10 +178,10 @@ namespace D3SaveEditor.Gui
 
                 touchedEffects.Clear();
                 RefreshEffectTimers();
-                MapInfo.Text = $"Gespeichert sichtbar: {game.RevealedRooms} von {game.HighestRoom + 1} Raumplätzen.";
+                MapInfo.Text = T("RoomsVisible", game.RevealedRooms, game.HighestRoom + 1);
                 SaveTitle.Text = $"{Path.GetFileName(openedPath)}  ·  {game.Description}";
-                SaveDetails.Text = $"{game.Callsign}  ·  {game.ShipName}  ·  {game.Mission} / Level {game.Level}  ·  Format {game.Version}  ·  {game.Layout.Name}";
-                Review.Text = FileReport() + "\r\nKeine geplanten Änderungen.\r\n";
+                RefreshSaveDetails();
+                Review.Text = FileReport() + "\r\n" + T("NoPlannedChanges") + "\r\n";
 
                 SaveButton.IsEnabled = CopyButton.IsEnabled = ResetButton.IsEnabled = true;
                 PlayerEditor.IsEnabled = PrimaryTab.IsEnabled = SecondaryTab.IsEnabled = CountermeasureTab.IsEnabled = InventoryTab.IsEnabled = ReviewButton.IsEnabled = true;
@@ -202,6 +201,13 @@ namespace D3SaveEditor.Gui
             box.ToolTip = enabled ? available : unavailable;
         }
 
+        private void RefreshEquipmentAvailability()
+        {
+            SetEquipmentAvailability(CoolerInput, game.FindEquipment("Afterburner") >= 0, T("CoolerTip"), T("CoolerMissing"));
+            SetEquipmentAvailability(ConverterInput, game.FindEquipment("Converter") >= 0, T("ConverterTip"), T("ConverterMissing"));
+            SetEquipmentAvailability(QuadInput, game.FindEquipment("QuadLaser") >= 0 && game.SupportsQuad, T("QuadTip"), T("QuadMissing"));
+        }
+
         private void LoadInventory()
         {
             cargoRows = SaveGame.CargoItems.Select(item => new SupplyRow(game, item)).ToArray();
@@ -215,14 +221,14 @@ namespace D3SaveEditor.Gui
             CountermeasureEditor.Content = countermeasures;
             ShipInputs.ItemsSource = shipRows;
             bool blackPyroDefined = game.IsShipDefined(SaveGame.BlackPyro);
-            BlackPyroUnlockInput.Content = blackPyroDefined ? SaveGame.BlackPyro : SaveGame.BlackPyro + " (fehlt)";
+            BlackPyroUnlockInput.Content = blackPyroDefined ? SaveGame.BlackPyro : T("Missing", SaveGame.BlackPyro);
             BlackPyroUnlockInput.IsChecked = game.IsShipAllowed(SaveGame.BlackPyro);
             BlackPyroUnlockInput.IsEnabled = blackPyroDefined && BlackPyroUnlockInput.IsChecked != true;
             preferBlackPyro = false;
             RefreshBlackPyroButton();
 
             var entries = game.InventoryItems.Select(InventoryLine).ToArray();
-            SavedInventory.ItemsSource = entries.Length == 0 ? new[] { "Das Inventar ist leer." } : entries;
+            SavedInventory.ItemsSource = entries.Length == 0 ? new[] { T("InventoryEmpty") } : entries;
         }
 
         private static string InventoryLine(InventoryItem item)
@@ -237,16 +243,16 @@ namespace D3SaveEditor.Gui
             GuideBotEditor.Visibility = bot == null ? Visibility.Collapsed : Visibility.Visible;
             if (bot == null)
             {
-                GuideBotInfo.Text = "Dieser Spielstand enthält keinen eindeutig erkannten Guide-Bot-Zustand.";
+                GuideBotInfo.Text = T("BotUnavailable");
                 GuideBotSupplies.ItemsSource = guideBotSupplies = null;
                 return;
             }
 
-            GuideBotInfo.Text = "Name, Funkmeldungen und verbrauchbare Vorräte im gespeicherten Level. Mengen von 0 bis 127.";
+            GuideBotInfo.Text = T("BotHelp");
             GuideBotName.Text = bot.Name;
             GuideBotChatter.IsChecked = bot.Chatter;
-            GuideBotShield.Text = $"Gespeicherter Schildwert: {bot.Shields:N1}";
-            var names = new[] { "Feuerlöscher", "Go Wingnut", "Fernsteuerung", "Begleitschutz", "Antivirus" };
+            GuideBotShield.Text = T("BotShields", bot.Shields);
+            var names = new[] { "BotExtinguisher", "BotWingnut", "BotControl", "BotGuardian", "BotAntivirus" };
             guideBotSupplies = names.Select((name, index) => new GuideBotSupplyRow(name, bot.Counts[index])).ToArray();
             foreach (var row in guideBotSupplies)
                 row.PropertyChanged += OnInventoryChanged;
@@ -287,12 +293,12 @@ namespace D3SaveEditor.Gui
         private static string EffectTime(bool? edit, bool enabled, float seconds)
         {
             if (edit.HasValue)
-                return edit.Value ? "Beim Speichern: 1.000.000.000 s Restdauer" : "Beim Speichern: inaktiv";
+                return edit.Value ? T("TimerOnSave") : T("InactiveOnSave");
             if (!enabled)
-                return "Gespeichert: inaktiv";
+                return T("SavedInactive");
             return seconds >= 100000000
-                ? "Gespeichert: dauerhaft (lange Restdauer)"
-                : $"Gespeichert: aktiv, Restdauer {seconds:N1} s";
+                ? T("SavedLong")
+                : T("SavedTime", seconds);
         }
 
         private void OnInputChanged(object sender, RoutedEventArgs e)
@@ -334,7 +340,7 @@ namespace D3SaveEditor.Gui
         {
             dirty = true;
             Title = "* " + EditorTitle;
-            Status.Text = "Änderungen noch nicht gespeichert.";
+            Status.Text = T("Pending");
         }
 
         private void OnMaxEnergy(object sender, RoutedEventArgs e) => EnergyInput.Text = "200";
@@ -437,8 +443,8 @@ namespace D3SaveEditor.Gui
             var caps = useShipLimit ? limits.ForShip(game.ShipName) : null;
             if (useShipLimit && caps == null)
             {
-                MessageBox.Show(this, "Bitte über „Schiffslimits laden“ eine Spieldatendatei mit einer Definition für das aktuelle Schiff öffnen.",
-                    "Schiffslimits fehlen", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(this, T("LoadLimitsFirst"),
+                    T("NoShipLimits"), MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -450,8 +456,8 @@ namespace D3SaveEditor.Gui
         {
             var dialog = new OpenFileDialog
             {
-                Title = "Spieldaten mit Schiffsdefinitionen laden",
-                Filter = "Spieldaten (*.hog;*.mn3;*.gam)|*.hog;*.mn3;*.gam|Alle Dateien (*.*)|*.*"
+                Title = T("LimitsTitle"),
+                Filter = $"{T("DataFilter")}|*.hog;*.mn3;*.gam|{T("AllFiles")}|*.*"
             };
             if (dialog.ShowDialog(this) != true)
                 return;
@@ -461,7 +467,7 @@ namespace D3SaveEditor.Gui
                 limits.Load(dialog.FileName);
                 if (game != null)
                     RefreshWeaponLimits();
-                Status.Text = $"{limits.Ships.Count} Schiffsdefinitionen geladen aus {limits.Source}.";
+                Status.Text = T("LimitsLoaded", limits.Ships.Count, limits.Source);
             }
             catch (Exception ex)
             {
@@ -473,11 +479,11 @@ namespace D3SaveEditor.Gui
         {
             var caps = limits.ForShip(game.ShipName);
             foreach (var row in primary.Rows.Concat(secondary.Rows))
-                row.Limit = !row.UsesAmmo ? "Energiewaffe" : caps == null ? "nicht geladen" : caps[row.Index].ToString("N0");
+                row.Limit = !row.UsesAmmo ? T("EnergyWeapon") : caps == null ? T("LimitUnavailable") : caps[row.Index].ToString("N0");
 
             string hint = caps == null
-                ? "„Vorhandene: Schiffslimit“ braucht die Munitionsgrenzen des aktuellen Schiffs. Öffne dafür „Schiffslimits laden“. „Max“ pro Zeile setzt bis dahin 65.535."
-                : $"„Vorhandene: Schiffslimit“ füllt alle vorhandenen Munitionswaffen bis zur angezeigten Kapazität für {game.ShipName} auf. „Max“ füllt jeweils eine Zeile.";
+                ? T("LimitsMissingHint")
+                : T("LimitsLoadedHint", game.ShipName);
             primary.Hint = secondary.Hint = hint;
         }
 
@@ -493,7 +499,7 @@ namespace D3SaveEditor.Gui
                 && !float.IsNaN(value) && value >= 0 && value <= maximum)
                 return value;
 
-            throw new FormatProblem($"{name} muss eine Zahl von 0 bis {maximum:N0} sein.");
+            throw new FormatProblem(T("FloatRange", name, maximum));
         }
 
         private static int ReadInteger(string text, int minimum, int maximum, string name)
@@ -502,22 +508,22 @@ namespace D3SaveEditor.Gui
             if (int.TryParse(text, NumberStyles.Integer, CultureInfo.CurrentCulture, out value) && value >= minimum && value <= maximum)
                 return value;
 
-            throw new FormatProblem($"{name} muss eine ganze Zahl von {minimum:N0} bis {maximum:N0} sein.");
+            throw new FormatProblem(T("IntegerRange", name, minimum, maximum));
         }
 
         private EditOptions ReadOptions()
         {
             var options = game.CurrentOptions();
-            options.Energy = ReadFloat(EnergyInput, options.Energy, 1000000000, "Energie");
-            options.Shields = ReadFloat(ShieldsInput, options.Shields, 1000000000, "Schild");
-            options.AfterburnerSeconds = ReadFloat(AfterburnerInput, options.AfterburnerSeconds, 1000000, "Nachbrenner");
-            options.Lives = (byte)ReadInteger(LivesInput.Text, 0, 255, "Leben");
-            options.Score = ReadInteger(ScoreInput.Text, int.MinValue, int.MaxValue, "Punktestand");
+            options.Energy = ReadFloat(EnergyInput, options.Energy, 1000000000, T("Energy"));
+            options.Shields = ReadFloat(ShieldsInput, options.Shields, 1000000000, T("Shields"));
+            options.AfterburnerSeconds = ReadFloat(AfterburnerInput, options.AfterburnerSeconds, 1000000, T("Afterburner"));
+            options.Lives = (byte)ReadInteger(LivesInput.Text, 0, 255, T("Lives"));
+            options.Score = ReadInteger(ScoreInput.Text, int.MinValue, int.MaxValue, T("Score"));
 
             foreach (var row in primary.Rows.Concat(secondary.Rows))
             {
                 options.Owned[row.Index] = row.Owned;
-                options.Ammo[row.Index] = (ushort)ReadInteger(row.Ammo, 0, ushort.MaxValue, $"Munition {row.Name}");
+                options.Ammo[row.Index] = (ushort)ReadInteger(row.Ammo, 0, ushort.MaxValue, row.AmmoLabel);
             }
             options.Primary = primary.SelectedIndex;
             if (secondary.SelectedIndex > 0)
@@ -570,9 +576,13 @@ namespace D3SaveEditor.Gui
 
         private string FileReport()
         {
-            return $"DATEI\r\n{openedPath}\r\nSHA-256: {game.Hash}\r\n\r\n" +
-                $"FORMAT\r\nVersion {game.Version} · {game.Layout.Name}\r\nSpielerblock: 0x{game.PlayerOffset:X}\r\n" +
-                $"Karte: {game.MapCount} Einträge · Inventar: {game.InventoryItems.Count} Arten · Gegenmaßnahmen: {game.CountermeasureItems.Count} Arten\r\n\r\n";
+            return T("FileReport", openedPath, game.Hash, game.Version, game.Layout.Name, game.PlayerOffset,
+                game.MapCount, game.InventoryItems.Count, game.CountermeasureItems.Count);
+        }
+
+        private void RefreshSaveDetails()
+        {
+            SaveDetails.Text = $"{game.Callsign}  ·  {game.ShipName}  ·  {game.Mission} / Level {game.Level}  ·  Format {game.Version}  ·  {game.Layout.Name}";
         }
 
         private void OnCheckChanges(object sender, RoutedEventArgs e) => CheckChanges();
@@ -583,18 +593,18 @@ namespace D3SaveEditor.Gui
             {
                 var result = game.Edit(ReadOptions());
                 string changes = result.Changes.Count == 0
-                    ? "Keine Änderungen. Bytefolge identisch."
+                    ? T("Identical")
                     : string.Join("\r\n", result.Changes.Select(change => "• " + change));
-                Review.Text = FileReport() + "GEPRÜFTE ÄNDERUNGEN\r\n" + changes +
-                    $"\r\n\r\nAusgabe erneut erfolgreich eingelesen.\r\nGröße: {game.Bytes.Length} → {result.Bytes.Length} Byte\r\n";
+                Review.Text = FileReport() + T("VerifiedHeading") + "\r\n" + changes +
+                    "\r\n\r\n" + T("VerifiedSize", game.Bytes.Length, result.Bytes.Length);
                 Status.Text = result.Changes.Count == 0
-                    ? "Prüfung bestanden: keine Änderung."
-                    : $"Prüfung bestanden: {result.Changes.Count} Änderungsgruppen.";
+                    ? T("VerifiedNoChanges")
+                    : T("VerifiedChanges", result.Changes.Count);
                 return result;
             }
             catch (Exception ex)
             {
-                Review.Text = FileReport() + "PRÜFUNG FEHLGESCHLAGEN\r\n" + ex.Message;
+                Review.Text = FileReport() + T("CheckFailed") + "\r\n" + ex.Message;
                 ShowError(ex);
                 return null;
             }
@@ -614,8 +624,8 @@ namespace D3SaveEditor.Gui
             {
                 var dialog = new SaveFileDialog
                 {
-                    Title = "Bearbeiteten Spielstand als Kopie speichern",
-                    Filter = "Alle Dateien (*.*)|*.*",
+                    Title = T("SaveCopyTitle"),
+                    Filter = $"{T("AllFiles")}|*.*",
                     AddExtension = false,
                     FileName = Path.GetFileName(openedPath) + ".edited",
                     InitialDirectory = Path.GetDirectoryName(openedPath),
@@ -630,7 +640,7 @@ namespace D3SaveEditor.Gui
             {
                 string backup = SaveFiles.Write(destination, result, openedPath, game.Hash);
                 LoadGame(result.Parsed, Path.GetFullPath(destination));
-                Status.Text = $"Gespeichert: {Path.GetFileName(destination)}" +
+                Status.Text = T("Saved", Path.GetFileName(destination)) +
                     (backup == null ? "" : $" · Backup: {Path.GetFileName(backup)}");
             }
             catch (Exception ex)
@@ -641,10 +651,64 @@ namespace D3SaveEditor.Gui
 
         private void ShowError(Exception ex)
         {
-            Status.Text = "Fehler: " + ex.Message;
+            Status.Text = T("Error", ex.Message);
             MessageBox.Show(this, ex.Message, EditorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
-        private void OnHelp(object sender, RoutedEventArgs e) => EditorTabs.SelectedItem = HelpTab;
+        private void OnOpenLanguageMenu(object sender, RoutedEventArgs e)
+        {
+            var menu = LanguageButton.ContextMenu;
+            foreach (MenuItem item in menu.Items)
+                item.IsChecked = Equals(item.Tag, IsEnglish ? "en" : "de");
+            menu.PlacementTarget = LanguageButton;
+            menu.Placement = PlacementMode.Bottom;
+            menu.IsOpen = true;
+        }
+
+        private void OnSelectLanguage(object sender, RoutedEventArgs e)
+        {
+            var item = (MenuItem)sender;
+            string code = (string)item.Tag;
+            loading = true;
+            try
+            {
+                CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(code);
+                UiText.Apply(Resources);
+                primary.RefreshText();
+                secondary.RefreshText();
+                Status.Text = dirty ? T("Pending") : game == null ? T("Ready") : T("Loaded");
+                if (game == null)
+                    return;
+
+                countermeasures.RefreshText();
+                foreach (var row in cargoRows)
+                    row.RefreshText();
+                foreach (var row in shipRows)
+                    row.RefreshText();
+                if (!game.IsShipDefined(SaveGame.BlackPyro))
+                    BlackPyroUnlockInput.Content = T("Missing", SaveGame.BlackPyro);
+                if (game.InventoryItems.Count == 0)
+                    SavedInventory.ItemsSource = new[] { T("InventoryEmpty") };
+                GuideBotInfo.Text = game.GuideBot == null ? T("BotUnavailable") : T("BotHelp");
+                if (game.GuideBot != null)
+                {
+                    GuideBotShield.Text = T("BotShields", game.GuideBot.Shields);
+                    foreach (var row in guideBotSupplies)
+                        row.RefreshText();
+                }
+                RefreshWeaponLimits();
+                RefreshEquipmentAvailability();
+                RefreshEffectTimers();
+                MapInfo.Text = T("RoomsVisible", game.RevealedRooms, game.HighestRoom + 1);
+                RefreshSaveDetails();
+                Review.Text = FileReport() + (dirty ? T("Pending") : T("NoPlannedChanges"));
+            }
+            finally
+            {
+                item.IsChecked = true;
+                LanguageButton.ContextMenu.IsOpen = false;
+                loading = false;
+            }
+        }
     }
 }

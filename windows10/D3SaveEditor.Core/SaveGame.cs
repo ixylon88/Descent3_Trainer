@@ -8,6 +8,8 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
+using static D3SaveEditor.Core.CoreText;
+
 namespace D3SaveEditor.Core {
     public sealed class FormatProblem : Exception {
         public FormatProblem(string message) : base(message) { }
@@ -25,7 +27,7 @@ namespace D3SaveEditor.Core {
         }
         internal void Need(int count) {
             if (count < 0 || Pos < 0 || Pos > End || count > End - Pos)
-                throw new FormatProblem("Die Datei ist abgeschnitten oder eine Blocklänge ist ungültig.");
+                throw new FormatProblem(Text("Truncated"));
         }
         internal void Skip(int count) { Need(count); Pos += count; }
         internal byte U8() { Need(1); return Data[Pos++]; }
@@ -39,13 +41,13 @@ namespace D3SaveEditor.Core {
             for (int i = 0; i < max; i++) {
                 if (U8() == 0) return SaveGame.Ansi.GetString(Data, start, Pos - start - 1);
             }
-            throw new FormatProblem("Eine Zeichenkette hat keinen gültigen Abschluss.");
+            throw new FormatProblem(Text("UnterminatedString"));
         }
         internal bool Bool() {
-            byte x = U8(); if (x > 1) throw new FormatProblem("Ungültiger Schalter im Speicherformat."); return x == 1;
+            byte x = U8(); if (x > 1) throw new FormatProblem(Text("InvalidBoolean")); return x == 1;
         }
         internal void Sized(int max = 32767) {
-            int size = I16(); if (size < 0 || size > max) throw new FormatProblem("Ungültige Strukturgröße."); Skip(size);
+            int size = I16(); if (size < 0 || size > max) throw new FormatProblem(Text("InvalidStructure")); Skip(size);
         }
     }
 
@@ -58,7 +60,7 @@ namespace D3SaveEditor.Core {
             new PlayerLayout(496,4,308,320,348,420,432,468),
             new PlayerLayout(536,8,312,336,376,448,468,504)
         };
-        public string Name { get { return PointerBytes == 4 ? "32-Bit / 496 Byte" : "64-Bit / 536 Byte"; } }
+        public string Name { get { return PointerBytes == 4 ? Text("Layout32") : Text("Layout64"); } }
     }
 
     public sealed class InventoryItem {
@@ -87,18 +89,18 @@ namespace D3SaveEditor.Core {
         internal static InventoryBlock Read(Reader r) {
             var result = new InventoryBlock { Start = r.Pos };
             int n = r.I32();
-            if (n < 0 || n > 10) throw new FormatProblem("Das Inventar enthält eine unbekannte Anzahl von Einträgen.");
+            if (n < 0 || n > 10) throw new FormatProblem(Text("InventoryLength"));
             for (int i=0; i<n; i++) {
                 var item = new InventoryItem { Start = r.Pos };
                 item.Type=r.I32(); item.OriginalType=r.I32(); item.Id=r.I32(); item.OriginalId=r.I32();
                 item.Flags=r.I32(); item.Count=r.I32();
-                if (item.Count < 1 || item.Count > 1000000) throw new FormatProblem("Ungültige Inventar-Stückzahl.");
+                if (item.Count < 1 || item.Count > 1000000) throw new FormatProblem(Text("InventoryCount"));
                 item.Description=r.Z(); item.Icon=r.Z(); item.Name=r.Z(); item.InventoryFlags=r.I32();
                 item.End = r.Pos;
                 result.Items.Add(item);
             }
             result.Selected=r.I32();
-            if (result.Selected < 0 || result.Selected >= Math.Max(n,1)) throw new FormatProblem("Ungültige Inventarauswahl.");
+            if (result.Selected < 0 || result.Selected >= Math.Max(n,1)) throw new FormatProblem(Text("InventorySelection"));
             result.End=r.Pos; return result;
         }
         internal byte[] Serialize(byte[] source) {
@@ -136,10 +138,10 @@ namespace D3SaveEditor.Core {
         internal static ObjectBlock Read(byte[] data, int pos, int version) {
             var r = new Reader(data,pos);
             var x = new ObjectBlock { Start=pos };
-            if (r.U32() != 0x00BADB0B) throw new FormatProblem("Objektmarkierung fehlt.");
+            if (r.U32() != 0x00BADB0B) throw new FormatProblem(Text("ObjectMarker"));
             x.Type=r.U8();
             if (x.Type == 255) { x.End=r.Pos; return x; }
-            if (x.Type > 25) throw new FormatProblem("Unbekannter Objekttyp.");
+            if (x.Type > 25) throw new FormatProblem(Text("ObjectType"));
             r.U8(); // lighting_render_type
             if (r.Bool()) r.Skip(52); // sizeof(light_info), no pointers
             x.Handle=r.I32(); x.DummyType=r.U8(); r.Skip(4+12+12+36); // room, pos, last_pos, orient
@@ -147,13 +149,13 @@ namespace D3SaveEditor.Core {
             x.Id=r.I16(); r.Skip(4); // object flags
             r.U8(); r.U8(); int renderType=r.U8();
             r.Skip(2+4); x.ShieldOffset=r.Pos; float shields=r.F32();
-            if (!SaveGame.Finite(shields)) throw new FormatProblem("Ungültiger Schildwert.");
+            if (!SaveGame.Finite(shields)) throw new FormatProblem(Text("ObjectShields"));
             r.Skip(3+12+4+8); // contents, creation/life times, parent, attach handles
             int nattach=r.I32();
-            if (nattach<0 || nattach>1024) throw new FormatProblem("Unbekannte Anzahl von Anheftpunkten.");
+            if (nattach<0 || nattach>1024) throw new FormatProblem(Text("AttachmentCount"));
             if (nattach>0) {
                 int allocated=version>=2 ? r.I32() : 1;
-                if (allocated!=0 && allocated!=1) throw new FormatProblem("Ungültige Anheftpunkt-Struktur.");
+                if (allocated!=0 && allocated!=1) throw new FormatProblem(Text("AttachmentStructure"));
                 if (allocated==1) r.Skip(4*nattach);
             }
             r.Skip(1+2+4+24+20);
@@ -163,12 +165,12 @@ namespace D3SaveEditor.Core {
             r.Sized(); r.Skip(4); // render union, size again
             if (renderType==1) r.Skip(24); // custom_anim
             int nb=r.U8();
-            if (nb>21) throw new FormatProblem("Unbekannte Waffenbatterie-Struktur.");
+            if (nb>21) throw new FormatProblem(Text("WeaponBatteries"));
             x.BatteryCount=nb; x.BatteryStart=r.Pos; r.Skip(nb*108);
             x.EffectRecord=r.Pos;
             if (r.Bool()) {
                 int size=r.I16();
-                if (size!=164) throw new FormatProblem("Unbekannte Effektstruktur. Dieses Spiel-Build wird noch nicht unterstützt.");
+                if (size!=164) throw new FormatProblem(Text("EffectStructure"));
                 x.EffectSize=size; x.EffectOffset=r.Pos; r.Skip(size);
             }
             x.End=r.Pos; return x;
@@ -245,7 +247,7 @@ namespace D3SaveEditor.Core {
         public string[][] Tables { get; private set; }
         public string Callsign { get { return Fixed(Bytes,PlayerOffset+64,20); } }
         public string ShipName {
-            get { int i=I32(Bytes,PlayerOffset+60); return i>=0 && i<Tables[3].Length ? Tables[3][i] : "Unbekannt"; }
+            get { int i=I32(Bytes,PlayerOffset+60); return i>=0 && i<Tables[3].Length ? Tables[3][i] : Text("UnknownShip"); }
         }
         public float Energy { get { return F32(Bytes,PlayerOffset+104); } }
         public float Shields { get { return F32(Bytes,PlayerObject.ShieldOffset); } }
@@ -268,9 +270,9 @@ namespace D3SaveEditor.Core {
         public string Hash { get { return HashBytes(Bytes); } }
 
         public static SaveGame Parse(byte[] bytes) {
-            if (!BitConverter.IsLittleEndian) throw new FormatProblem("Der Editor benötigt ein Little-Endian-System.");
+            if (!BitConverter.IsLittleEndian) throw new FormatProblem(Text("LittleEndian"));
             if (bytes==null || bytes.Length<600 || bytes.Length>256*1024*1024)
-                throw new FormatProblem("Keine unterstützte Descent-3-Spielstandsdatei (600 Byte bis 256 MiB).");
+                throw new FormatProblem(Text("SaveSize"));
             var s=new SaveGame { Bytes=(byte[])bytes.Clone() };
             s.ParseHeader();
             var matches=new List<SaveGame>();
@@ -287,13 +289,13 @@ namespace D3SaveEditor.Core {
                     if (obj.Id==0 && (obj.Handle&0x7ff)<1500 && (obj.BatteryCount==0 || obj.BatteryCount==21)) objects.Add(obj);
                 } catch (FormatProblem) { }
             }
-            if (objects.Count>64) throw new FormatProblem("Mehrdeutige Spielerobjekte. Die Datei wird nicht bearbeitet.");
+            if (objects.Count>64) throw new FormatProblem(Text("AmbiguousObjects"));
             foreach (var obj in objects) {
                 int end=obj.End, expected=(obj.Handle&0x7ff)+1;
                 try {
                     while (end+5<bytes.Length && U32(bytes,end)==0x00BADB0B && expected<1500) {
                         var next=ObjectBlock.Read(bytes,end,s.Version);
-                        if(next.Type!=255 && (next.Handle&0x7ff)!=expected) throw new FormatProblem("Ungültige Objektfolge.");
+                        if(next.Type!=255 && (next.Handle&0x7ff)!=expected) throw new FormatProblem(Text("ObjectSequence"));
                         end=next.End; expected++;
                     }
                     foreach(var layout in PlayerLayout.Known) {
@@ -305,8 +307,8 @@ namespace D3SaveEditor.Core {
                 } catch(FormatProblem) { }
             }
             if(matches.Count!=1) throw new FormatProblem(matches.Count==0
-                ? "Kein eindeutig verknüpfter Spielerblock gefunden. Unterstützt: Speicherformat 0–2, Windows-Strukturen mit 496 oder 536 Byte. Andere Builds und beschädigte Dateien werden abgelehnt."
-                : "Mehrere plausible Spielerblöcke gefunden. Die Datei wird nicht bearbeitet.");
+                ? Text("NoPlayer")
+                : Text("AmbiguousPlayer"));
             var match = matches[0];
             match.GuideBot = GuideBotData.Find(match);
             return match;
@@ -314,62 +316,62 @@ namespace D3SaveEditor.Core {
 
         private void ParseHeader() {
             var r=new Reader(Bytes);
-            if (Array.IndexOf(Bytes,(byte)0,0,32)<0) throw new FormatProblem("Die Spielstandsbeschreibung ist ungültig.");
+            if (Array.IndexOf(Bytes,(byte)0,0,32)<0) throw new FormatProblem(Text("Description"));
             Description=Fixed(Bytes,0,32); r.Skip(32); Version=r.I16();
-            if(Version<0 || Version>2) throw new FormatProblem("Unbekannte Spielstandsversion: "+Version+". Unterstützt werden 0 bis 2.");
+            if(Version<0 || Version>2) throw new FormatProblem(Text("SaveVersion", Version));
             if(r.Bool()) SkipSnapshot(r);
             Tables=new string[6][];
             for(int table=0;table<6;table++) {
-                int n=r.I16(); if(n<0 || n>16384) throw new FormatProblem("Unbekannte Übersetzungstabelle.");
+                int n=r.I16(); if(n<0 || n>16384) throw new FormatProblem(Text("TranslationTable"));
                 var list=new string[n]; for(int i=0;i<n;i++) list[i]=r.Z(); Tables[table]=list;
             }
             for(int i=0;;i++) {
-                if(i>16384) throw new FormatProblem("Bitmap-Tabelle ist nicht abgeschlossen.");
-                int index=r.I16(); string name=r.Z(); if(index==-1) { if(name.Length!=0)throw new FormatProblem("Ungültiges Tabellenende."); break; }
-                if(index<0) throw new FormatProblem("Ungültiger Bitmap-Index.");
+                if(i>16384) throw new FormatProblem(Text("BitmapEnd"));
+                int index=r.I16(); string name=r.Z(); if(index==-1) { if(name.Length!=0)throw new FormatProblem(Text("TableEnd")); break; }
+                if(index<0) throw new FormatProblem(Text("BitmapIndex"));
             }
             Level=r.I16(); Mission=r.Z();
-            if(Mission.Length==0 || Level<0 || Level>10000) throw new FormatProblem("Ungültige Missionsangaben.");
-            r.Skip(4); float gameTime=r.F32(); if(!Finite(gameTime))throw new FormatProblem("Ungültige Spielzeit.");
+            if(Mission.Length==0 || Level<0 || Level>10000) throw new FormatProblem(Text("Mission"));
+            r.Skip(4); float gameTime=r.F32(); if(!Finite(gameTime))throw new FormatProblem(Text("GameTime"));
             r.Skip(4+4+2);
-            int weather=r.I32(); if(weather<0 || weather>65536)throw new FormatProblem("Ungültiger Wetterblock."); r.Skip(weather);
+            int weather=r.I32(); if(weather<0 || weather>65536)throw new FormatProblem(Text("WeatherBlock")); r.Skip(weather);
             int maxDoors=r.I32(),activeDoors=r.I32();
-            if(maxDoors<0 || maxDoors>65536 || activeDoors<0 || activeDoors>maxDoors)throw new FormatProblem("Ungültiger Türblock.");
+            if(maxDoors<0 || maxDoors>65536 || activeDoors<0 || activeDoors>maxDoors)throw new FormatProblem(Text("DoorBlock"));
             r.Skip(maxDoors*4);
             HighestRoom=r.I16(); MapCount=r.I16();
-            if(MapCount<1 || MapCount>16384 || HighestRoom< -1 || HighestRoom>=MapCount)throw new FormatProblem("Ungültiger Kartenblock.");
+            if(MapCount<1 || MapCount>16384 || HighestRoom< -1 || HighestRoom>=MapCount)throw new FormatProblem(Text("MapBlock"));
             MapOffset=r.Pos; r.Need(MapCount);
-            for(int i=0;i<MapCount;i++) if(r.U8()>1)throw new FormatProblem("Unbekanntes Kartenformat.");
+            for(int i=0;i<MapCount;i++) if(r.U8()>1)throw new FormatProblem(Text("MapFormat"));
         }
         private static void SkipSnapshot(Reader r) {
             int idLen=r.U8(), cmap=r.U8(), type=r.U8();
-            if(cmap!=0 || (type!=121 && type!=122 && type!=123))throw new FormatProblem("Unbekanntes Vorschaubildformat.");
+            if(cmap!=0 || (type!=121 && type!=122 && type!=123))throw new FormatProblem(Text("PreviewFormat"));
             r.Z(); int mips=r.U8(); r.Skip(9); int width=r.U16(),height=r.U16(); r.Skip(2); r.Skip(idLen);
-            if(width<1 || width>8192 || height<1 || height>8192 || mips<1 || mips>16)throw new FormatProblem("Ungültiges Vorschaubild.");
+            if(width<1 || width>8192 || height<1 || height>8192 || mips<1 || mips>16)throw new FormatProblem(Text("PreviewImage"));
             for(int m=0;m<mips;m++) {
                 int total=Math.Max(1,width>>m)*Math.Max(1,height>>m), pixels=0;
                 while(pixels<total) {
                     int command=r.U8();
-                    if(command==1 || command>250)throw new FormatProblem("Ungültige Bildkompression.");
+                    if(command==1 || command>250)throw new FormatProblem(Text("ImageCompression"));
                     int count=command==0 ? 1 : command;
-                    if(count>total-pixels)throw new FormatProblem("Vorschaubild überschreitet seine Größe.");
+                    if(count>total-pixels)throw new FormatProblem(Text("ImageSize"));
                     r.Skip(2); pixels+=count;
                 }
             }
         }
         private void ValidatePlayer() {
             int p=PlayerOffset;
-            if(Array.IndexOf(Bytes,(byte)0,p+64,20)<0)throw new FormatProblem("Ungültiger Rufname.");
+            if(Array.IndexOf(Bytes,(byte)0,p+64,20)<0)throw new FormatProblem(Text("Callsign"));
             if(!Finite(Energy) || Energy<0 || Energy>1000000000f || !Finite(Afterburner) || Afterburner<0 || Afterburner>1000000)
-                throw new FormatProblem("Ungültige Spielerwerte.");
-            if(I16(Bytes,p+136)!=(PlayerObject.Handle&0x7ff))throw new FormatProblem("Spieler und Spielerobjekt passen nicht zusammen.");
+                throw new FormatProblem(Text("PlayerValues"));
+            if(I16(Bytes,p+136)!=(PlayerObject.Handle&0x7ff))throw new FormatProblem(Text("PlayerObject"));
             int ship=I32(Bytes,p+60);
-            if(ship<0 || ship>=Tables[3].Length || string.IsNullOrEmpty(Tables[3][ship]))throw new FormatProblem("Spielerschiff fehlt.");
+            if(ship<0 || ship>=Tables[3].Length || string.IsNullOrEmpty(Tables[3][ship]))throw new FormatProblem(Text("MissingPlayerShip"));
             int primary=I32(Bytes,p+216), secondary=I32(Bytes,p+228);
-            if(primary<0 || primary>9 || secondary<10 || secondary>19)throw new FormatProblem("Ungültige aktive Waffe.");
+            if(primary<0 || primary>9 || secondary<10 || secondary>19)throw new FormatProblem(Text("InvalidWeapon"));
             for(int i=0;i<6;i++) {
                 float v=F32(Bytes,p+Layout.Scalars+4*i);
-                if(!Finite(v) || v<0 || v>1000000)throw new FormatProblem("Unbekannter Spieleraufbau.");
+                if(!Finite(v) || v<0 || v>1000000)throw new FormatProblem(Text("PlayerLayout"));
             }
             int invPos=p+Layout.Size;
             bool guided=false; for(int i=0;i<Layout.PointerBytes;i++) if(Bytes[p+Layout.GuidedPointer+i]!=0)guided=true;
@@ -377,10 +379,10 @@ namespace D3SaveEditor.Core {
             Inventory=InventoryBlock.Read(r); CounterMeasures=InventoryBlock.Read(r);
             if(I32(Bytes,p+Layout.Inventory+Layout.PointerBytes)!=Inventory.Items.Count ||
                I32(Bytes,p+Layout.CounterMeasures+Layout.PointerBytes)!=CounterMeasures.Items.Count)
-                throw new FormatProblem("Spielerstruktur und Inventare haben unterschiedliche Größen.");
+                throw new FormatProblem(Text("InventoryMismatch"));
             // At least the following matcen count must exist; opaque engine/script
             // state is retained verbatim and never reconstructed by the editor.
-            r.Need(4); int matcens=r.I32(); if(matcens<0 || matcens>4096)throw new FormatProblem("Ungültiger Folgeblock.");
+            r.Need(4); int matcens=r.I32(); if(matcens<0 || matcens>4096)throw new FormatProblem(Text("TrailingBlock"));
         }
         public int FindEquipment(string name) {
             return FindTableId(0, name, Tables[0].Length);
@@ -432,36 +434,36 @@ namespace D3SaveEditor.Core {
                edit.CargoCounts==null || edit.CargoCounts.Length!=CargoItems.Count ||
                edit.CountermeasureCounts==null || edit.CountermeasureCounts.Length!=CountermeasureTypes.Count ||
                edit.UnlockShips==null || edit.UnlockShips.Length!=StandardShips.Count)
-                throw new ArgumentException("Unvollständige Editieroptionen.");
+                throw new ArgumentException(Text("MissingOptions"));
             if(!Finite(edit.Energy) || edit.Energy<0 || edit.Energy>1000000000 || !Finite(edit.Shields) || edit.Shields<0 || edit.Shields>1000000000 ||
                !Finite(edit.AfterburnerSeconds) || edit.AfterburnerSeconds<0 || edit.AfterburnerSeconds>1000000)
-                throw new FormatProblem("Energie, Schild und Nachbrenner müssen endliche, nicht negative Werte im Eingabebereich sein.");
+                throw new FormatProblem(Text("PlayerNumberRange"));
             uint originalMask=U32(Bytes,PlayerOffset+168);
-            if(!edit.Owned.Take(10).Any(x=>x) && (originalMask&0x3ffu)!=0)throw new FormatProblem("Mindestens eine Primärwaffe muss vorhanden sein.");
+            if(!edit.Owned.Take(10).Any(x=>x) && (originalMask&0x3ffu)!=0)throw new FormatProblem(Text("PrimaryRequired"));
             var result=new EditResult(); var patches=new List<Patch>();
             if (edit.GuideBotName != null || edit.GuideBotChatter.HasValue || edit.GuideBotCounts != null) {
-                if (GuideBot == null) throw new FormatProblem("Kein bearbeitbarer Guide-Bot-Zustand im Spielstand.");
+                if (GuideBot == null) throw new FormatProblem(Text("GuideBotUnavailable"));
                 GuideBot.Edit(edit, Bytes, patches, result);
             }
             var raw=new byte[Layout.Size]; Buffer.BlockCopy(Bytes,PlayerOffset,raw,0,raw.Length);
             uint shipPermissions = ShipPermissions;
             if (edit.UnlockBlackPyro || edit.PreferBlackPyro) {
                 uint bit = ShipPermissionBit(BlackPyro);
-                if (bit == 0) throw new FormatProblem("Die Schiffsdefinition „Black Pyro“ fehlt im Spielstand.");
+                if (bit == 0) throw new FormatProblem(Text("BlackPyroMissing"));
                 // Apply a reset first so the user can re-enable individual ships before saving.
                 if (edit.PreferBlackPyro) shipPermissions &= ~ShipPermissionMask;
-                if (!IsShipAllowed(BlackPyro)) result.Changes.Add(BlackPyro + " freischalten");
+                if (!IsShipAllowed(BlackPyro)) result.Changes.Add(Text("UnlockShip", BlackPyro));
                 shipPermissions |= bit;
             }
             for (int i = 0; i < StandardShips.Count; i++) {
                 if (!edit.UnlockShips[i]) continue;
                 uint bit = ShipPermissionBit(StandardShips[i]);
-                if (bit == 0) throw new FormatProblem("Die Schiffsdefinition „" + StandardShips[i] + "“ fehlt im Spielstand.");
-                if (!IsShipAllowed(StandardShips[i])) result.Changes.Add(StandardShips[i] + " freischalten");
+                if (bit == 0) throw new FormatProblem(Text("ShipMissing", StandardShips[i]));
+                if (!IsShipAllowed(StandardShips[i])) result.Changes.Add(Text("UnlockShip", StandardShips[i]));
                 shipPermissions |= bit;
             }
             if ((ShipPermissions & ~shipPermissions) != 0)
-                result.Changes.Add("Andere Schiffsfreigaben entfernen");
+                result.Changes.Add(Text("ShipPermissionsRemoved"));
             Put(raw, Layout.Permissions, shipPermissions);
             Put(raw,104,edit.Energy); Put(raw,88,edit.Score); raw[108]=edit.Lives; Put(raw,Layout.Afterburner,edit.AfterburnerSeconds);
             uint mask=U32(raw,168)&~0xFFFFFu;
@@ -479,10 +481,10 @@ namespace D3SaveEditor.Core {
                 uint flags=U32(raw,84)&~(1u|(1u<<22));
                 if(edit.GodMode.Value)flags|=1;
                 Put(raw,84,flags); Put(raw,116,edit.GodMode.Value ? 1e9f : 0f);
-                result.Changes.Add(edit.GodMode.Value ? "God-Mode dauerhaft aktivieren" : "Unverwundbarkeit deaktivieren");
+                result.Changes.Add(edit.GodMode.Value ? Text("GodModeOn") : Text("GodModeOff"));
             }
             if(edit.QuadLasers.HasValue && !SupportsQuad)
-                throw new FormatProblem("Die Waffenbatterien dieses Spielstands erlauben keine Quad-Laser-Bearbeitung.");
+                throw new FormatProblem(Text("QuadUnavailable"));
             var inventory = Inventory.Copy();
             var countermeasures = CounterMeasures.Copy();
             // Remove first so an item can be replaced even when the inventory is full.
@@ -496,10 +498,10 @@ namespace D3SaveEditor.Core {
             if (edit.ActiveCountermeasureWeaponId.HasValue) {
                 int id = edit.ActiveCountermeasureWeaponId.Value;
                 int selected = countermeasures.Items.FindIndex(item => item.Type == 5 && item.Id == id && id >= 0);
-                if (selected < 0) throw new FormatProblem("Die gewählte Gegenmaßnahme muss im Bestand vorhanden sein.");
+                if (selected < 0) throw new FormatProblem(Text("CountermeasureNotOwned"));
                 if (selected != countermeasures.Selected) {
                     countermeasures.Selected = selected;
-                    result.Changes.Add("Aktive Gegenmaßnahme: " + countermeasures.Items[selected].Name);
+                    result.Changes.Add(Text("ActiveCountermeasure", countermeasures.Items[selected].Name));
                 }
             }
             AddInventoryPatch(raw, Layout.Inventory, inventory, patches);
@@ -523,22 +525,22 @@ namespace D3SaveEditor.Core {
                     var record=new byte[167]; record[0]=1; Put(record,1,(ushort)164); Buffer.BlockCopy(effect,0,record,3,164);
                     patches.Add(new Patch(PlayerObject.EffectRecord,1,record));
                 }
-                result.Changes.Add(edit.Cloaked.Value ? "Tarnung dauerhaft aktivieren" : "Tarnung deaktivieren");
+                result.Changes.Add(edit.Cloaked.Value ? Text("CloakOn") : Text("CloakOff"));
             }
-            if(edit.RevealMap) { var map=Enumerable.Repeat((byte)1,MapCount).ToArray(); patches.Add(new Patch(MapOffset,MapCount,map)); result.Changes.Add("Gesamte Karte aufdecken"); }
+            if(edit.RevealMap) { var map=Enumerable.Repeat((byte)1,MapCount).ToArray(); patches.Add(new Patch(MapOffset,MapCount,map)); result.Changes.Add(Text("MapRevealed")); }
             patches.Add(new Patch(PlayerObject.ShieldOffset,4,BitConverter.GetBytes(edit.Shields)));
             patches.Add(new Patch(PlayerOffset,Layout.Size,raw));
-            if(edit.Energy!=Energy)result.Changes.Add("Energie: "+Energy+" → "+edit.Energy);
-            if(edit.Shields!=Shields)result.Changes.Add("Schild: "+Shields+" → "+edit.Shields);
-            if(edit.AfterburnerSeconds!=Afterburner)result.Changes.Add("Nachbrennerladung ändern");
-            if(edit.Lives!=Bytes[PlayerOffset+108] || edit.Score!=I32(Bytes,PlayerOffset+88))result.Changes.Add("Leben / Punktestand ändern");
-            if(mask!=U32(Bytes,PlayerOffset+168) || !edit.Ammo.SequenceEqual(CurrentOptions().Ammo) || primary!=I32(Bytes,PlayerOffset+216) || secondary!=I32(Bytes,PlayerOffset+228))result.Changes.Add("Waffen / Munition / aktive Waffe ändern");
+            if(edit.Energy!=Energy)result.Changes.Add(Text("EnergyEdited", Energy, edit.Energy));
+            if(edit.Shields!=Shields)result.Changes.Add(Text("ShieldsEdited", Shields, edit.Shields));
+            if(edit.AfterburnerSeconds!=Afterburner)result.Changes.Add(Text("AfterburnerEdited"));
+            if(edit.Lives!=Bytes[PlayerOffset+108] || edit.Score!=I32(Bytes,PlayerOffset+88))result.Changes.Add(Text("LivesOrScoreEdited"));
+            if(mask!=U32(Bytes,PlayerOffset+168) || !edit.Ammo.SequenceEqual(CurrentOptions().Ammo) || primary!=I32(Bytes,PlayerOffset+216) || secondary!=I32(Bytes,PlayerOffset+228))result.Changes.Add(Text("WeaponsEdited"));
             result.Bytes=ApplyPatches(Bytes,patches); result.Parsed=Parse(result.Bytes);
             if(result.Bytes.SequenceEqual(Bytes))result.Changes.Clear();
             return result;
         }
         private void AddInventoryPatch(byte[] raw, int offset, InventoryBlock block, List<Patch> patches) {
-            if (block.Items.Count > 10) throw new FormatProblem("Das Inventar ist voll (maximal 10 Arten pro Liste).");
+            if (block.Items.Count > 10) throw new FormatProblem(Text("InventoryFull"));
             Put(raw, offset + Layout.PointerBytes, block.Items.Count);
             byte[] bytes = block.Serialize(Bytes);
             if (!SliceEqual(Bytes, block.Start, block.End - block.Start, bytes))
@@ -547,15 +549,15 @@ namespace D3SaveEditor.Core {
         private void SetEquipment(InventoryBlock inv,string key,string name,int flags,bool? requested,bool removing,EditResult result) {
             if(!requested.HasValue || requested.Value==removing)return;
             int id=FindEquipment(key);
-            if(id<0)throw new FormatProblem("Die Gegenstandsdefinition „"+key+"“ fehlt in diesem Spielstand.");
+            if(id<0)throw new FormatProblem(Text("ObjectMissing", key));
             var found=inv.Items.Find(x=>x.Type==7 && x.Id==id);
             if(requested.Value && found==null) {
                 inv.Items.Add(new InventoryItem { Type=7,OriginalType=7,Id=id,OriginalId=id,Count=1,Flags=0,
                     InventoryFlags=flags,Description="",Icon="",Name=name });
-                result.Changes.Add(name+" hinzufügen");
+                result.Changes.Add(Text("EquipmentAdded", name));
             } else if(!requested.Value && found!=null) {
                 inv.Remove(7, id);
-                result.Changes.Add(name+" entfernen");
+                result.Changes.Add(Text("EquipmentRemoved", name));
             }
         }
         private void SetSupplies(InventoryBlock block, IReadOnlyList<SupplyItem> items, int?[] counts, bool removing, EditResult result) {
@@ -563,14 +565,14 @@ namespace D3SaveEditor.Core {
                 if (!counts[i].HasValue || (counts[i].Value == 0) != removing) continue;
                 SupplyItem item = items[i];
                 int id = SupplyId(item);
-                if (id < 0) throw new FormatProblem("Die Definition „" + item.Name + "“ fehlt im Spielstand.");
+                if (id < 0) throw new FormatProblem(Text("SupplyMissing", item.Name));
                 var saved = block.Items.Find(entry => entry.Type == item.Type && entry.Id == id);
                 int oldCount = saved == null ? 0 : saved.Count;
                 int count = counts[i].Value;
                 if (count == oldCount) continue;
                 int maximum = Math.Max(oldCount, item.Maximum);
                 if (count < 0 || count > maximum)
-                    throw new FormatProblem(item.Name + " erlaubt eine Menge von 0 bis " + maximum + ".");
+                    throw new FormatProblem(Text("SupplyBounds", item.Name, maximum));
 
                 if (count == 0) {
                     block.Remove(item.Type, id);
@@ -578,7 +580,7 @@ namespace D3SaveEditor.Core {
                     saved.Count = count;
                 } else {
                     int pickup = item.Pickup == null ? id : FindTableId(0, item.Pickup, MaxObjectIds);
-                    if (pickup < 0) throw new FormatProblem("Die Aufsammeldefinition „" + item.Pickup + "“ fehlt im Spielstand.");
+                    if (pickup < 0) throw new FormatProblem(Text("PickupMissing", item.Pickup));
                     // Engine inventory stores the power-up ID as the countermeasure's auxiliary ID.
                     const int selectable = 0x03, missionItem = 0x04, timeoutOnSpew = 0x80;
                     block.Items.Add(new InventoryItem {
@@ -595,7 +597,7 @@ namespace D3SaveEditor.Core {
             using(var stream=new MemoryStream()) {
                 int previous=0;
                 foreach(var p in patches) {
-                    if(p.Start<previous || p.Start<0 || p.Length<0 || p.Start>source.Length-p.Length)throw new FormatProblem("Überlappende oder ungültige Änderungen.");
+                    if(p.Start<previous || p.Start<0 || p.Length<0 || p.Start>source.Length-p.Length)throw new FormatProblem(Text("InvalidChanges"));
                     stream.Write(source,previous,p.Start-previous); stream.Write(p.Data,0,p.Data.Length); previous=p.Start+p.Length;
                 }
                 stream.Write(source,previous,source.Length-previous); return stream.ToArray();
@@ -620,7 +622,7 @@ namespace D3SaveEditor.Core {
 
     public static class SaveFiles {
         public static SaveGame Open(string path) {
-            var info=new FileInfo(path); if(info.Length>256*1024*1024)throw new FormatProblem("Die Datei ist größer als 256 MiB.");
+            var info=new FileInfo(path); if(info.Length>256*1024*1024)throw new FormatProblem(Text("FileTooLarge"));
             return SaveGame.Parse(File.ReadAllBytes(path));
         }
         // Write a validated copy or atomically replace with a timestamped backup.
@@ -630,7 +632,7 @@ namespace D3SaveEditor.Core {
             string full=Path.GetFullPath(destination),opened=Path.GetFullPath(openedPath);
             if(string.Equals(full,opened,StringComparison.OrdinalIgnoreCase) &&
                (!File.Exists(opened) || SaveGame.HashBytes(File.ReadAllBytes(opened))!=expectedHash))
-                throw new IOException("Der geöffnete Spielstand wurde inzwischen verändert. Bitte erneut öffnen.");
+                throw new IOException(Text("SourceChanged"));
             string dir=Path.GetDirectoryName(full);
             string temp=Path.Combine(dir,".d3edit-"+Guid.NewGuid().ToString("N")+".tmp");
             string backup=null;

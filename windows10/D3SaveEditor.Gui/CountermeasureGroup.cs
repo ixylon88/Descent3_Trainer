@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows;
 using D3SaveEditor.Core;
+using static D3SaveEditor.Gui.UiText;
 
 namespace D3SaveEditor.Gui
 {
@@ -24,7 +25,7 @@ namespace D3SaveEditor.Gui
 
         internal int WeaponId { get; }
         public string Name => Item.Name;
-        public string AmmoLabel => "Menge " + Name;
+        public string AmmoLabel => T("CountLabel", Name);
         public bool CanToggle => CanEdit;
         public bool CanEditAmmo => CanEdit;
         public string Limit => CanEdit ? Item.Maximum.ToString("N0", CultureInfo.CurrentCulture) : "–";
@@ -52,6 +53,7 @@ namespace D3SaveEditor.Gui
         }
 
         internal void Fill() => Ammo = Item.Maximum.ToString(CultureInfo.CurrentCulture);
+        internal void RefreshAmmoLabel() => Notify(nameof(AmmoLabel));
     }
 
     internal sealed class CountermeasureGroup : BindableItem
@@ -60,7 +62,7 @@ namespace D3SaveEditor.Gui
         {
             internal CountermeasureRow Row;
             internal InventoryItem Saved;
-            internal string Name => Row?.Name ?? (Saved == null ? "Keine Gegenmaßnahme" : SavedName(Saved));
+            internal string Name => Row?.Name ?? (Saved == null ? T("NoCountermeasure") : SavedName(Saved));
             internal bool Present => Row?.Owned ?? (Saved != null);
             internal int WeaponId => Row?.WeaponId ?? (Saved?.Type == 5 ? Saved.Id : -1);
         }
@@ -74,7 +76,6 @@ namespace D3SaveEditor.Gui
             var other = game.CountermeasureItems.Where(item => item.Type != 5 || !Rows.Any(row => row.WeaponId == item.Id && row.CanEdit)).ToArray();
             choices = new[] { new Choice() }.Concat(Rows.Where(row => row.CanEdit).Select(row => new Choice { Row = row }))
                 .Concat(other.Select(item => new Choice { Saved = item })).ToArray();
-            Choices = choices.Select(choice => choice.Name).ToArray();
             ExtraEntries = other.Select(item => $"{SavedName(item)} × {item.Count}").ToArray();
 
             var active = game.ActiveCountermeasure;
@@ -84,15 +85,29 @@ namespace D3SaveEditor.Gui
         }
 
         public CountermeasureRow[] Rows { get; }
-        public string[] Choices { get; }
+        public string[] Choices => choices.Select(choice => choice.Name).ToArray();
         public string[] ExtraEntries { get; }
-        public string ActiveLabel => "Aktive Gegenmaßnahme";
-        public string NameHeading => "Gegenmaßnahme";
-        public string CountHeading => "Menge";
-        public string LimitHeading => "Spiellimit";
-        public string MaxPresentLabel => "Vorhandene: Spiellimit";
+        public string ActiveLabel => T("ActiveCountermeasure");
+        public string NameHeading => T("Countermeasure");
+        public string CountHeading => T("Count");
+        public string LimitHeading => T("GameLimit");
+        public string MaxPresentLabel => T("FillGameLimit");
         public Visibility StorageMaximumVisibility => Visibility.Collapsed;
-        public string Hint => "Die Limits gelten für alle Schiffe. Weitere gespeicherte Gegenmaßnahmen bleiben im Bestand.";
+        public string Hint => T("CountermeasureHint");
+
+        internal void RefreshText()
+        {
+            Notify(nameof(Choices));
+            Notify(nameof(SelectedIndex));
+            Notify(nameof(ActiveLabel));
+            Notify(nameof(NameHeading));
+            Notify(nameof(CountHeading));
+            Notify(nameof(LimitHeading));
+            Notify(nameof(MaxPresentLabel));
+            Notify(nameof(Hint));
+            foreach (var row in Rows)
+                row.RefreshAmmoLabel();
+        }
 
         public int SelectedIndex
         {

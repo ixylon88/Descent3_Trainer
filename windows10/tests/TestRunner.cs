@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -82,7 +83,25 @@ namespace D3SaveEditor.Tests
                 GuideBotTests(File.ReadAllBytes(Path.Combine(dir, name)));
             FileTests(dir, baseBytes);
             TableTests(dir);
+            LocalizationTest();
             Console.WriteLine("\n" + passed + " assertions passed. No real in-game save/load test has been performed.");
+        }
+        private static void LocalizationTest()
+        {
+            var original = CultureInfo.CurrentUICulture;
+            try
+            {
+                foreach (var language in new[] { "de", "en" })
+                {
+                    CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(language);
+                    string message = null;
+                    try { SaveGame.Parse(new byte[1]); }
+                    catch (FormatProblem ex) { message = ex.Message; }
+                    Check(message?.StartsWith(language == "de" ? "Keine unterstützte" : "Unsupported", StringComparison.Ordinal) == true,
+                        "Parser errors follow the selected interface language");
+                }
+            }
+            finally { CultureInfo.CurrentUICulture = original; }
         }
         private static void GuideBotTests(byte[] bytes)
         {

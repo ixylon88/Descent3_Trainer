@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+using static D3SaveEditor.Core.CoreText;
+
 namespace D3SaveEditor.Core {
     public sealed class GuideBotData {
         // AIGame.cpp: the fixed-size guidebot_data has no pointers in either supported ABI.
@@ -142,15 +144,15 @@ namespace D3SaveEditor.Core {
                 byte[] name = SaveGame.Ansi.GetBytes(edit.GuideBotName);
                 if (name.Length == 0 || name.Length >= NameSize || SaveGame.Ansi.GetString(name) != edit.GuideBotName ||
                     Array.Exists(name, ch => ch < 32 || ch == 127))
-                    throw new FormatProblem("Der Guide-Bot-Name muss 1 bis 7 ANSI-Zeichen enthalten.");
+                    throw new FormatProblem(Text("GuideBotName"));
                 Array.Clear(values, 0, NameSize);
                 Buffer.BlockCopy(name, 0, values, 0, name.Length);
             }
             if (edit.GuideBotCounts != null) {
-                if (edit.GuideBotCounts.Length != PowerupCount) throw new ArgumentException("Unvollständige Guide-Bot-Vorräte.");
+                if (edit.GuideBotCounts.Length != PowerupCount) throw new ArgumentException(Text("GuideBotCounts"));
                 for (int i = 0; i < PowerupCount; i++) {
                     int count = edit.GuideBotCounts[i];
-                    if (count < 0 || count > MaximumCount) throw new FormatProblem("Guide-Bot-Mengen müssen zwischen 0 und 127 liegen.");
+                    if (count < 0 || count > MaximumCount) throw new FormatProblem(Text("GuideBotCountRange"));
                     values[Powerups + i] = (byte)count;
                 }
             }
@@ -161,7 +163,7 @@ namespace D3SaveEditor.Core {
                 patches.Add(new Patch(offset + Flags, 4, BitConverter.GetBytes(updated)));
                 changed = true;
             }
-            if (changed) result.Changes.Add("Guide-Bot bearbeiten");
+            if (changed) result.Changes.Add(Text("GuideBotEdited"));
         }
     }
 }

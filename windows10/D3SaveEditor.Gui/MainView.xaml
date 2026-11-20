@@ -70,17 +70,17 @@
                             <ColumnDefinition Width="74" />
                             <ColumnDefinition Width="154" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="Vorhanden" />
+                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{DynamicResource Present}" />
                         <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding NameHeading}" />
                         <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="{Binding CountHeading}" />
                         <TextBlock Grid.Column="4" VerticalAlignment="Center" Margin="6,0" Text="{Binding LimitHeading}" />
                     </Grid>
                     <ItemsControl ItemsSource="{Binding Rows}" ItemTemplate="{StaticResource WeaponRowTemplate}" />
                     <WrapPanel Margin="0,10,0,0">
-                        <Button Content="Alle auswählen" Click="OnSelectWeapons" />
-                        <Button Content="Alle abwählen" Click="OnClearWeapons" />
+                        <Button Content="{DynamicResource SelectAll}" Click="OnSelectWeapons" />
+                        <Button Content="{DynamicResource ClearAll}" Click="OnClearWeapons" />
                         <Button Content="{Binding MaxPresentLabel}" Click="OnMaxShipWeapons" />
-                        <Button Content="Vorhandene: 65.535" Click="OnMaxStorageWeapons" Visibility="{Binding StorageMaximumVisibility}" />
+                        <Button Content="{DynamicResource FillStorage}" Click="OnMaxStorageWeapons" Visibility="{Binding StorageMaximumVisibility}" />
                     </WrapPanel>
                     <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Text="{Binding Hint}" />
                     <ItemsControl Margin="0,8,0,0" ItemsSource="{Binding ExtraEntries}" />
@@ -111,43 +111,42 @@
         </Grid.RowDefinitions>
 
         <WrapPanel Margin="0,0,0,6">
-            <Button Content="Spielstand öffnen…" Click="OnChooseOpen" />
-            <Button x:Name="SaveButton" Content="Speichern + Backup" Click="OnSave" IsEnabled="False" />
-            <Button x:Name="CopyButton" Content="Kopie speichern…" Click="OnSaveCopy" IsEnabled="False" />
-            <Button x:Name="ResetButton" Content="Originalwerte" Click="OnReset" IsEnabled="False" />
-            <Button Content="Schiffslimits laden…" Click="OnLoadLimits"
-                    ToolTip="Liest die normalen Munitionsgrenzen für die Waffenreiter aus Table.gam, d3.hog oder einem Missionsarchiv." />
-            <Button Content="Hilfe" Click="OnHelp" />
+            <Button Content="{DynamicResource OpenSave}" Click="OnChooseOpen" />
+            <Button x:Name="SaveButton" Content="{DynamicResource SaveAndBackup}" Click="OnSave" IsEnabled="False" />
+            <Button x:Name="CopyButton" Content="{DynamicResource SaveCopy}" Click="OnSaveCopy" IsEnabled="False" />
+            <Button x:Name="ResetButton" Content="{DynamicResource ResetValues}" Click="OnReset" IsEnabled="False" />
+            <Button Content="{DynamicResource LoadShipLimits}" Click="OnLoadLimits"
+                    ToolTip="{DynamicResource LoadShipLimitsTip}" />
+            <Button x:Name="LanguageButton" Content="{DynamicResource Language}" Click="OnOpenLanguageMenu"
+                    ToolTip="{DynamicResource LanguageTip}">
+                <Button.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="_Deutsch" Tag="de" IsCheckable="True" Click="OnSelectLanguage" />
+                        <MenuItem Header="_English" Tag="en" IsCheckable="True" Click="OnSelectLanguage" />
+                    </ContextMenu>
+                </Button.ContextMenu>
+            </Button>
         </WrapPanel>
 
         <Border Grid.Row="1" Background="#152438" Padding="12,9" Margin="0,0,0,10">
-            <StackPanel>
-                <TextBlock x:Name="SaveTitle" Text="Noch kein Spielstand geöffnet"
-                           FontWeight="SemiBold" Foreground="White" TextTrimming="CharacterEllipsis" />
-                <TextBlock x:Name="SaveDetails" Margin="0,3,0,0" Foreground="#CFDCEA"
-                           Text="Im Spiel speichern, dann eine Datei wie saveg000 aus dem Ordner savegame öffnen."
-                           TextWrapping="Wrap" />
-            </StackPanel>
+            <DockPanel>
+                <Image DockPanel.Dock="Right" MaxWidth="150" MaxHeight="48" VerticalAlignment="Center"
+                       Stretch="Uniform" ImageFailed="Image_ImageFailed" IsHitTestVisible="False">
+                    <Image.Source>
+                        <BitmapImage DecodePixelWidth="200" UriSource="flashmen_1.jpg" />
+                    </Image.Source>
+                </Image>
+                <StackPanel>
+                    <TextBlock x:Name="SaveTitle" Text="{DynamicResource NoSave}"
+                               FontWeight="SemiBold" Foreground="White" TextTrimming="CharacterEllipsis" />
+                    <TextBlock x:Name="SaveDetails" Margin="0,3,0,0" Foreground="#CFDCEA"
+                               Text="{DynamicResource OpenHint}" TextWrapping="Wrap" />
+                </StackPanel>
+            </DockPanel>
         </Border>
 
-        <DockPanel Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" x:Name="ZweiZeilenMesser" >
-            <!--<Image Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Source="flashmen_1.jpg" Stretch="None" HorizontalAlignment="Right" VerticalAlignment="Center" ImageFailed="Image_ImageFailed" />-->
-            <Image Height="{Binding ActualHeight, ElementName=ZweiZeilenMesser}" HorizontalAlignment="Right" VerticalAlignment="Center" ImageFailed="Image_ImageFailed" Stretch="Uniform">
-                <Image.Source>
-                    <!-- To save significant application memory, set the DecodePixelWidth or  
-                    DecodePixelHeight of the BitmapImage value of the image source to the desired 
-                    height and width of the rendered image. If you don't do this, the application will 
-                    cache the image as though it were rendered as its normal size rather than just 
-                    the size that is displayed. -->
-                    <!-- Note: In order to preserve aspect ratio, only set either DecodePixelWidth
-                    or DecodePixelHeight but not both. -->
-                    <BitmapImage DecodePixelWidth="200" UriSource="flashmen_1.jpg" />
-                </Image.Source>
-            </Image>
-        </DockPanel>
-
         <TabControl x:Name="EditorTabs" Grid.Row="2">
-            <TabItem Header="Spieler / Ausrüstung">
+            <TabItem Header="{DynamicResource PlayerTab}">
                 <ScrollViewer x:Name="PlayerEditor" IsEnabled="False" VerticalScrollBarVisibility="Auto">
                     <Grid Margin="12">
                         <Grid.ColumnDefinitions>
@@ -159,7 +158,7 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <GroupBox Header="Versorgung">
+                        <GroupBox Header="{DynamicResource PlayerSupplies}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -173,55 +172,55 @@
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
-                                <Label Style="{StaticResource ValueLabel}" Content="Energie" Target="{Binding ElementName=EnergyInput}" />
+                                <Label Style="{StaticResource ValueLabel}" Content="{DynamicResource Energy}" Target="{Binding ElementName=EnergyInput}" />
                                 <TextBox x:Name="EnergyInput" Grid.Column="1" Style="{StaticResource NumericInput}" TextChanged="OnInputChanged" />
                                 <Button Grid.Column="2" Content="Max 200" Click="OnMaxEnergy" />
-                                <Label Grid.Row="1" Style="{StaticResource ValueLabel}" Content="Schild" Target="{Binding ElementName=ShieldsInput}" />
+                                <Label Grid.Row="1" Style="{StaticResource ValueLabel}" Content="{DynamicResource Shields}" Target="{Binding ElementName=ShieldsInput}" />
                                 <TextBox x:Name="ShieldsInput" Grid.Row="1" Grid.Column="1" Style="{StaticResource NumericInput}" TextChanged="OnInputChanged" />
                                 <Button Grid.Row="1" Grid.Column="2" Content="Max 200" Click="OnMaxShields" />
-                                <Label Grid.Row="2" Style="{StaticResource ValueLabel}" Content="Nachbrenner (s)" Target="{Binding ElementName=AfterburnerInput}" />
+                                <Label Grid.Row="2" Style="{StaticResource ValueLabel}" Content="{DynamicResource AfterburnerSeconds}" Target="{Binding ElementName=AfterburnerInput}" />
                                 <TextBox x:Name="AfterburnerInput" Grid.Row="2" Grid.Column="1" Style="{StaticResource NumericInput}" TextChanged="OnInputChanged" />
-                                <Button Grid.Row="2" Grid.Column="2" Content="Voll (5 s)" Click="OnMaxAfterburner" />
-                                <Label Grid.Row="3" Style="{StaticResource ValueLabel}" Content="Leben" Target="{Binding ElementName=LivesInput}" />
+                                <Button Grid.Row="2" Grid.Column="2" Content="{DynamicResource FillAfterburner}" Click="OnMaxAfterburner" />
+                                <Label Grid.Row="3" Style="{StaticResource ValueLabel}" Content="{DynamicResource Lives}" Target="{Binding ElementName=LivesInput}" />
                                 <TextBox x:Name="LivesInput" Grid.Row="3" Grid.Column="1" Style="{StaticResource NumericInput}" TextChanged="OnInputChanged" />
-                                <Label Grid.Row="4" Style="{StaticResource ValueLabel}" Content="Punktestand" Target="{Binding ElementName=ScoreInput}" />
+                                <Label Grid.Row="4" Style="{StaticResource ValueLabel}" Content="{DynamicResource Score}" Target="{Binding ElementName=ScoreInput}" />
                                 <TextBox x:Name="ScoreInput" Grid.Row="4" Grid.Column="1" Style="{StaticResource NumericInput}" TextChanged="OnInputChanged" />
                             </Grid>
                         </GroupBox>
 
-                        <GroupBox Grid.Column="1" Header="Effekte">
+                        <GroupBox Grid.Column="1" Header="{DynamicResource Effects}">
                             <StackPanel>
                                 <DockPanel>
-                                    <Button x:Name="GodRenewButton" DockPanel.Dock="Right" Content="Verlängern" Click="OnRenewEffect" Tag="{Binding ElementName=GodModeInput}"
-                                            ToolTipService.ShowOnDisabled="True" ToolTip="Setzt die Restdauer des aktiven Effekts beim Speichern auf 1.000.000.000 s." />
-                                    <CheckBox x:Name="GodModeInput" Content="God-Mode / unverwundbar"
+                                    <Button x:Name="GodRenewButton" DockPanel.Dock="Right" Content="{DynamicResource ExtendEffect}" Click="OnRenewEffect" Tag="{Binding ElementName=GodModeInput}"
+                                            ToolTipService.ShowOnDisabled="True" ToolTip="{DynamicResource ExtendEffectTip}" />
+                                    <CheckBox x:Name="GodModeInput" Content="{DynamicResource Invulnerability}"
                                               Checked="OnEffectChanged" Unchecked="OnEffectChanged"
-                                              ToolTip="Schaltet die Unverwundbarkeit ein oder aus." />
+                                              ToolTip="{DynamicResource InvulnerabilityTip}" />
                                 </DockPanel>
                                 <TextBlock x:Name="GodTime" Margin="0,0,0,10" TextWrapping="Wrap" />
                                 <DockPanel>
-                                    <Button x:Name="CloakRenewButton" DockPanel.Dock="Right" Content="Verlängern" Click="OnRenewEffect" Tag="{Binding ElementName=CloakInput}"
-                                            ToolTipService.ShowOnDisabled="True" ToolTip="Setzt die Restdauer des aktiven Effekts beim Speichern auf 1.000.000.000 s." />
-                                    <CheckBox x:Name="CloakInput" Content="Cloaked-Mode / getarnt" Checked="OnEffectChanged" Unchecked="OnEffectChanged"
-                                              ToolTip="Tarnung wird am Spielerobjekt gesetzt. Fade-Übergänge werden beim Ändern beendet." />
+                                    <Button x:Name="CloakRenewButton" DockPanel.Dock="Right" Content="{DynamicResource ExtendEffect}" Click="OnRenewEffect" Tag="{Binding ElementName=CloakInput}"
+                                            ToolTipService.ShowOnDisabled="True" ToolTip="{DynamicResource ExtendEffectTip}" />
+                                    <CheckBox x:Name="CloakInput" Content="{DynamicResource Cloak}" Checked="OnEffectChanged" Unchecked="OnEffectChanged"
+                                              ToolTip="{DynamicResource CloakTip}" />
                                 </DockPanel>
                                 <TextBlock x:Name="CloakTime" TextWrapping="Wrap" />
                             </StackPanel>
                         </GroupBox>
 
-                        <GroupBox Grid.Row="1" Header="Ausrüstung">
+                        <GroupBox Grid.Row="1" Header="{DynamicResource Equipment}">
                             <StackPanel>
-                                <CheckBox x:Name="CoolerInput" Content="Nachbrenner-Kühler" Checked="OnEffectChanged" Unchecked="OnEffectChanged" />
-                                <CheckBox x:Name="ConverterInput" Content="Energie → Schild-Konverter" Checked="OnEffectChanged" Unchecked="OnEffectChanged" />
-                                <CheckBox x:Name="QuadInput" Content="Quad-Laser" Checked="OnEffectChanged" Unchecked="OnEffectChanged" />
+                                <CheckBox x:Name="CoolerInput" Content="{DynamicResource Cooler}" Checked="OnEffectChanged" Unchecked="OnEffectChanged" />
+                                <CheckBox x:Name="ConverterInput" Content="{DynamicResource Converter}" Checked="OnEffectChanged" Unchecked="OnEffectChanged" />
+                                <CheckBox x:Name="QuadInput" Content="{DynamicResource QuadLasers}" Checked="OnEffectChanged" Unchecked="OnEffectChanged" />
                             </StackPanel>
                         </GroupBox>
 
-                        <GroupBox Grid.Row="1" Grid.Column="1" Header="Karte">
+                        <GroupBox Grid.Row="1" Grid.Column="1" Header="{DynamicResource Map}">
                             <StackPanel>
-                                <CheckBox x:Name="MapInput" Content="Gesamte Karte aufdecken" Checked="OnInputChanged" Unchecked="OnInputChanged" />
+                                <CheckBox x:Name="MapInput" Content="{DynamicResource RevealMap}" Checked="OnInputChanged" Unchecked="OnInputChanged" />
                                 <TextBlock x:Name="MapInfo" Margin="0,4,0,0" TextWrapping="Wrap" />
-                                <TextBlock Margin="0,7,0,0" Text="Ohne Häkchen bleibt die gespeicherte Erkundung erhalten."
+                                <TextBlock Margin="0,7,0,0" Text="{DynamicResource MapTip}"
                                            TextWrapping="Wrap" />
                             </StackPanel>
                         </GroupBox>
@@ -244,17 +243,17 @@
                 </ScrollViewer>
             </TabItem>
 
-            <TabItem x:Name="PrimaryTab" Header="Primärwaffen" IsEnabled="False">
+            <TabItem x:Name="PrimaryTab" Header="{DynamicResource PrimaryTab}" IsEnabled="False">
                 <ContentControl x:Name="PrimaryWeaponEditor" ContentTemplate="{StaticResource WeaponTabTemplate}" />
             </TabItem>
-            <TabItem x:Name="SecondaryTab" Header="Sekundärwaffen" IsEnabled="False">
+            <TabItem x:Name="SecondaryTab" Header="{DynamicResource SecondaryTab}" IsEnabled="False">
                 <ContentControl x:Name="SecondaryWeaponEditor" ContentTemplate="{StaticResource WeaponTabTemplate}" />
             </TabItem>
-            <TabItem x:Name="CountermeasureTab" Header="Gegenmaßnahmen" IsEnabled="False">
+            <TabItem x:Name="CountermeasureTab" Header="{DynamicResource CountermeasureTab}" IsEnabled="False">
                 <ContentControl x:Name="CountermeasureEditor" ContentTemplate="{StaticResource WeaponTabTemplate}" />
             </TabItem>
 
-            <TabItem x:Name="InventoryTab" Header="Inventar / Schiffe" IsEnabled="False">
+            <TabItem x:Name="InventoryTab" Header="{DynamicResource InventoryTab}" IsEnabled="False">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <Grid Margin="12">
                         <Grid.ColumnDefinitions>
@@ -267,23 +266,23 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <GroupBox Header="Gegenstände">
+                        <GroupBox Header="{DynamicResource Items}">
                             <ItemsControl x:Name="CargoInputs" ItemTemplate="{StaticResource SupplyRowTemplate}" />
                         </GroupBox>
-                        <GroupBox Grid.Column="1" Header="Schiffsfreigaben">
+                        <GroupBox Grid.Column="1" Header="{DynamicResource ShipPermissions}">
                             <StackPanel>
                                 <ItemsControl x:Name="ShipInputs" ItemTemplate="{StaticResource ShipRowTemplate}" />
                                 <CheckBox x:Name="BlackPyroUnlockInput" Checked="OnInputChanged" Unchecked="OnInputChanged"
-                                          ToolTip="Speichert die Freigabe im Spielstand." />
-                                <Button x:Name="PreferBlackPyroButton" Content="Nur Black Pyro erlauben"
+                                          ToolTip="{DynamicResource ShipPermissionTip}" />
+                                <Button x:Name="PreferBlackPyroButton" Content="{DynamicResource BlackPyroOnly}"
                                         HorizontalAlignment="Left" Margin="0,8,0,4" Click="OnPreferBlackPyro" />
-                                <TextBlock TextWrapping="Wrap" Text="Der Knopf wählt alle anderen Schiffe ab. Da der Black Pyro im Auswahlmenü fehlt, übernimmt ihn das Spiel als einziges erlaubtes Schiff beim nächsten passenden Briefing automatisch. Das funktioniert auch in der Hauptkampagne." />
+                                <TextBlock TextWrapping="Wrap" Text="{DynamicResource BlackPyroHint}" />
                             </StackPanel>
                         </GroupBox>
                         <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Margin="0,0,0,10"
-                                   Text="0 entfernt den Eintrag. Kühler, Konverter und Quad-Laser stehen im Spieler-Tab."
+                                   Text="{DynamicResource CargoHint}"
                                    TextWrapping="Wrap" />
-                        <GroupBox Grid.Row="2" Grid.ColumnSpan="2" Header="Gespeicherte Einträge">
+                        <GroupBox Grid.Row="2" Grid.ColumnSpan="2" Header="{DynamicResource SavedEntries}">
                             <ListBox x:Name="SavedInventory" MinHeight="110" MaxHeight="220"
                                      ScrollViewer.HorizontalScrollBarVisibility="Auto" />
                         </GroupBox>
@@ -300,17 +299,17 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <GroupBox Header="Eigenschaften">
+                            <GroupBox Header="{DynamicResource Properties}">
                                 <StackPanel>
                                     <DockPanel LastChildFill="False">
                                         <Label Style="{StaticResource ValueLabel}" Content="Name" Target="{Binding ElementName=GuideBotName}" />
                                         <TextBox x:Name="GuideBotName" MinWidth="105" VerticalContentAlignment="Center" MaxLength="7" TextChanged="OnInputChanged" />
                                     </DockPanel>
-                                    <CheckBox x:Name="GuideBotChatter" Content="Regelmäßige Funkmeldungen" Checked="OnInputChanged" Unchecked="OnInputChanged" />
+                                    <CheckBox x:Name="GuideBotChatter" Content="{DynamicResource BotChatter}" Checked="OnInputChanged" Unchecked="OnInputChanged" />
                                     <TextBlock x:Name="GuideBotShield" Margin="0,6,0,0" />
                                 </StackPanel>
                             </GroupBox>
-                            <GroupBox Grid.Column="1" Header="Vorräte">
+                            <GroupBox Grid.Column="1" Header="{DynamicResource BotSupplies}">
                                 <ItemsControl x:Name="GuideBotSupplies">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
@@ -328,39 +327,39 @@
                 </ScrollViewer>
             </TabItem>
 
-            <TabItem Header="Datei / Änderungen">
+            <TabItem Header="{DynamicResource ChangesTab}">
                 <DockPanel Margin="12">
                     <Button x:Name="ReviewButton" DockPanel.Dock="Top" HorizontalAlignment="Left" IsEnabled="False"
-                            Content="Änderungen prüfen" Click="OnCheckChanges" />
+                            Content="{DynamicResource CheckChanges}" Click="OnCheckChanges" />
                     <TextBox x:Name="Review" Margin="0,6,0,0" IsReadOnly="True"
                              FontFamily="Consolas" AcceptsReturn="True" TextWrapping="NoWrap"
                              VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
-                             Text="Hier erscheinen die Dateianalyse und die geplanten Änderungen." />
+                             Text="{DynamicResource ReviewHint}" />
                 </DockPanel>
             </TabItem>
-            <TabItem x:Name="HelpTab" Header="Hilfe">
+            <TabItem x:Name="HelpTab" Header="{DynamicResource HelpTab}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="12">
-                        <GroupBox Header="Spielstände öffnen und speichern">
+                        <GroupBox Header="{DynamicResource HelpSaves}">
                             <StackPanel>
-                                <TextBlock TextWrapping="Wrap" Text="Im Spiel speichern und das Spiel beenden. Danach eine Datei wie saveg000 aus dem Ordner savegame öffnen, Werte bearbeiten und den geänderten Spielstand im Spiel laden." />
-                                <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Text="Beim Überschreiben erstellt der Editor eine datierte Sicherung. Eine Kopie mit der Endung .edited zum Laden in einen passenden savegNNN-Slot umbenennen." />
+                                <TextBlock TextWrapping="Wrap" Text="{DynamicResource HelpOpen}" />
+                                <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Text="{DynamicResource HelpBackups}" />
                             </StackPanel>
                         </GroupBox>
-                        <GroupBox Header="Waffen und Gegenmaßnahmen">
-                            <TextBlock TextWrapping="Wrap" Text="Schiffslimits laden liest normale Munitionsgrenzen aus Table.gam, d3.hog oder einem Missionsarchiv. Vorhandene: Schiffslimit nutzt diese Werte für die Waffen. Bei Gegenmaßnahmen gelten die angezeigten Spiellimits für alle Schiffe." />
+                        <GroupBox Header="{DynamicResource HelpLoadout}">
+                            <TextBlock TextWrapping="Wrap" Text="{DynamicResource HelpLimits}" />
                         </GroupBox>
-                        <GroupBox Header="Unverwundbarkeit und Tarnung">
-                            <TextBlock TextWrapping="Wrap" Text="Das Häkchen schaltet den Effekt ein oder aus. Verlängern setzt die Restdauer eines bereits aktiven Effekts beim Speichern auf 1.000.000.000 Sekunden." />
+                        <GroupBox Header="{DynamicResource HelpEffects}">
+                            <TextBlock TextWrapping="Wrap" Text="{DynamicResource HelpTimers}" />
                         </GroupBox>
-                        <GroupBox Header="Black Pyro und Guide-Bot">
-                            <TextBlock TextWrapping="Wrap" Text="Nur Black Pyro erlauben wählt alle anderen Schiffe ab, damit das Spiel beim nächsten passenden Briefing den Black Pyro übernimmt. Der Reiter Guide-Bot bearbeitet Name, Funkmeldungen und Vorräte des gespeicherten Roboters, wenn der Skriptzustand eindeutig erkannt wurde." />
+                        <GroupBox Header="{DynamicResource HelpShipsAndBot}">
+                            <TextBlock TextWrapping="Wrap" Text="{DynamicResource HelpPyroAndBot}" />
                         </GroupBox>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
         </TabControl>
         <TextBlock x:Name="Status" Grid.Row="3" Margin="0,8,0,0" Foreground="#465B70"
-                   Text="Bereit · Dateien können auch in das Fenster gezogen werden." TextWrapping="Wrap" />
+                   Text="{DynamicResource Ready}" TextWrapping="Wrap" />
     </Grid>
 </Window>
