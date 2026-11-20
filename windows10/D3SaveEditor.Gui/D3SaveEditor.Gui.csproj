@@ -12,6 +12,7 @@
     <Description>Offline editor for Descent 3 savegames</Description>
     <Product>Descent 3 Savegame Editor</Product>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,7 +24,7 @@
   <!-- run: if you simply want to use the artifact (executable), put the images in the folder where the executable is located  -->
   <ItemGroup>
     <Content Include="..\..\pics\Anim?.bmp" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
-    <Content Include="..\..\pics\flashmen?.jpg" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
+    <Content Include="..\..\pics\flashmen_?.jpg" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
     <Content Include="..\..\pics\SETU?.BMP" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
   </ItemGroup>
 </Project>

@@ -5,6 +5,7 @@
     <IsPackable>false</IsPackable>
     <UseWPF>true</UseWPF>
     <RootNamespace>D3SaveEditor.Tests</RootNamespace>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
