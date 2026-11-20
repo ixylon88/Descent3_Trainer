@@ -265,7 +265,7 @@ D3_TEXT(EFFECTS,
     "Effekte",
     "Effects")
 D3_TEXT(INVULNERABILITY,
-    "God-Mode / unverwundbar",
+    "Unverwundbarkeit",
     "God mode / invulnerable")
 D3_TEXT(EXTEND_EFFECT,
     "Verlaengern",
@@ -580,30 +580,30 @@ D3_TEXT(NO_LIMITS_DEFINITION,
     "Keine passende Schiffsdefinition gefunden (Version 1 bis 6).",
     "No matching ship definition found (versions 1 through 6).")
 
-/* Loadout names from D3.STR. Use CP1252 escapes in ANSI control labels. */
+/* Match the WPF display names. Use CP1252 escapes in ANSI control labels. */
 D3_TEXT(WEAPON_LASER, "Laser", "Laser")
-D3_TEXT(WEAPON_VAUSS, "Vauss", "Vauss")
-D3_TEXT(WEAPON_MICROWAVE, "Mikrowellen", "Microwave")
-D3_TEXT(WEAPON_PLASMA, "Plasma", "Plasma")
-D3_TEXT(WEAPON_FUSION, "Fusion", "Fusion")
+D3_TEXT(WEAPON_VAUSS, "Vausskanone", "Vauss Cannon")
+D3_TEXT(WEAPON_MICROWAVE, "Mikrowellenkanone", "Microwave Cannon")
+D3_TEXT(WEAPON_PLASMA, "Plasmakanone", "Plasma Cannon")
+D3_TEXT(WEAPON_FUSION, "Fusionskanone", "Fusion Cannon")
 D3_TEXT(WEAPON_SUPER_LASER, "Superlaser", "Super Laser")
 D3_TEXT(WEAPON_MASS_DRIVER, "Massetreiber", "Mass Driver")
-D3_TEXT(WEAPON_NAPALM, "Napalm", "Napalm")
+D3_TEXT(WEAPON_NAPALM, "Napalm-Kanone", "Napalm Cannon")
 D3_TEXT(WEAPON_EMD_GUN, "EMD-Kanone", "EMD Gun")
-D3_TEXT(WEAPON_OMEGA, "Omega", "Omega")
-D3_TEXT(WEAPON_CONCUSSION, "Ersch\xFCtterung", "Concussion")
-D3_TEXT(WEAPON_HOMING, "Zielpeil", "Homing")
+D3_TEXT(WEAPON_OMEGA, "Omega-Kanone", "Omega Cannon")
+D3_TEXT(WEAPON_CONCUSSION, "Ersch\xFCtterungsgescho\xDF", "Concussion Missile")
+D3_TEXT(WEAPON_HOMING, "Zielpeilgescho\xDF", "Homing Missile")
 D3_TEXT(WEAPON_IMPACT_MORTAR, "Granatwerfer", "Impact Mortar")
-D3_TEXT(WEAPON_SMART, "Smart", "Smart")
-D3_TEXT(WEAPON_MEGA, "Mega", "Mega")
-D3_TEXT(WEAPON_FRAG, "Frag", "Frag")
-D3_TEXT(WEAPON_GUIDED, "Fernlenk", "Guided")
+D3_TEXT(WEAPON_SMART, "Smart-Gescho\xDF", "Smart Missile")
+D3_TEXT(WEAPON_MEGA, "Mega-Gescho\xDF", "Mega Missile")
+D3_TEXT(WEAPON_FRAG, "Fragmentgescho\xDF", "Frag Missile")
+D3_TEXT(WEAPON_GUIDED, "Fernlenkgescho\xDF", "Guided Missile")
 D3_TEXT(WEAPON_NAPALM_ROCKET, "Napalmrakete", "Napalm Rocket")
-D3_TEXT(WEAPON_CYCLONE, "Zyklon", "Cyclone")
-D3_TEXT(WEAPON_BLACK_SHARK, "Black Shark", "Black Shark")
+D3_TEXT(WEAPON_CYCLONE, "Zyklon-Gescho\xDF", "Cyclone Missile")
+D3_TEXT(WEAPON_BLACK_SHARK, "Black Shark Gescho\xDF", "Black Shark Missile")
 D3_TEXT(COUNTERMEASURE_CHAFF, "St\xF6rspreu", "Chaff")
 D3_TEXT(COUNTERMEASURE_BETTY, "H\xFCpfende Betty", "Bouncing Betty")
 D3_TEXT(COUNTERMEASURE_SEEKER_MINE, "Suchermine", "Seeker Mine")
 D3_TEXT(COUNTERMEASURE_GUNBOY, "GunBoy", "GunBoy")
-D3_TEXT(COUNTERMEASURE_PROX_MINE, "Nahmine", "Prox Mine")
+D3_TEXT(COUNTERMEASURE_PROX_MINE, "Ann\xE4herungsmine", "Proximity Mine")
 D3_TEXT(PLAYER_HIGH_VALUE, "Max 1 Mio", "Max 1M")

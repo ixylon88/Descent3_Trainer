@@ -47,16 +47,16 @@ namespace D3SaveEditor.Tests
                 Update(view);
                 SelectWeapon(tabs, 4);
                 Update(view);
-                Check(WeaponCheck(tabs, "Fusion").IsChecked == true, "Choosing active primary grants that weapon");
+                Check(WeaponCheck(tabs, "Fusionskanone").IsChecked == true, "Choosing active primary grants that weapon");
 
                 tabs.SelectedIndex = 2;
                 Update(view);
                 SelectWeapon(tabs, 0);
                 Update(view);
-                Check(WeaponCheck(tabs, "Erschütterung").IsChecked == false, "Choosing no secondary removes its ownership");
-                WeaponCheck(tabs, "Black Shark").SetCurrentValue(ToggleButton.IsCheckedProperty, true);
+                Check(WeaponCheck(tabs, "Erschütterungsgeschoß").IsChecked == false, "Choosing no secondary removes its ownership");
+                WeaponCheck(tabs, "Black Shark Geschoß").SetCurrentValue(ToggleButton.IsCheckedProperty, true);
                 Update(view);
-                Text(Find<TextBox>(tabs, box => AutomationProperties.GetName(box) == "Munition Black Shark"), "65535");
+                Text(Find<TextBox>(tabs, box => AutomationProperties.GetName(box) == "Munition Black Shark Geschoß"), "65535");
 
                 tabs.SelectedIndex = 0;
                 Update(view);

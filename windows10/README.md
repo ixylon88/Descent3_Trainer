@@ -82,9 +82,11 @@ Die Eigenschaft `Version` in `D3SaveEditor.Gui/D3SaveEditor.Gui.csproj` legt die
 
 Der WPF-Dienst `LocalizationService` liest die Oberflächentexte aus `UiStrings.resx`
 und `UiStrings.de.resx`. Beim Sprachwechsel aktualisiert WPF die gebundenen Texte
-über `INotifyPropertyChanged`. Meldungen des Spielstandkerns stehen separat in
-`Messages.resx` und `Messages.de.resx`. Englisch ist die neutrale Sprache. Bei
-deutscher Windows-Oberflächensprache startet der Editor auf Deutsch.
+über `INotifyPropertyChanged`. `Messages.resx` und `Messages.de.resx` enthalten
+Meldungen für die Validierung und Änderungsübersicht im Editor sowie die Namen
+für Waffen und Gegenmaßnahmen. Descent 3 verwendet seine eigenen Sprachdateien.
+Englisch ist die neutrale Sprache. Bei deutscher Windows-Oberflächensprache
+startet der Editor auf Deutsch.
 
 `build-windows10.cmd` im Repo-Hauptordner baut unter Windows mit dem .NET SDK die
 Release-Konfiguration des Editors. `test-windows10.cmd` baut und startet das Testprojekt.
