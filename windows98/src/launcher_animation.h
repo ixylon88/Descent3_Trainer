@@ -4,8 +4,9 @@
 
 #include <windows.h>
 
-int launcher_animation_start(HWND window, HINSTANCE instance, int x, int y);
-int launcher_animation_tick(UINT_PTR timer_id);
+int launcher_animation_start(HWND window, int x, int y);
+int launcher_animation_tick(HWND window, UINT_PTR timer_id);
+int launcher_animation_paint(HWND window);
 void launcher_animation_stop(HWND window);
 
 #endif

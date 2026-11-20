@@ -5,8 +5,10 @@
 
 enum { FRAME_COUNT = 9, FRAME_SIZE = 64, FRAME_INTERVAL_MS = 100, ANIMATION_TIMER_ID = 1 };
 
-static HWND image;
+static HDC frame_dc;
+static HRGN frame_clip;
 static HBITMAP frames[FRAME_COUNT];
+static int frame_left, frame_top;
 static int current_frame;
 
 static int load_frames(void) {
@@ -31,8 +33,13 @@ static int load_frames(void) {
     return 1;
 }
 
-static void release_frames(void) {
+static void release_animation(void) {
     int index;
+    if (frame_dc) DeleteDC(frame_dc);
+    frame_dc = NULL;
+    if (frame_clip) DeleteObject(frame_clip);
+    frame_clip = NULL;
+
     for (index = 0; index < FRAME_COUNT; index++) {
         if (frames[index]) {
             DeleteObject(frames[index]);
@@ -41,53 +48,55 @@ static void release_frames(void) {
     }
 }
 
-static void show_frame(HBITMAP bitmap) {
-    HBITMAP previous = (HBITMAP)SendMessageA(image, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)bitmap);
-    /* Some versions of the static control copy bitmaps containing alpha. */
-    if (previous && previous != frames[current_frame]) DeleteObject(previous);
-}
-
-int launcher_animation_start(HWND window, HINSTANCE instance, int x, int y) {
+int launcher_animation_start(HWND window, int x, int y) {
     const int clip_inset = 2;
-    HRGN clip;
 
     if (!load_frames()) goto failed;
 
-    image = CreateWindowExA(0, "STATIC", "", WS_CHILD | SS_BITMAP | SS_CENTERIMAGE,
-                            x, y, FRAME_SIZE, FRAME_SIZE, window, NULL, instance, NULL);
-    if (!image || !SetTimer(window, ANIMATION_TIMER_ID, FRAME_INTERVAL_MS, NULL)) goto failed;
+    frame_clip = CreateEllipticRgn(x + clip_inset, y + clip_inset,
+                                  x + FRAME_SIZE - clip_inset, y + FRAME_SIZE - clip_inset);
+    if (!frame_clip) goto failed;
 
-    clip = CreateEllipticRgn(clip_inset, clip_inset, FRAME_SIZE - clip_inset, FRAME_SIZE - clip_inset);
-    /* The window owns the region after SetWindowRgn succeeds. */
-    if (clip && !SetWindowRgn(image, clip, FALSE)) DeleteObject(clip);
-
+    frame_dc = CreateCompatibleDC(NULL);
+    if (!frame_dc || !SetTimer(window, ANIMATION_TIMER_ID, FRAME_INTERVAL_MS, NULL)) goto failed;
+    frame_left = x;
+    frame_top = y;
     current_frame = 0;
-    show_frame(frames[current_frame]);
-    ShowWindow(image, SW_SHOW);
     return 1;
 
 failed:
-    if (image) DestroyWindow(image);
-    image = NULL;
-    release_frames();
+    release_animation();
     return 0;
 }
 
-int launcher_animation_tick(UINT_PTR timer_id) {
-    int next;
-    if (!image || timer_id != ANIMATION_TIMER_ID) return 0;
+int launcher_animation_tick(HWND window, UINT_PTR timer_id) {
+    if (!frame_dc || timer_id != ANIMATION_TIMER_ID) return 0;
 
-    next = (current_frame + 1) % FRAME_COUNT;
-    show_frame(frames[next]);
-    current_frame = next;
+    current_frame = (current_frame + 1) % FRAME_COUNT;
+    InvalidateRgn(window, frame_clip, FALSE);
+    return 1;
+}
+
+int launcher_animation_paint(HWND window) {
+    PAINTSTRUCT paint;
+    HDC target;
+    if (!frame_dc) return 0;
+
+    target = BeginPaint(window, &paint);
+    /* The paint DC still observes the window's update and visible regions. */
+    if (target && SelectClipRgn(target, frame_clip) != ERROR) {
+        HGDIOBJ previous = SelectObject(frame_dc, frames[current_frame]);
+        if (previous) {
+            BitBlt(target, frame_left, frame_top, FRAME_SIZE, FRAME_SIZE, frame_dc, 0, 0, SRCCOPY);
+            SelectObject(frame_dc, previous);
+        }
+        SelectClipRgn(target, NULL);
+    }
+    EndPaint(window, &paint);
     return 1;
 }
 
 void launcher_animation_stop(HWND window) {
-    if (image) {
-        KillTimer(window, ANIMATION_TIMER_ID);
-        show_frame(NULL);
-        image = NULL;
-    }
-    release_frames();
+    if (frame_dc) KillTimer(window, ANIMATION_TIMER_ID);
+    release_animation();
 }

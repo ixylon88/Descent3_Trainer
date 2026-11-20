@@ -9,16 +9,17 @@ from pathlib import Path
 ALLOW = {
     'comctl32.dll': {'InitCommonControls'},
     'comdlg32.dll': {'CommDlgExtendedError','GetOpenFileNameA','GetSaveFileNameA'},
-    'gdi32.dll': {'CreateEllipticRgn','CreateFontA','DeleteObject','GetObjectA','GetStockObject'},
+    'gdi32.dll': {'BitBlt','CreateCompatibleDC','CreateEllipticRgn','CreateFontA',
+        'DeleteDC','DeleteObject','GetObjectA','GetStockObject','SelectClipRgn','SelectObject'},
     'kernel32.dll': {'CloseHandle','CreateFileA','DeleteFileA','ExitProcess','FlushFileBuffers',
         'GetCommandLineA','GetFileAttributesA','GetFileSize','GetFullPathNameA','GetLocalTime',
         'GetModuleFileNameA','GetModuleHandleA','GetProcessHeap','GetTempFileNameA','HeapAlloc','HeapFree',
         'MoveFileA','ReadFile','SetFilePointer','WriteFile','lstrcmpiA'},
-    'user32.dll': {'AdjustWindowRectEx','AppendMenuA','CreatePopupMenu','CreateWindowExA',
-        'DefWindowProcA','DestroyMenu','DestroyWindow','DispatchMessageA','EnableWindow',
+    'user32.dll': {'AdjustWindowRectEx','AppendMenuA','BeginPaint','CreatePopupMenu','CreateWindowExA',
+        'DefWindowProcA','DestroyMenu','DestroyWindow','DispatchMessageA','EnableWindow','EndPaint',
         'GetMessageA','GetSystemMetrics','GetWindowRect','GetWindowTextA',
-        'IsDialogMessageA','KillTimer','LoadCursorA','LoadIconA','LoadImageA','MessageBoxA','PostQuitMessage',
-        'RegisterClassA','SendMessageA','SetTimer','SetWindowRgn','SetWindowTextA','ShowWindow','SystemParametersInfoA',
+        'InvalidateRgn','IsDialogMessageA','KillTimer','LoadCursorA','LoadIconA','LoadImageA','MessageBoxA','PostQuitMessage',
+        'RegisterClassA','SendMessageA','SetTimer','SetWindowTextA','ShowWindow','SystemParametersInfoA',
         'TrackPopupMenu','TranslateMessage','UpdateWindow','wsprintfA'},
 }
 

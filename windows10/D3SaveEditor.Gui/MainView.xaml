@@ -113,8 +113,8 @@
         </Grid.RowDefinitions>
 
         <DockPanel Margin="0,0,0,6">
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                <Button x:Name="LanguageButton" Content="{Binding [Language], Source={StaticResource Localization}, Mode=OneWay}" Click="OnOpenLanguageMenu"
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                <Button x:Name="LanguageButton" Margin="0,0,0,0" Content="{Binding [Language], Source={StaticResource Localization}, Mode=OneWay}" Click="OnOpenLanguageMenu"
                         ToolTip="{Binding [LanguageTip], Source={StaticResource Localization}, Mode=OneWay}">
                     <Button.ContextMenu>
                         <ContextMenu>
@@ -136,12 +136,11 @@
 
         <Border Grid.Row="1" Background="#152438" Padding="12,9" Margin="0,0,0,10">
             <DockPanel VerticalAlignment="Center">
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" IsHitTestVisible="False">
-                    <Canvas Height="64" Width="70" Margin="-12,-12" VerticalAlignment="Center" Visibility="{Binding Visibility, ElementName=LauncherOrb}" >
-                        <Rectangle Height="64" Width="70" Fill="#F3F6FA"/>
-                        <Image x:Name="LauncherOrb" Visibility="Collapsed" Width="64" Height="64" Canvas.Left="6"
-                               HorizontalAlignment="Right" VerticalAlignment="Center" Stretch="Fill"
-                               UseLayoutRounding="True" SnapsToDevicePixels="True"
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" IsHitTestVisible="False">
+                    <Canvas Height="64" Width="74" Margin="-12,-12,12,-12" VerticalAlignment="Center" Visibility="{Binding Visibility, ElementName=LauncherOrb}" >
+                        <Rectangle Height="64" Width="74" Fill="#F3F6FA"/>
+                        <Image x:Name="LauncherOrb" Visibility="Collapsed" Width="64" Height="64" Canvas.Left="0"
+                               Stretch="Fill" UseLayoutRounding="True" SnapsToDevicePixels="True"
                                RenderOptions.BitmapScalingMode="NearestNeighbor">
                             <Image.OpacityMask>
                                 <DrawingBrush Viewbox="0,0,64,64" ViewboxUnits="Absolute" Stretch="Fill">

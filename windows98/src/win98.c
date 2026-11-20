@@ -684,7 +684,7 @@ static void make_ui(void){
     local_button(D3_TEXT_RESET,380,42,100,ID_RESET,-1,1);local_button(D3_TEXT_LOAD_LIMITS,486,42,144,ID_LIMITS,-1,1);
     language_button=local_button(D3_TEXT_LANGUAGE,579,10,112,ID_LANGUAGE,-1,0);
     control("STATIC","v" D3_VERSION_TEXT,SS_RIGHT|WS_DISABLED,697,15,51,18,0,-1,0);
-    if(launcher_animation_start(main_window,instance,684,42))info_width=664;
+    if(launcher_animation_start(main_window,684,42))info_width=664;
     info=label(T(NO_SAVE),12,76,info_width,34,-1);
     tab=control(WC_TABCONTROLA,"",WS_TABSTOP|WS_CLIPSIBLINGS,12,114,736,355,ID_TAB,-1,0);
     label_tabs(TCM_INSERTITEMA);
@@ -699,7 +699,10 @@ static LRESULT CALLBACK window_proc(HWND hwnd,UINT message,WPARAM w,LPARAM l){
     switch(message){
     case WM_CREATE:main_window=hwnd;make_ui();return 0;
     case WM_TIMER:
-        if(launcher_animation_tick(w))return 0;
+        if(launcher_animation_tick(hwnd,w))return 0;
+        break;
+    case WM_PAINT:
+        if(launcher_animation_paint(hwnd))return 0;
         break;
     case WM_NOTIFY:notify=(NMHDR*)l;if(notify->idFrom==ID_TAB && notify->code==TCN_SELCHANGE){selected_page=(int)SendMessageA(tab,TCM_GETCURSEL,0,0);apply_visibility();}return 0;
     case WM_COMMAND:
