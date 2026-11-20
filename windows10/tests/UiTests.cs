@@ -74,7 +74,19 @@ namespace D3SaveEditor.Tests
                     "The saved countermeasure selection is visible");
                 var chaffInput = Find<TextBox>(tabs, box => AutomationProperties.GetName(box) == "Menge Chaff");
                 Check(chaffInput.Text == "2", "Saved Chaff count is displayed");
+                var countInputs = Descendants(tabs).OfType<TextBox>()
+                    .Where(box => AutomationProperties.GetName(box).StartsWith("Menge ", StringComparison.Ordinal)).ToArray();
+                var maxButtons = Descendants(tabs).OfType<Button>()
+                    .Where(button => Equals(button.Content, "Max") && countInputs.Any(box => ReferenceEquals(box.DataContext, button.DataContext))).ToArray();
+                Click(Find<Button>(tabs, button => Equals(button.Content, "Alle abwählen")));
+                Update(view);
+                Check(countInputs.Length == 5 && maxButtons.Length == 5 &&
+                    countInputs.All(box => !box.IsEnabled && box.Text == "0") && maxButtons.All(button => !button.IsEnabled),
+                    "Clearing all countermeasures disables the count inputs and Max buttons");
                 Click(Find<Button>(tabs, button => Equals(button.Content, "Alle auswählen")));
+                Update(view);
+                Check(countInputs.All(box => box.IsEnabled) && maxButtons.All(button => button.IsEnabled),
+                    "Selecting the available countermeasures re-enables their controls");
                 Click(Find<Button>(tabs, button => Equals(button.Content, "Vorhandene: Spiellimit")));
                 Update(view);
                 Check(chaffInput.Text == "12" && Find<TextBox>(tabs, box => AutomationProperties.GetName(box) == "Menge Gunboy").Text == "4",

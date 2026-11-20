@@ -18,8 +18,9 @@ namespace D3SaveEditor.Gui
             owned = OriginalCount > 0;
             PropertyChanged += (sender, e) =>
             {
-                if (e.PropertyName == nameof(CountText) && int.TryParse(CountText, out int count))
-                    SetField(ref owned, count > 0, nameof(Owned));
+                if (e.PropertyName == nameof(CountText) && int.TryParse(CountText, out int count) &&
+                    SetField(ref owned, count > 0, nameof(Owned)))
+                    Notify(nameof(CanEditAmmo));
             };
         }
 
@@ -27,7 +28,7 @@ namespace D3SaveEditor.Gui
         public string Name => Item.Name;
         public string AmmoLabel => T("CountLabel", Name);
         public bool CanToggle => CanEdit;
-        public bool CanEditAmmo => CanEdit;
+        public bool CanEditAmmo => CanEdit && Owned;
         public string Limit => CanEdit ? Item.Maximum.ToString("N0", CultureInfo.CurrentCulture) : "–";
 
         public string Ammo

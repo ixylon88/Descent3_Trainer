@@ -156,11 +156,14 @@ static void refresh_countermeasures(int normalize) {
     D3I32 count;
     for (i=0; i<D3_COUNTERMEASURE_TYPES; i++) {
         int available=d3_supply_count(game,1,i)>=0;
+        int owned;
         get_text(countermeasure_counts[i],value,sizeof(value));
         if (d3_integer(value,0,1000000,&count)) check(countermeasure_owned[i],count>0);
         else if (!available) check(countermeasure_owned[i],0);
+        owned=available && checked(countermeasure_owned[i]);
         EnableWindow(countermeasure_owned[i],available);
-        EnableWindow(countermeasure_max[i],available);
+        EnableWindow(countermeasure_counts[i],owned);
+        EnableWindow(countermeasure_max[i],owned);
     }
     if (!normalize) return;
     selected=(int)SendMessageA(countermeasure_active,CB_GETCURSEL,0,0);
