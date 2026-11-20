@@ -10,6 +10,12 @@ Die Oberflaeche benoetigt mindestens 800 x 600.
 3. Werte und Haken einstellen; Aenderungen pruefen.
 4. Speichern + Backup waehlen. Anschliessend im Spiel neu laden.
 
+OPTIONALE ANIMATION
+Anim0.bmp bis Anim8.bmp neben D3EDIT98.EXE ablegen. Beim lokalen Bau
+werden vorhandene Frames aus pics im Repo-Hauptordner kopiert.
+Die vollstaendige Folge laeuft oben rechts mit 64 x 64 Pixeln und
+100 ms pro Frame.
+
 FUNKTIONSUMFANG
 Alle Primaer- und Sekundaerwaffen, aktive Waffenauswahl,
 Munition, Energie, Schild, Nachbrennerladung, Leben, Punkte,

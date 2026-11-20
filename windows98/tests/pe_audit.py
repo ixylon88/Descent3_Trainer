@@ -9,16 +9,16 @@ from pathlib import Path
 ALLOW = {
     'comctl32.dll': {'InitCommonControls'},
     'comdlg32.dll': {'CommDlgExtendedError','GetOpenFileNameA','GetSaveFileNameA'},
-    'gdi32.dll': {'CreateFontA','DeleteObject','GetStockObject'},
+    'gdi32.dll': {'CreateFontA','DeleteObject','GetObjectA','GetStockObject'},
     'kernel32.dll': {'CloseHandle','CreateFileA','DeleteFileA','ExitProcess','FlushFileBuffers',
         'GetCommandLineA','GetFileAttributesA','GetFileSize','GetFullPathNameA','GetLocalTime',
-        'GetModuleHandleA','GetProcessHeap','GetTempFileNameA','HeapAlloc','HeapFree',
+        'GetModuleFileNameA','GetModuleHandleA','GetProcessHeap','GetTempFileNameA','HeapAlloc','HeapFree',
         'MoveFileA','ReadFile','SetFilePointer','WriteFile','lstrcmpiA'},
     'user32.dll': {'AdjustWindowRectEx','AppendMenuA','CreatePopupMenu','CreateWindowExA',
         'DefWindowProcA','DestroyMenu','DestroyWindow','DispatchMessageA','EnableWindow',
         'GetMessageA','GetSystemMetrics','GetWindowRect','GetWindowTextA',
-        'IsDialogMessageA','LoadCursorA','LoadIconA','MessageBoxA','PostQuitMessage',
-        'RegisterClassA','SendMessageA','SetWindowTextA','ShowWindow','SystemParametersInfoA',
+        'IsDialogMessageA','KillTimer','LoadCursorA','LoadIconA','LoadImageA','MessageBoxA','PostQuitMessage',
+        'RegisterClassA','SendMessageA','SetTimer','SetWindowTextA','ShowWindow','SystemParametersInfoA',
         'TrackPopupMenu','TranslateMessage','UpdateWindow','wsprintfA'},
 }
 

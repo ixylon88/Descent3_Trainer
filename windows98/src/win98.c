@@ -8,6 +8,7 @@
 #include "d3core.h"
 #include "d3text.h"
 #include "d3files.h"
+#include "launcher_animation.h"
 #include "version.h"
 
 enum {ID_OPEN=100,ID_SAVE,ID_COPY,ID_RESET,ID_LIMITS,ID_LANGUAGE,ID_TAB,
@@ -676,13 +677,15 @@ static void guidebot_page(void) {
 }
 static void make_ui(void){
     HWND heading;
+    int info_width=736;
     font=(HFONT)GetStockObject(DEFAULT_GUI_FONT);title_font=CreateFontA(-18,0,0,0,FW_BOLD,0,0,0,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH|FF_SWISS,"MS Sans Serif");
     heading=label("DESCENT 3  -  SAVEGAME EDITOR / WINDOWS 98",12,10,560,25,-1);SendMessageA(heading,WM_SETFONT,(WPARAM)title_font,TRUE);
     local_button(D3_TEXT_OPEN,12,42,88,ID_OPEN,-1,0);local_button(D3_TEXT_SAVE,106,42,134,ID_SAVE,-1,1);local_button(D3_TEXT_COPY,246,42,128,ID_COPY,-1,1);
     local_button(D3_TEXT_RESET,380,42,100,ID_RESET,-1,1);local_button(D3_TEXT_LOAD_LIMITS,486,42,144,ID_LIMITS,-1,1);
     language_button=local_button(D3_TEXT_LANGUAGE,579,10,112,ID_LANGUAGE,-1,0);
     control("STATIC","v" D3_VERSION_TEXT,SS_RIGHT|WS_DISABLED,697,15,51,18,0,-1,0);
-    info=label(T(NO_SAVE),12,76,736,34,-1);
+    if(launcher_animation_start(main_window,instance,684,42))info_width=664;
+    info=label(T(NO_SAVE),12,76,info_width,34,-1);
     tab=control(WC_TABCONTROLA,"",WS_TABSTOP|WS_CLIPSIBLINGS,12,114,736,355,ID_TAB,-1,0);
     label_tabs(TCM_INSERTITEMA);
     player_page();weapon_page(0,PRIMARY_PAGE);weapon_page(10,SECONDARY_PAGE);countermeasure_page();inventory_page(INVENTORY_PAGE);guidebot_page();help_page();
@@ -695,6 +698,9 @@ static LRESULT CALLBACK window_proc(HWND hwnd,UINT message,WPARAM w,LPARAM l){
     int id,code,i,selected;D3Buffer out;NMHDR *notify;
     switch(message){
     case WM_CREATE:main_window=hwnd;make_ui();return 0;
+    case WM_TIMER:
+        if(launcher_animation_tick(w))return 0;
+        break;
     case WM_NOTIFY:notify=(NMHDR*)l;if(notify->idFrom==ID_TAB && notify->code==TCN_SELCHANGE){selected_page=(int)SendMessageA(tab,TCM_GETCURSEL,0,0);apply_visibility();}return 0;
     case WM_COMMAND:
         id=LOWORD(w);code=HIWORD(w);if(loading)return 0;
@@ -736,7 +742,10 @@ static LRESULT CALLBACK window_proc(HWND hwnd,UINT message,WPARAM w,LPARAM l){
         case ID_GUIDEBOT_CHATTER:changed();break;
         }return 0;
     case WM_CLOSE:if(discard())DestroyWindow(hwnd);return 0;
-    case WM_DESTROY:if(title_font)DeleteObject(title_font);PostQuitMessage(0);return 0;
+    case WM_DESTROY:
+        launcher_animation_stop(hwnd);
+        if(title_font)DeleteObject(title_font);
+        PostQuitMessage(0);return 0;
     }
     return DefWindowProcA(hwnd,message,w,l);
 }
