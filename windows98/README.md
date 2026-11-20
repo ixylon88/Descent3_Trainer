@@ -25,7 +25,7 @@ Windows 98 verwendet hier ANSI-Dateipfade. Verwendet werden maximal 200 Zeichen 
 | Primärwaffen | Alle zehn Waffen an-/abwählen, aktive Waffe bestimmen; gespeicherte Munitionszähler für Vauss, Mass Driver und Napalm setzen |
 | Sekundärwaffen | Alle zehn Waffen an-/abwählen, aktive Waffe und Stückzahlen von 0 bis 65.535 setzen |
 | Versorgung | Schild und Energie setzen oder jeweils auf 200 maximieren; Nachbrenner auf 5 Sekunden auffüllen |
-| Effekte | God-Mode und Cloaked-Mode aktivieren/deaktivieren und Restdauer erneuern |
+| Effekte | God-Mode, Cloaked-Mode und Schnellfeuer aktivieren/deaktivieren. God-Mode und Tarnung verlängern |
 | Ausrüstung | Nachbrenner-Kühler, Energie-Schild-Konverter und Quad-Laser hinzufügen/entfernen |
 | Gegenmaßnahmen | Bestand und aktive Gegenmaßnahme einstellen, vorhandene Gegenmaßnahmen bis zum Spiellimit auffüllen |
 | Inventar / Schiffe | Spielerinventar ansehen, unterstützte Gegenstände bearbeiten, Schiffe freischalten und den Black Pyro für ein Briefing vormerken |

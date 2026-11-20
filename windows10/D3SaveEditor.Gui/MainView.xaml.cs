@@ -164,6 +164,7 @@ namespace D3SaveEditor.Gui
                 ScoreInput.Text = original.Score.ToString();
                 GodModeInput.IsChecked = game.Invulnerable;
                 CloakInput.IsChecked = game.IsCloaked;
+                RapidFireInput.IsChecked = game.HasRapidFire;
                 CoolerInput.IsChecked = game.HasEquipment("Afterburner");
                 ConverterInput.IsChecked = game.HasEquipment("Converter");
                 QuadInput.IsChecked = game.HasQuad;
@@ -545,6 +546,7 @@ namespace D3SaveEditor.Gui
 
             options.GodMode = ReadEffect(GodModeInput);
             options.Cloaked = ReadEffect(CloakInput);
+            options.RapidFire = ReadEffect(RapidFireInput);
             options.Cooler = ReadEffect(CoolerInput);
             options.Converter = ReadEffect(ConverterInput);
             options.QuadLasers = ReadEffect(QuadInput);

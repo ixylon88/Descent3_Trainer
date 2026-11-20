@@ -60,6 +60,7 @@ namespace D3SaveEditor.Core {
             new PlayerLayout(496,4,308,320,348,420,432,468),
             new PlayerLayout(536,8,312,336,376,448,468,504)
         };
+        internal int WeaponRecharge => Scalars + 4 * sizeof(float);
         public string Name { get { return PointerBytes == 4 ? Text("Layout32") : Text("Layout64"); } }
     }
 
@@ -185,7 +186,7 @@ namespace D3SaveEditor.Core {
         public bool[] Owned = new bool[20];
         public ushort[] Ammo = new ushort[20];
         // null means keep the saved effect, including its finite duration.
-        public bool? GodMode, Cloaked, Cooler, Converter, QuadLasers;
+        public bool? GodMode, Cloaked, RapidFire, Cooler, Converter, QuadLasers;
         public bool RevealMap;
         public int?[] CargoCounts = new int?[SaveGame.CargoItems.Count];
         public int?[] CountermeasureCounts = new int?[SaveGame.CountermeasureTypes.Count];
@@ -258,6 +259,7 @@ namespace D3SaveEditor.Core {
         public float InvulnerableTime { get { return F32(Bytes,PlayerOffset+116); } }
         public bool IsCloaked { get { return PlayerObject.EffectOffset>=0 && (U32(Bytes,PlayerObject.EffectOffset)&(1u|1024u))!=0; } }
         public float CloakTime { get { return PlayerObject.EffectOffset<0 ? 0 : F32(Bytes,PlayerObject.EffectOffset+12); } }
+        public bool HasRapidFire => F32(Bytes, PlayerOffset + Layout.WeaponRecharge) < 1f;
         public int RevealedRooms { get { int n=0; for(int i=0;i<=HighestRoom;i++) if(Bytes[MapOffset+i]!=0)n++; return n; } }
         public bool HasQuad { get { return PlayerObject.BatteryCount==21 && (U32(Bytes,PlayerObject.BatteryStart+104)&16)!=0; } }
         public bool SupportsQuad { get { return PlayerObject.BatteryCount==21; } }
@@ -484,6 +486,14 @@ namespace D3SaveEditor.Core {
                 if(edit.GodMode.Value)flags|=1;
                 Put(raw,84,flags); Put(raw,116,edit.GodMode.Value ? 1e9f : 0f);
                 result.Changes.Add(edit.GodMode.Value ? Text("GodModeOn") : Text("GodModeOff"));
+            }
+            if (edit.RapidFire.HasValue) {
+                // The Rapid Fire pickup uses the same weapon recharge multiplier.
+                float recharge = edit.RapidFire.Value ? 0.7f : 1f;
+                if (F32(raw, Layout.WeaponRecharge) != recharge) {
+                    Put(raw, Layout.WeaponRecharge, recharge);
+                    result.Changes.Add(edit.RapidFire.Value ? Text("RapidFireOn") : Text("RapidFireOff"));
+                }
             }
             if(edit.QuadLasers.HasValue && !SupportsQuad)
                 throw new FormatProblem(Text("QuadUnavailable"));

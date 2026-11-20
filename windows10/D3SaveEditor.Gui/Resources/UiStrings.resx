@@ -530,6 +530,12 @@ Map: {5} entries · Inventory: {6} types · Countermeasures: {7} types
   <data name="CountermeasureHint" xml:space="preserve">
     <value>These limits apply to all ships. Extra saved countermeasure types stay in the loadout.</value>
   </data>
+  <data name="RapidFire" xml:space="preserve">
+    <value>Rapid Fire</value>
+  </data>
+  <data name="RapidFireTip" xml:space="preserve">
+    <value>Sets the base firing delay to 70% using the pickup's multiplier. An existing pickup timer can end the effect.</value>
+  </data>
   <data name="Player1MMax" xml:space="preserve">
     <value>Max 1M</value>
   </data>

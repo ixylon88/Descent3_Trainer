@@ -294,6 +294,12 @@
   <data name="CloakOff" xml:space="preserve">
     <value>Disable cloaking</value>
   </data>
+  <data name="RapidFireOn" xml:space="preserve">
+    <value>Enable rapid fire</value>
+  </data>
+  <data name="RapidFireOff" xml:space="preserve">
+    <value>Disable rapid fire</value>
+  </data>
   <data name="MapRevealed" xml:space="preserve">
     <value>Reveal the entire map</value>
   </data>

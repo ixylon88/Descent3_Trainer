@@ -55,6 +55,8 @@ namespace D3SaveEditor.Tests
                 Check(!off.Invulnerable && !off.IsCloaked && off.InvulnerableTime == 0 && off.CloakTime == 0 && !off.HasQuad && !off.HasEquipment("Afterburner"), name + ": effects and equipment can be disabled");
             }
             var baseBytes = File.ReadAllBytes(Path.Combine(dir, "fixture32")); var valid = SaveGame.Parse(baseBytes);
+            RapidFireTests(baseBytes, 448);
+            RapidFireTests(File.ReadAllBytes(Path.Combine(dir, "fixture64")), 484);
             var maximum = valid.CurrentOptions();
             maximum.Energy = maximum.Shields = float.MaxValue;
             var atMaximum = valid.Edit(maximum).Parsed;
@@ -126,6 +128,30 @@ namespace D3SaveEditor.Tests
                 Check(german.Bytes.SequenceEqual(english.Bytes), "Loadout edits are byte-identical across interface languages");
             }
             finally { CultureInfo.CurrentUICulture = original; }
+        }
+        private static void RapidFireTests(byte[] bytes, int rechargeOffset)
+        {
+            var game = SaveGame.Parse(bytes);
+            int offset = game.PlayerOffset + rechargeOffset;
+            var options = game.CurrentOptions();
+            options.RapidFire = true;
+            var enabled = game.Edit(options);
+            Check(!game.HasRapidFire && enabled.Parsed.HasRapidFire &&
+                enabled.Bytes.SequenceEqual(Changed(bytes, offset, BitConverter.GetBytes(0.7f))),
+                game.Layout.Size + ": enabling rapid fire changes only the weapon recharge multiplier");
+            Check(enabled.Changes.SequenceEqual(new[] { CoreText.Text("RapidFireOn") }),
+                game.Layout.Size + ": enabling rapid fire appears in the change report");
+
+            var saved = enabled.Parsed;
+            options = saved.CurrentOptions();
+            options.RapidFire = false;
+            var disabled = saved.Edit(options);
+            Check(!disabled.Parsed.HasRapidFire && disabled.Bytes.SequenceEqual(bytes),
+                game.Layout.Size + ": disabling rapid fire restores normal recharge");
+
+            var custom = SaveGame.Parse(Changed(bytes, offset, BitConverter.GetBytes(0.5f)));
+            Check(custom.HasRapidFire && custom.Edit(custom.CurrentOptions()).Bytes.SequenceEqual(custom.Bytes),
+                game.Layout.Size + ": an existing custom multiplier survives an unchanged resave");
         }
         private static void GuideBotTests(byte[] bytes)
         {

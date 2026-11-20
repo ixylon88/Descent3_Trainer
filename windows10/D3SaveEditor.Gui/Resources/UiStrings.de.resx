@@ -530,6 +530,12 @@ Karte: {5} Einträge · Inventar: {6} Arten · Gegenmaßnahmen: {7} Arten
   <data name="CountermeasureHint" xml:space="preserve">
     <value>Die Limits gelten für alle Schiffe. Weitere gespeicherte Gegenmaßnahmen bleiben im Bestand.</value>
   </data>
+  <data name="RapidFire" xml:space="preserve">
+    <value>Schnellfeuer</value>
+  </data>
+  <data name="RapidFireTip" xml:space="preserve">
+    <value>Setzt die Grundwartezeit zwischen Schüssen auf 70 %. Ein bereits laufender Pickup-Timer kann den Effekt beenden.</value>
+  </data>
   <data name="Player1MMax" xml:space="preserve">
     <value>Max 1 Mio</value>
   </data>

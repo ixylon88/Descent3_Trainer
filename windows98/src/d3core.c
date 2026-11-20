@@ -39,7 +39,7 @@ const D3Supply d3_countermeasure_types[D3_COUNTERMEASURE_TYPES] = {
 };
 const char *const d3_standard_ships[D3_STANDARD_SHIPS] = {"Pyro-GL", "Phoenix", "Magnum-AHT"};
 
-enum {OBJ_WEAPON = 5, OBJ_POWERUP = 7, SHIP_PERMISSIONS_OFFSET = 468};
+enum {OBJ_WEAPON = 5, OBJ_POWERUP = 7, WEAPON_RECHARGE_OFFSET = 448, SHIP_PERMISSIONS_OFFSET = 468};
 enum {MAX_OBJECT_IDS = 910, MAX_WEAPONS = 200, MAX_SHIPS = 30};
 /* AIGame.cpp guidebot_data is pointer-free under the supported ABIs. */
 enum {BOT_SIZE=992, BOT_ITEMS=8, BOT_OWNER_SLOT=40, BOT_OWNER=44, BOT_FLAGS=96, BOT_HANDLE=108, BOT_NO_CHATTER=8};
@@ -316,6 +316,7 @@ int d3_supply_count(const D3Game *g,int countermeasure,int index) {
 }
 int d3_god(const D3Game *g){return (d3_u32(g->data+g->player+84)&1)!=0;}
 int d3_cloak(const D3Game *g){return g->object.has_effect && (d3_u32(g->data+g->object.effect)&1025)!=0;}
+int d3_rapid_fire(const D3Game *g){return d3_float(g->data+g->player+WEAPON_RECHARGE_OFFSET)<1.0f;}
 int d3_quad(const D3Game *g){return g->object.batteries==21 && (d3_u32(g->data+g->object.battery+104)&16)!=0;}
 void d3_current(const D3Game *g,D3Options *o){
     int i;D3U32 mask;d3_zero(o,sizeof(*o));
@@ -323,7 +324,7 @@ void d3_current(const D3Game *g,D3Options *o){
     o->score=(D3I32)d3_u32(g->data+g->player+88);o->lives=g->data[g->player+108];
     o->primary=(D3I32)d3_u32(g->data+g->player+216);o->secondary=(D3I32)d3_u32(g->data+g->player+228);
     mask=d3_u32(g->data+g->player+168);for(i=0;i<20;i++){o->owned[i]=(D3U8)((mask>>i)&1);o->ammo[i]=d3_u16(g->data+g->player+172+2*i);}
-    o->god=o->cloak=o->cooler=o->converter=o->quad=-1;
+    o->god=o->cloak=o->rapid_fire=o->cooler=o->converter=o->quad=-1;
     for(i=0;i<D3_CARGO_TYPES;i++)o->cargo_counts[i]=-1;
     for(i=0;i<D3_COUNTERMEASURE_TYPES;i++)o->countermeasure_counts[i]=-1;
     o->active_countermeasure_weapon_id=-1;
@@ -510,6 +511,8 @@ int d3_edit(D3Game *g,const D3Options *o,D3Buffer *out){
     if(secondary<10 || secondary>19 || (!o->owned[secondary] && (mask!=oldmask || secondary!=(D3I32)d3_u32(raw+228)))){for(secondary=10;secondary<20;secondary++)if(o->owned[secondary])break;if(secondary==20)secondary=10;}
     d3_put32(raw+216,(D3U32)primary);d3_put32(raw+228,(D3U32)secondary);
     if(o->god>=0){flags=d3_u32(raw+84)&~(1u|(1u<<22));if(o->god)flags|=1;d3_put32(raw+84,flags);d3_put_float(raw+116,o->god?1e9f:0);}
+    /* Match the Rapid Fire pickup's weapon recharge multiplier. */
+    if(o->rapid_fire>=0)d3_put_float(raw+WEAPON_RECHARGE_OFFSET,o->rapid_fire ? 0.7f : 1.0f);
     patch_inventory(g,&lists[0],raw+312,inv_bytes,patches,&n);
     patch_inventory(g,&lists[1],raw+324,inv_bytes+D3_INVENTORY_BYTES,patches,&n);
     if(o->cloak>=0 && (g->object.has_effect || o->cloak)){

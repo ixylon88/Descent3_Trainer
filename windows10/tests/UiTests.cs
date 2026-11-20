@@ -35,7 +35,10 @@ namespace D3SaveEditor.Tests
 
                 var save = Field<Button>(view, "SaveButton");
                 var energy = Field<TextBox>(view, "EnergyInput");
+                var rapidFire = Field<CheckBox>(view, "RapidFireInput");
                 Check(save.IsEnabled && energy.Text.StartsWith("100", StringComparison.Ordinal), "Loaded player values are displayed");
+                Check(rapidFire.IsEnabled && rapidFire.IsChecked == false && Equals(rapidFire.Content, "Schnellfeuer"),
+                    "Rapid fire displays its saved state in German");
                 var tabs = Field<TabControl>(view, "EditorTabs");
                 tabs.SelectedItem = Field<TabItem>(view, "InventoryTab");
                 Update(view);
@@ -65,7 +68,7 @@ namespace D3SaveEditor.Tests
                 Field<TextBox>(view, "AfterburnerInput").Text = "5";
                 Field<TextBox>(view, "LivesInput").Text = "50";
                 Field<TextBox>(view, "ScoreInput").Text = "999";
-                foreach (string name in new[] { "GodModeInput", "CloakInput", "CoolerInput", "QuadInput", "MapInput" })
+                foreach (string name in new[] { "GodModeInput", "CloakInput", "RapidFireInput", "CoolerInput", "QuadInput", "MapInput" })
                     Field<CheckBox>(view, name).IsChecked = true;
                 Field<CheckBox>(view, "ConverterInput").IsChecked = false;
 
@@ -133,6 +136,7 @@ namespace D3SaveEditor.Tests
                     "WPF save writes selected weapons and maximum ammo");
                 Check(saved.Invulnerable && saved.IsCloaked && saved.HasEquipment("Afterburner") && saved.HasQuad && !saved.HasEquipment("Converter"),
                     "WPF save writes effects and equipment");
+                Check(saved.HasRapidFire && rapidFire.IsChecked == true, "WPF saves and displays enabled rapid fire");
                 Check(saved.InventoryItems.Any(item => item.Name == "Force Wall" && item.Count == 4)
                     && saved.CountermeasureItems.Any(item => item.Name == "Saved Chaff" && item.Count == 12)
                     && saved.CountermeasureItems.All(item => item.Name != "Saved Betty"), "WPF save writes inventory edits");
@@ -159,6 +163,9 @@ namespace D3SaveEditor.Tests
                 var highValues = SaveFiles.Open(source);
                 Check(highValues.Energy == 999999 && highValues.Shields == 999999 && highValues.Afterburner == 999999,
                     "WPF high-value presets save 999,999 for all three supplies");
+                rapidFire.IsChecked = false;
+                Click(save);
+                Check(!SaveFiles.Open(source).HasRapidFire && rapidFire.IsChecked == false, "WPF can turn rapid fire off again");
                 Console.WriteLine(passed + " WPF assertions passed.");
             }
             finally

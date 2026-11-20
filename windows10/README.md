@@ -19,7 +19,7 @@
 | Primärwaffen | Alle zehn Waffen einzeln hinzufügen/entfernen; aktive Waffe wählen; Munition für Vauss, Mass Driver und Napalm bearbeiten |
 | Sekundärwaffen | Alle zehn Waffen einzeln hinzufügen/entfernen; aktive Waffe und Stückzahlen von 0 bis 65.535 setzen |
 | Versorgung | Schild und Energie setzen oder auf 200 maximieren; Nachbrennerladung setzen oder auf 5 Sekunden auffüllen |
-| Effekte | God-Mode und Cloaked-Mode aktivieren/deaktivieren; lange Restdauer erneuern |
+| Effekte | God-Mode, Cloaked-Mode und Schnellfeuer aktivieren/deaktivieren. God-Mode und Tarnung verlängern |
 | Ausrüstung | Nachbrenner-Kühler, Energie-Schild-Konverter und Quad-Laser zuweisen/entfernen |
 | Gegenmaßnahmen | Bestand und aktive Gegenmaßnahme einstellen, vorhandene Gegenmaßnahmen bis zum Spiellimit auffüllen |
 | Inventar / Schiffe | Spielerinventar ansehen, unterstützte Gegenstände bearbeiten, Schiffe freischalten und den Black Pyro für ein Briefing vormerken |

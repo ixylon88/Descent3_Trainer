@@ -222,6 +222,9 @@
                                               ToolTip="{Binding [CloakTip], Source={StaticResource Localization}, Mode=OneWay}" />
                                 </DockPanel>
                                 <TextBlock x:Name="CloakTime" TextWrapping="Wrap" />
+                                <CheckBox x:Name="RapidFireInput" Content="{Binding [RapidFire], Source={StaticResource Localization}, Mode=OneWay}"
+                                          Checked="OnEffectChanged" Unchecked="OnEffectChanged"
+                                          ToolTip="{Binding [RapidFireTip], Source={StaticResource Localization}, Mode=OneWay}" />
                             </StackPanel>
                         </GroupBox>
 

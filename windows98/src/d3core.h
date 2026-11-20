@@ -70,8 +70,9 @@ typedef struct {
     int lives, primary, secondary;
     D3U8 owned[20];
     D3U16 ammo[20];
-    /* -1 keep existing; 0 disable; 1 enable with a long timer. */
-    int god, cloak, cooler, converter, quad, reveal_map;
+    /* -1 keeps the saved state, 0 disables, and 1 enables. */
+    int god, cloak, rapid_fire, cooler, converter, quad;
+    int reveal_map;
     /* -1 keeps the saved count, 0 removes the entry. */
     int cargo_counts[D3_CARGO_TYPES], countermeasure_counts[D3_COUNTERMEASURE_TYPES];
     /* Weapon definition ID, or -1 to keep the saved selection. */
@@ -117,6 +118,7 @@ D3U32 d3_ship_permission_bit(const D3Game *game,const char *name);
 int d3_prefers_black_pyro(const D3Game *game);
 int d3_god(const D3Game *game);
 int d3_cloak(const D3Game *game);
+int d3_rapid_fire(const D3Game *game);
 int d3_quad(const D3Game *game);
 int d3_edit(D3Game *game,const D3Options *options,D3Buffer *out);
 /* A table can be valid without containing the requested ship. */

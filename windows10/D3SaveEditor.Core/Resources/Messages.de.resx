@@ -294,6 +294,12 @@
   <data name="CloakOff" xml:space="preserve">
     <value>Tarnung deaktivieren</value>
   </data>
+  <data name="RapidFireOn" xml:space="preserve">
+    <value>Schnellfeuer aktivieren</value>
+  </data>
+  <data name="RapidFireOff" xml:space="preserve">
+    <value>Schnellfeuer deaktivieren</value>
+  </data>
   <data name="MapRevealed" xml:space="preserve">
     <value>Gesamte Karte aufdecken</value>
   </data>

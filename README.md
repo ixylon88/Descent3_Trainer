@@ -19,7 +19,7 @@ verschiedene Eigenschaften. Die Editoren konvertieren keine Speicherformate.
 
 - Primär- und Sekundärwaffen einzeln hinzufügen/entfernen und aktive Waffen auswählen.
 - Schild, Energie, Munition, Nachbrennerladung, Leben und Punktestand bearbeiten.
-- God-Mode, Tarnung, Nachbrenner-Kühler, Konverter und Quad-Laser setzen.
+- God-Mode, Tarnung, Schnellfeuer, Nachbrenner-Kühler, Konverter und Quad-Laser setzen.
 - Gegenstände und Gegenmaßnahmen im Spielstand einsehen. Mengen für Force Wall,
   Go Wingnut sowie die fünf Standard-Gegenmaßnahmen bearbeiten, sofern die
   passenden Definitionen im Spielstand vorhanden sind.
@@ -33,6 +33,12 @@ verschiedene Eigenschaften. Die Editoren konvertieren keine Speicherformate.
 
 Die genauen Voraussetzungen, Grenzen und Bedienhinweise stehen in den jeweiligen
 README-Dateien. Proprietäre Spieldaten und echte Spielstände sind nicht enthalten.
+
+**Schnellfeuer** unter **Spieler → Effekte** verwendet den Faktor `0,7` des
+[Schnellfeuer-Pickups](https://github.com/DescentDevelopers/Descent3/blob/de4bebf5f2d2523261956d0f28603e426eb88c63/scripts/generic.cpp#L380)
+für die Grundwartezeit zwischen Schüssen. Beim Ausschalten gilt wieder der
+normale Faktor `1,0`. Ein bereits laufender Power-up-Timer kann den gespeicherten
+Effekt beenden.
 
 ## Inventar, Gegenmaßnahmen und Schiffsfreigaben
 

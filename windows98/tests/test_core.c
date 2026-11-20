@@ -226,6 +226,33 @@ static void number_tests(void){
     check(!d3_integer("2147483648",(-2147483647-1),2147483647,&n) && !d3_integer("65536",0,65535,&n),"integer overflow rejected");
     d3_format_float(s,100.125f);check(!strcmp(s,"100.125"),"decimal formatting");
 }
+static void rapid_fire_test(const char *path) {
+    D3Buffer source=read_file(path),enabled,disabled,unchanged;
+    D3Game *game=parse(&source),*saved;
+    D3Options options;
+    D3U32 offset=game->player+448;
+
+    check(!d3_rapid_fire(game),"normal recharge displays rapid fire as off");
+    d3_current(game,&options);
+    options.rapid_fire=1;
+    check(d3_edit(game,&options,&enabled) && enabled.size==source.size &&
+          d3_float(enabled.data+offset)==0.7f && d3_equal(enabled.data,source.data,offset) &&
+          d3_equal(enabled.data+offset+4,source.data+offset+4,source.size-offset-4),
+          "enabling rapid fire changes only the weapon recharge multiplier");
+    saved=parse(&enabled);
+    check(d3_rapid_fire(saved),"enabled rapid fire is recognized after reloading");
+    d3_current(saved,&options);
+    options.rapid_fire=0;
+    check(d3_edit(saved,&options,&disabled) && disabled.size==source.size && d3_equal(disabled.data,source.data,source.size),
+          "disabling rapid fire restores normal recharge");
+
+    d3_put_float(source.data+offset,0.5f);
+    d3_current(game,&options);
+    check(d3_rapid_fire(game) && d3_edit(game,&options,&unchanged) &&
+          unchanged.size==source.size && d3_equal(unchanged.data,source.data,source.size),
+          "an existing custom multiplier survives an unchanged resave");
+    d3_free(unchanged.data);d3_free(disabled.data);d3_free(saved);d3_free(enabled.data);d3_free(game);d3_free(source.data);
+}
 static void player_value_tests(const char *path) {
     D3Buffer source=read_file(path),out,again;
     D3Game *game=parse(&source),*saved;
@@ -258,6 +285,6 @@ int main(int argc,char **argv){
     snprintf(path,260,"%s/fixture98-guidebot",argv[1]);guidebot_tests(path);
     localization_test();
     snprintf(work,260,"%s/io-%ld",argv[1],(long)getpid());if(mkdir(work,0700))return 2;
-    snprintf(path,260,"%s/fixture98",argv[1]);player_value_tests(path);file_tests(path,work);table_tests(work);check(rmdir(work)==0,"all temporary file-test artifacts cleaned");
+    snprintf(path,260,"%s/fixture98",argv[1]);player_value_tests(path);rapid_fire_test(path);file_tests(path,work);table_tests(work);check(rmdir(work)==0,"all temporary file-test artifacts cleaned");
     printf("\n%d assertions passed. Windows 98 runtime and in-game loading remain untested.\n",assertions);return 0;
 }

@@ -12,7 +12,7 @@
 
 enum {ID_OPEN=100,ID_SAVE,ID_COPY,ID_RESET,ID_LIMITS,ID_LANGUAGE,ID_TAB,
 ID_ENERGY=120,ID_SHIELDS,ID_AB,ID_LIVES,ID_SCORE,ID_ENERGY_MAX,ID_SHIELD_MAX,ID_AB_MAX,ID_ENERGY_HIGH,ID_SHIELD_HIGH,ID_AB_HIGH,
-ID_GOD=140,ID_CLOAK,ID_COOLER,ID_CONVERTER,ID_QUAD,ID_MAP,ID_GOD_RENEW,ID_CLOAK_RENEW,
+ID_GOD=140,ID_CLOAK,ID_COOLER,ID_CONVERTER,ID_QUAD,ID_MAP,ID_GOD_RENEW,ID_CLOAK_RENEW,ID_RAPID_FIRE,
 ID_PRIMARY=160,ID_SECONDARY,ID_CHECK,
 ID_ALL_PRI=170,ID_NONE_PRI,ID_CAP_PRI,ID_STORE_PRI,ID_ALL_SEC,ID_NONE_SEC,ID_CAP_SEC,ID_STORE_SEC,
 ID_OWN=200,ID_AMMO=240,ID_MAX=280,
@@ -26,7 +26,7 @@ static HWND main_window,tab,info,status,hint,review,language_button;
 static HFONT font,title_font;
 static Widget widgets[256];static int widget_count,selected_page,loading,dirty;
 static HWND energy,shields,afterburner,lives,score,god,cloak,cooler,converter,quad,full_map,god_time,cloak_time,map_info;
-static HWND god_renew,cloak_renew;
+static HWND god_renew,cloak_renew,rapid_fire;
 static HWND owned[20],ammo[20],max_buttons[20],cap_labels[20],primary,secondary;
 static HWND cargo_counts[D3_CARGO_TYPES],countermeasure_counts[D3_COUNTERMEASURE_TYPES];
 static HWND countermeasure_owned[D3_COUNTERMEASURE_TYPES],countermeasure_max[D3_COUNTERMEASURE_TYPES];
@@ -43,6 +43,7 @@ static char opened_path[260],energy_text[48],shield_text[48],ab_text[48],caps_sh
 static D3U16 caps[21];static int caps_loaded;
 static const char high_player_value[]="999999";
 static int god_request=-1,cloak_request=-1,cooler_request=-1,converter_request=-1,quad_request=-1;
+static int rapid_fire_request=-1;
 static const D3Text page_names[]={D3_TEXT_PLAYER_TAB,D3_TEXT_PRIMARY_TAB,D3_TEXT_SECONDARY_TAB,
     D3_TEXT_COUNTERMEASURE_TAB,D3_TEXT_INVENTORY_TAB,D3_TEXT_GUIDEBOT_TAB,D3_TEXT_REVIEW_TAB,D3_TEXT_HELP_TAB};
 static const D3Text weapon_names[]={
@@ -358,12 +359,13 @@ static void load_values(void){
     d3_format_float(energy_text,o.energy);d3_format_float(shield_text,o.shields);d3_format_float(ab_text,o.afterburner);text(energy,energy_text);text(shields,shield_text);text(afterburner,ab_text);
     d3_format_u32(n,(D3U32)o.lives);text(lives,n);d3_format_i32(n,o.score);text(score,n);
     check(god,d3_god(game));check(cloak,d3_cloak(game));check(cooler,d3_has_item(game,game->cooler_id));check(converter,d3_has_item(game,game->converter_id));check(quad,d3_quad(game));check(full_map,0);
+    check(rapid_fire,d3_rapid_fire(game));
     EnableWindow(cooler,game->cooler_id>=0);EnableWindow(converter,game->converter_id>=0);EnableWindow(quad,game->quad_id>=0 && game->object.batteries==21);
     load_inventory_values();
     load_guidebot_values();
     for(i=0;i<20;i++){check(owned[i],o.owned[i]);d3_format_u32(n,o.ammo[i]);text(ammo[i],n);if(i>=10 && o.owned[i])has_second=1;}
     SendMessageA(primary,CB_SETCURSEL,o.primary,0);SendMessageA(secondary,CB_SETCURSEL,has_second?(WPARAM)(o.secondary-9):0,0);
-    god_request=cloak_request=cooler_request=converter_request=quad_request=-1;
+    god_request=cloak_request=rapid_fire_request=cooler_request=converter_request=quad_request=-1;
     refresh_effect_timers();
     refresh_map_text();
     d3_string(s,1400,opened_path);d3_append(s,1400,"\r\n");d3_append(s,1400,game->callsign);d3_append(s,1400," | ");d3_append(s,1400,d3_ship(game));d3_append(s,1400," | ");d3_append(s,1400,game->mission);d3_append(s,1400," / Level ");append_number(s,1400,(D3U32)game->level);text(info,s);
@@ -430,6 +432,7 @@ static int read_options(D3Options *o){
         }
     }
     o->primary=(int)SendMessageA(primary,CB_GETCURSEL,0,0);i=(int)SendMessageA(secondary,CB_GETCURSEL,0,0);if(i>0)o->secondary=i+9;
+    o->rapid_fire=rapid_fire_request;
     o->god=god_request;o->cloak=cloak_request;o->cooler=cooler_request;o->converter=converter_request;o->quad=quad_request;o->reveal_map=checked(full_map);return 1;
 }
 static void report_supply_counts(char *report,D3U32 size,const int *counts,int countermeasures) {
@@ -452,6 +455,7 @@ static int build_output(D3Buffer *out){
         for(i=0;i<20;i++)if(o.owned[i]){d3_append(s,4096,d3_text(weapon_names[i]));d3_append(s,4096,": ");append_number(s,4096,o.ammo[i]);d3_append(s,4096,"\r\n");}
         if(o.god>=0)d3_append(s,4096,o.god?T(GOD_LONG):T(GOD_OFF));
         if(o.cloak>=0)d3_append(s,4096,o.cloak?T(CLOAK_LONG):T(CLOAK_OFF));
+        if(o.rapid_fire>=0)d3_append(s,4096,o.rapid_fire?T(RAPID_FIRE_ON):T(RAPID_FIRE_OFF));
         if(o.cooler>=0)d3_append(s,4096,o.cooler?T(COOLER_ADD):T(COOLER_REMOVE));
         if(o.converter>=0)d3_append(s,4096,o.converter?T(CONVERTER_ADD):T(CONVERTER_REMOVE));
         if(o.quad>=0)d3_append(s,4096,o.quad?T(QUAD_ON):T(QUAD_OFF));if(o.reveal_map)d3_append(s,4096,T(MAP_REVEALED));
@@ -588,6 +592,7 @@ static void player_page(void){
     local_group(D3_TEXT_EQUIPMENT,24,335,338,119,0);cooler=local_checkbox(D3_TEXT_COOLER,38,356,300,ID_COOLER,0);converter=local_checkbox(D3_TEXT_CONVERTER,38,384,300,ID_CONVERTER,0);quad=local_checkbox(D3_TEXT_QUAD_LASERS,38,412,300,ID_QUAD,0);
     local_group(D3_TEXT_EFFECTS,378,146,356,151,0);god=local_checkbox(D3_TEXT_INVULNERABILITY,392,167,213,ID_GOD,0);god_renew=local_button(D3_TEXT_EXTEND_EFFECT,610,165,109,ID_GOD_RENEW,0,1);god_time=label("",392,191,327,18,0);
     cloak=local_checkbox(D3_TEXT_CLOAK,392,226,213,ID_CLOAK,0);cloak_renew=local_button(D3_TEXT_EXTEND_EFFECT,610,224,109,ID_CLOAK_RENEW,0,1);cloak_time=label("",392,250,327,18,0);
+    rapid_fire=local_checkbox(D3_TEXT_RAPID_FIRE,392,274,327,ID_RAPID_FIRE,0);
     local_group(D3_TEXT_MAP,378,308,356,146,0);full_map=local_checkbox(D3_TEXT_REVEAL_MAP,392,331,325,ID_MAP,0);map_info=label("",392,365,326,55,0);
 }
 static void weapon_page(int first,int page){
@@ -721,6 +726,7 @@ static LRESULT CALLBACK window_proc(HWND hwnd,UINT message,WPARAM w,LPARAM l){
         case ID_AB_HIGH:text(afterburner,high_player_value);changed();break;
         case ID_GOD:case ID_GOD_RENEW:god_request=checked(god);refresh_effect_timers();changed();break;
         case ID_CLOAK:case ID_CLOAK_RENEW:cloak_request=checked(cloak);refresh_effect_timers();changed();break;
+        case ID_RAPID_FIRE:rapid_fire_request=checked(rapid_fire);changed();break;
         case ID_COOLER:cooler_request=checked(cooler);changed();break;case ID_CONVERTER:converter_request=checked(converter);changed();break;case ID_QUAD:quad_request=checked(quad);changed();break;case ID_MAP:changed();break;
         case ID_ALL_PRI:select_all(0,1);break;case ID_NONE_PRI:select_all(0,0);break;case ID_ALL_SEC:select_all(10,1);break;case ID_NONE_SEC:select_all(10,0);break;
         case ID_CAP_PRI:max_all(0,0);break;case ID_STORE_PRI:max_all(0,1);break;case ID_CAP_SEC:max_all(10,0);break;case ID_STORE_SEC:max_all(10,1);break;
