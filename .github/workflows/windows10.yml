@@ -73,7 +73,7 @@ jobs:
             $hash = Get-FileHash -LiteralPath $destination -Algorithm SHA256
             '{0}  {1}' -f $hash.Hash.ToLowerInvariant(), $file
           }
-          Copy-Item -LiteralPath LICENSE, ../NOTICE.md, ../NOTICE-Deutsch.md -Destination $package
+          Copy-Item -LiteralPath LICENSE, ../NOTICE.md, ../HINWEIS.md -Destination $package
           $repository = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY"
           @(
             'Descent 3 Savegame Editor for Windows 10 and 11'

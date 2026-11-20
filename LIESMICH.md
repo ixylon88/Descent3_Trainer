@@ -11,8 +11,8 @@ Mit Hilfe von ChatGPT (OpenAI) entwickelt.
 
 | Ordner | Zielsystem und Technik | Grundlage des Dateiformats |
 | --- | --- | --- |
-| [`windows10`](windows10/README-Deutsch.md) | Windows 10/11, C#, .NET Framework 4.8, WPF | Descent3 `main`, Revision `76049bb32d0a391ab35aedcd0716073c1e64d72a`; bekannte Spielerlayouts 496/536 Byte |
-| [`windows98`](windows98/README-Deutsch.md) | Windows 98, natives C/ANSI-Win32, ohne zusätzliche Laufzeitpakete | Descent3 `d3-historical`, Revision `84e25b0b411284bad57b34f50fd976f1a8a2367f`; Spielerlayout 496 Byte |
+| [`windows10`](windows10/LIESMICH.md) | Windows 10/11, C#, .NET Framework 4.8, WPF | Descent3 `main`, Revision `76049bb32d0a391ab35aedcd0716073c1e64d72a`; bekannte Spielerlayouts 496/536 Byte |
+| [`windows98`](windows98/LIESMICH.md) | Windows 98, natives C/ANSI-Win32, ohne zusätzliche Laufzeitpakete | Descent3 `d3-historical`, Revision `84e25b0b411284bad57b34f50fd976f1a8a2367f`; Spielerlayout 496 Byte |
 
 Die Betriebssystemvariante und das Layout des gespeicherten Spielstands sind
 verschiedene Eigenschaften. Die Editoren konvertieren keine Speicherformate.
@@ -143,7 +143,7 @@ Im früheren Win98-Paket enthielt `LICENSE` einen MIT-Text, obwohl README und
 Quelltexte GPL-3.0-or-later ausweisen. Dieses Paket enthält den dazu passenden
 GPL-v3-Lizenztext. Die frühere MIT-Datei bleibt zur Herkunftsdokumentation unter
 `docs/origin` erhalten; daraus wird keine zusätzliche MIT-Lizenz für den
-gesamten Editor abgeleitet. Einzelheiten in [`NOTICE-Deutsch.md`](NOTICE-Deutsch.md).
+gesamten Editor abgeleitet. Einzelheiten in [`HINWEIS.md`](HINWEIS.md).
 
 Bei GitHub-Veröffentlichung die Lizenztexte und vorhandenen Copyright- und
 Herkunftshinweise beibehalten. Werden auch EXE-Dateien veröffentlicht, den dazu

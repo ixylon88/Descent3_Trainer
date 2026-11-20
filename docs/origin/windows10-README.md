@@ -1,6 +1,6 @@
 # Descent 3 Savegame Editor · Windows 10 / 11
 
-[Deutsches Original](windows10-README-Deutsch.md) · [Current manual](../../windows10/README.md)
+[Deutsches Original](windows10-LIESMICH.md) · [Current manual](../../windows10/README.md)
 
 **Archived English translation of the source-based version 1.0 preview.**
 The original package included the built Windows application and its complete

@@ -47,7 +47,7 @@ bleibt der Ball ausgeblendet.
 Es muss mindestens eine bereits vorhandene Primärwaffe übrig bleiben. Wird eine gerade aktive Waffe entfernt, setzt der Editor bei Bedarf eine noch vorhandene Waffe als aktiv. Abgewählte Waffen erhalten in der Oberfläche Munition 0. Flare und unbekannte zusätzliche Besitzbits bleiben erhalten.
 
 Die Bedienung des Reiters **Inventar / Schiffe** steht in der
-[gemeinsamen Anleitung](../README-Deutsch.md#inventar-gegenmaßnahmen-und-schiffsfreigaben).
+[gemeinsamen Anleitung](../LIESMICH.md#inventar-gegenmaßnahmen-und-schiffsfreigaben).
 
 ## Was „maximieren“ bedeutet
 

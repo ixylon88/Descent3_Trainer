@@ -1,6 +1,6 @@
 # Descent 3 Savegame Editor
 
-[Deutsch](README-Deutsch.md)
+[Deutsch](LIESMICH.md)
 
 Source code for two graphical offline editors for Descent 3 savegames.
 Developed with help from ChatGPT (OpenAI).

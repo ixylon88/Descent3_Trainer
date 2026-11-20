@@ -1,6 +1,6 @@
 # Descent 3 Savegame Editor for Windows 98
 
-[Deutsch](README-Deutsch.md)
+[Deutsch](LIESMICH.md)
 
 **Version 1.0.0, based on `d3-historical`.**
 

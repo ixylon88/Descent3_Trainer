@@ -1,6 +1,6 @@
 # License, provenance, and package changes
 
-[Deutsch](NOTICE-Deutsch.md)
+[Deutsch](HINWEIS.md)
 
 This notice documents the original source package dated October 24, 2026.
 

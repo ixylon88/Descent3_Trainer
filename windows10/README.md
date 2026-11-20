@@ -1,6 +1,6 @@
 # Descent 3 Savegame Editor · Windows 10 / 11
 
-[Deutsch](README-Deutsch.md)
+[Deutsch](LIESMICH.md)
 
 **Version 1.0.0.** The editor uses WPF and .NET Framework 4.8. It runs without network access or administrator privileges. Saving requires write access to the destination folder.
 

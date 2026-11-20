@@ -40,7 +40,7 @@ jobs:
         run: |
           package="$RUNNER_TEMP/Descent3_Trainer-Win98"
           mkdir -p "$package"
-          cp D3EDIT98.EXE LICENSE ../NOTICE.md ../NOTICE-Deutsch.md "$package/"
+          cp D3EDIT98.EXE LICENSE ../NOTICE.md ../HINWEIS.md "$package/"
           sed 's/\r*$//; s/$/\r/' QUICKSTART.TXT > "$package/README.TXT"
           sed 's/\r*$//; s/$/\r/' LIESMICH.TXT > "$package/LIESMICH.TXT"
           printf 'Corresponding source (including build scripts):\r\n%s/%s/archive/%s.zip\r\n' \

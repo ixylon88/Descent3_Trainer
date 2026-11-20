@@ -39,7 +39,7 @@ Windows 98 verwendet hier ANSI-Dateipfade. Verwendet werden maximal 200 Zeichen 
 Eine vorhandene letzte Primärwaffe kann nicht entfernt werden. **Keine Sekundaerwaffe** entfernt sämtliche Sekundärwaffen samt Munition. Abgewählte Waffen erhalten in der Oberfläche Munition 0. Aktive Waffen werden bei Bedarf auf vorhandene Waffen zurückgesetzt. Flare, zusätzliche Besitzbits und die sonstigen Daten bleiben erhalten.
 
 Die Bedienung des Reiters **Inventar / Schiffe** steht in der
-[gemeinsamen Anleitung](../README-Deutsch.md#inventar-gegenmaßnahmen-und-schiffsfreigaben).
+[gemeinsamen Anleitung](../LIESMICH.md#inventar-gegenmaßnahmen-und-schiffsfreigaben).
 
 ## Maximale Vorräte
 
@@ -79,7 +79,7 @@ Der ursprüngliche Editor wurde vom Projektinhaber mit echten Spielständen unte
 
 ## Weiterarbeiten und Neubau
 
-`../PROJEKTSTAND-Descent3.md` dokumentiert beide bisherigen Versionen, Quellen, Layouts, Entscheidungen, Tests und offene Punkte. Die Windows-10/11-Version mit C#-Quelltext liegt im Nachbarordner [`../windows10`](../windows10/README-Deutsch.md). Dieses Quelltextpaket enthält keine fertigen EXE-Dateien; die ursprünglichen vollständigen Projektarchive bleiben separat erhalten.
+`../PROJEKTSTAND-Descent3.md` dokumentiert beide bisherigen Versionen, Quellen, Layouts, Entscheidungen, Tests und offene Punkte. Die Windows-10/11-Version mit C#-Quelltext liegt im Nachbarordner [`../windows10`](../windows10/LIESMICH.md). Dieses Quelltextpaket enthält keine fertigen EXE-Dateien; die ursprünglichen vollständigen Projektarchive bleiben separat erhalten.
 
 Der vollständige native Quelltext liegt unter `src`, Tests unter `tests`. Zum Neubau werden auf einem **modernen Entwicklungsrechner** der i686-MinGW-w64-C-Compiler und sein Ressourcencompiler `windres` benötigt. Auf dem Windows-98-Zielrechner ist kein Compiler erforderlich.
 

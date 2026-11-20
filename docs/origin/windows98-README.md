@@ -1,6 +1,6 @@
 # Descent 3 Savegame Editor for Windows 98
 
-[Deutsches Original](windows98-README-Deutsch.md) · [Current manual](../../windows98/README.md)
+[Deutsches Original](windows98-LIESMICH.md) · [Current manual](../../windows98/README.md)
 
 **Archived English translation of the source-based version 1.0 preview,
 based on `d3-historical`.**
