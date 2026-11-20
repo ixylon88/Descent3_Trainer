@@ -132,7 +132,7 @@ namespace D3SaveEditor.Core {
 
     internal sealed class ObjectBlock {
         internal int Start, End, Handle, Id, ShieldOffset, EffectRecord, EffectOffset = -1, EffectSize, BatteryStart, BatteryCount;
-        internal byte Type;
+        internal byte Type, DummyType;
         internal static ObjectBlock Read(byte[] data, int pos, int version) {
             var r = new Reader(data,pos);
             var x = new ObjectBlock { Start=pos };
@@ -142,7 +142,7 @@ namespace D3SaveEditor.Core {
             if (x.Type > 25) throw new FormatProblem("Unbekannter Objekttyp.");
             r.U8(); // lighting_render_type
             if (r.Bool()) r.Skip(52); // sizeof(light_info), no pointers
-            x.Handle=r.I32(); r.U8(); r.Skip(4+12+12+36); // dummy type, room, pos, last_pos, orient
+            x.Handle=r.I32(); x.DummyType=r.U8(); r.Skip(4+12+12+36); // room, pos, last_pos, orient
             r.Skip(r.U8());
             x.Id=r.I16(); r.Skip(4); // object flags
             r.U8(); r.U8(); int renderType=r.U8();
@@ -190,6 +190,9 @@ namespace D3SaveEditor.Core {
         public int? ActiveCountermeasureWeaponId;
         public bool[] UnlockShips = new bool[SaveGame.StandardShips.Count];
         public bool UnlockBlackPyro, PreferBlackPyro;
+        public string GuideBotName;
+        public bool? GuideBotChatter;
+        public int[] GuideBotCounts;
     }
     internal sealed class Patch {
         internal int Start, Length;
@@ -260,6 +263,7 @@ namespace D3SaveEditor.Core {
             get { return CounterMeasures.Items.Count == 0 ? null : CounterMeasures.Items[CounterMeasures.Selected]; }
         }
         public int CountermeasureWeaponId(int index) { return SupplyId(CountermeasureTypes[index]); }
+        public GuideBotData GuideBot { get; private set; }
         public uint ShipPermissions { get { return U32(Bytes, PlayerOffset + Layout.Permissions); } }
         public string Hash { get { return HashBytes(Bytes); } }
 
@@ -303,7 +307,9 @@ namespace D3SaveEditor.Core {
             if(matches.Count!=1) throw new FormatProblem(matches.Count==0
                 ? "Kein eindeutig verknüpfter Spielerblock gefunden. Unterstützt: Speicherformat 0–2, Windows-Strukturen mit 496 oder 536 Byte. Andere Builds und beschädigte Dateien werden abgelehnt."
                 : "Mehrere plausible Spielerblöcke gefunden. Die Datei wird nicht bearbeitet.");
-            return matches[0];
+            var match = matches[0];
+            match.GuideBot = GuideBotData.Find(match);
+            return match;
         }
 
         private void ParseHeader() {
@@ -433,6 +439,10 @@ namespace D3SaveEditor.Core {
             uint originalMask=U32(Bytes,PlayerOffset+168);
             if(!edit.Owned.Take(10).Any(x=>x) && (originalMask&0x3ffu)!=0)throw new FormatProblem("Mindestens eine Primärwaffe muss vorhanden sein.");
             var result=new EditResult(); var patches=new List<Patch>();
+            if (edit.GuideBotName != null || edit.GuideBotChatter.HasValue || edit.GuideBotCounts != null) {
+                if (GuideBot == null) throw new FormatProblem("Kein bearbeitbarer Guide-Bot-Zustand im Spielstand.");
+                GuideBot.Edit(edit, Bytes, patches, result);
+            }
             var raw=new byte[Layout.Size]; Buffer.BlockCopy(Bytes,PlayerOffset,raw,0,raw.Length);
             uint shipPermissions = ShipPermissions;
             if (edit.UnlockBlackPyro || edit.PreferBlackPyro) {

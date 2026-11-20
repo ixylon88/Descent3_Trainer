@@ -25,6 +25,7 @@ namespace D3SaveEditor.Gui
         private SupplyRow[] cargoRows;
         private CountermeasureGroup countermeasures;
         private ShipRow[] shipRows;
+        private GuideBotSupplyRow[] guideBotSupplies;
         private SaveGame game;
         private string openedPath;
         private bool loading;
@@ -174,6 +175,7 @@ namespace D3SaveEditor.Gui
                 secondary.SelectedIndex = original.Owned.Skip(10).Any(owned => owned) ? original.Secondary - 9 : 0;
                 RefreshWeaponLimits();
                 LoadInventory();
+                LoadGuideBot();
 
                 touchedEffects.Clear();
                 RefreshEffectTimers();
@@ -184,6 +186,7 @@ namespace D3SaveEditor.Gui
 
                 SaveButton.IsEnabled = CopyButton.IsEnabled = ResetButton.IsEnabled = true;
                 PlayerEditor.IsEnabled = PrimaryTab.IsEnabled = SecondaryTab.IsEnabled = CountermeasureTab.IsEnabled = InventoryTab.IsEnabled = ReviewButton.IsEnabled = true;
+                GuideBotTab.IsEnabled = true;
                 dirty = false;
                 Title = EditorTitle;
             }
@@ -226,6 +229,28 @@ namespace D3SaveEditor.Gui
         {
             string name = string.IsNullOrEmpty(item.Name) ? $"ID {(item.Id < 0 ? item.OriginalId : item.Id)}" : item.Name;
             return $"{name} × {item.Count}";
+        }
+
+        private void LoadGuideBot()
+        {
+            var bot = game.GuideBot;
+            GuideBotEditor.Visibility = bot == null ? Visibility.Collapsed : Visibility.Visible;
+            if (bot == null)
+            {
+                GuideBotInfo.Text = "Dieser Spielstand enthält keinen eindeutig erkannten Guide-Bot-Zustand.";
+                GuideBotSupplies.ItemsSource = guideBotSupplies = null;
+                return;
+            }
+
+            GuideBotInfo.Text = "Name, Funkmeldungen und verbrauchbare Vorräte im gespeicherten Level. Mengen von 0 bis 127.";
+            GuideBotName.Text = bot.Name;
+            GuideBotChatter.IsChecked = bot.Chatter;
+            GuideBotShield.Text = $"Gespeicherter Schildwert: {bot.Shields:N1}";
+            var names = new[] { "Feuerlöscher", "Go Wingnut", "Fernsteuerung", "Begleitschutz", "Antivirus" };
+            guideBotSupplies = names.Select((name, index) => new GuideBotSupplyRow(name, bot.Counts[index])).ToArray();
+            foreach (var row in guideBotSupplies)
+                row.PropertyChanged += OnInventoryChanged;
+            GuideBotSupplies.ItemsSource = guideBotSupplies;
         }
 
         private void OnPreferBlackPyro(object sender, RoutedEventArgs e)
@@ -513,6 +538,17 @@ namespace D3SaveEditor.Gui
             for (int i = 0; i < shipRows.Length; i++)
                 options.UnlockShips[i] = shipRows[i].CanUnlock && shipRows[i].Allowed;
             options.UnlockBlackPyro = !options.PreferBlackPyro && BlackPyroUnlockInput.IsChecked == true && !game.IsShipAllowed(SaveGame.BlackPyro);
+            var bot = game.GuideBot;
+            if (bot != null)
+            {
+                if (GuideBotName.Text != bot.Name)
+                    options.GuideBotName = GuideBotName.Text;
+                if (GuideBotChatter.IsChecked != bot.Chatter)
+                    options.GuideBotChatter = GuideBotChatter.IsChecked;
+                int[] counts = guideBotSupplies.Select(row => ReadInteger(row.CountText, 0, GuideBotData.MaximumCount, row.Name)).ToArray();
+                if (!counts.SequenceEqual(bot.Counts))
+                    options.GuideBotCounts = counts;
+            }
 
             return options;
         }

@@ -29,6 +29,7 @@ Windows 98 verwendet hier ANSI-Dateipfade. Verwendet werden maximal 200 Zeichen 
 | Ausrüstung | Nachbrenner-Kühler, Energie-Schild-Konverter und Quad-Laser hinzufügen/entfernen |
 | Gegenmaßnahmen | Bestand und aktive Gegenmaßnahme einstellen, vorhandene Gegenmaßnahmen bis zum Spiellimit auffüllen |
 | Inventar / Schiffe | Spielerinventar ansehen, unterstützte Gegenstände bearbeiten, Schiffe freischalten und den Black Pyro für ein Briefing vormerken |
+| Guide-Bot | Name, Funkmeldungen und Vorräte bei eindeutig erkanntem Skriptzustand bearbeiten |
 | Karte | Gespeicherte Kartensichtbarkeit vollständig aufdecken |
 | Weitere Werte | Leben und Punktestand ändern |
 | Dateiverwaltung | Ausgabe prüfen, Kopie schreiben, Original sichern, nachträglich geändertes Original erkennen |

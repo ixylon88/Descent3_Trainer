@@ -21,6 +21,8 @@ typedef char D3AssertFloat[(sizeof(float)==4) ? 1 : -1];
 #define D3_COUNTERMEASURE_TYPES 5
 #define D3_STANDARD_SHIPS 3
 #define D3_BLACK_PYRO "Black Pyro"
+#define D3_GUIDEBOT_POWERUPS 5
+#define D3_GUIDEBOT_MAX_COUNT 127
 
 typedef struct {
     const char *key, *name, *pickup;
@@ -38,18 +40,27 @@ typedef struct {
 } D3Inventory;
 typedef struct {
     D3U32 start, end, handle, shield, effect_record, effect, battery;
-    int id, type, has_effect, batteries;
+    int id, type, dummy_type, has_effect, batteries;
 } D3Object;
+typedef struct {
+    D3U32 offset;
+    float shields;
+    char name[8];
+    int chatter;
+    D3U8 counts[D3_GUIDEBOT_POWERUPS];
+} D3GuideBot;
 typedef struct {
     const D3U8 *data;
     D3U32 size, player, map, map_count;
     int version, level, highest_room, ship_count;
     int cooler_id, converter_id, quad_id;
+    int guidebot_id, guidebot_red_id;
     int cargo_ids[D3_CARGO_TYPES];
     int countermeasure_ids[D3_COUNTERMEASURE_TYPES], countermeasure_pickups[D3_COUNTERMEASURE_TYPES];
     char description[32], mission[D3_STRING], callsign[20];
     char ships[128][128];
     D3Object object;
+    D3GuideBot guidebot;
     D3Inventory inventory, countermeasures;
     const char *error;
 } D3Game;
@@ -67,6 +78,8 @@ typedef struct {
     int active_countermeasure_weapon_id;
     D3U8 unlock_ships[D3_STANDARD_SHIPS];
     D3U8 unlock_black_pyro, prefer_black_pyro;
+    int rename_guidebot, guidebot_chatter, guidebot_counts[D3_GUIDEBOT_POWERUPS];
+    char guidebot_name[8];
 } D3Options;
 typedef struct {
     D3U8 *data;

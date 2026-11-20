@@ -160,6 +160,32 @@ static void loadout_tests(const char *path){
     check(!d3_edit(original,&edit,&again),"missing pickup ID is never guessed");
     d3_free(original);d3_free(saved);d3_free(input.data);d3_free(out.data);
 }
+static void guidebot_tests(const char *path) {
+    D3Buffer bytes=read_file(path),out;
+    D3Game *original=parse(&bytes),*saved;
+    D3U32 body=original->guidebot.offset;
+    D3Options edit;
+    check(body && !strcmp(original->guidebot.name,"Buddy") && original->guidebot.shields==20.0f &&
+          original->guidebot.chatter && original->guidebot.counts[0]==3,"GuideBot memory and owning robot are decoded");
+    d3_current(original,&edit);
+    check(d3_edit(original,&edit,&out) && out.size==bytes.size && d3_equal(out.data,bytes.data,bytes.size),"untouched GuideBot is byte-identical");
+    d3_free(out.data);
+    edit.rename_guidebot=1;d3_string(edit.guidebot_name,8,"Buddy 2");
+    edit.guidebot_chatter=0;edit.guidebot_counts[1]=127;
+    check(d3_edit(original,&edit,&out),"GuideBot name, chatter and supplies can be edited");
+    saved=parse(&out);
+    check(!strcmp(saved->guidebot.name,"Buddy 2") && !saved->guidebot.chatter && saved->guidebot.counts[1]==127,
+          "GuideBot edits round-trip");
+    d3_copy(bytes.data+body,"Buddy 2",8);bytes.data[body+9]=127;d3_put32(bytes.data+body+96,0x28u);
+    check(out.size==bytes.size && d3_equal(out.data,bytes.data,bytes.size),"GuideBot edit preserves the rest of the script state and the save");
+    d3_free(saved);d3_free(out.data);
+    edit.guidebot_counts[1]=128;
+    check(!d3_edit(original,&edit,&out),"GuideBot signed-byte supply limit is enforced");
+    d3_put32(bytes.data+body+44,0x1002u);
+    check(d3_parse(original,bytes.data,bytes.size) && !original->guidebot.offset && !d3_edit(original,&edit,&out),
+          "a GuideBot chunk owned by another player is not editable");
+    d3_free(original);d3_free(bytes.data);
+}
 static D3Buffer make_table(void){
     D3Buffer b;D3U32 p=5;int i,j;b.data=d3_alloc(8192);b.data[0]=6;d3_put16(b.data+p,6);p+=2;d3_copy(b.data+p,"Pyro-GL",8);p+=8;for(i=0;i<6;i++)b.data[p++]=0;p+=8+68+12;
     for(i=0;i<21;i++){b.data[p++]=0;for(j=0;j<3;j++)b.data[p++]=0;d3_put32(b.data+p,(D3U32)(i*7));p+=4+211;for(j=0;j<16;j++)b.data[p++]=0;}
@@ -186,6 +212,7 @@ int main(int argc,char **argv){
     if(argc<2)return 2;hash_test();number_tests();
     for(i=0;i<6;i++){snprintf(path,260,"%s/%s",argv[1],names[i]);fixture(path,i==0 && argc>2?argv[2]:0);}
     snprintf(path,260,"%s/fixture98-loadout",argv[1]);loadout_tests(path);
+    snprintf(path,260,"%s/fixture98-guidebot",argv[1]);guidebot_tests(path);
     snprintf(work,260,"%s/io-%ld",argv[1],(long)getpid());if(mkdir(work,0700))return 2;
     snprintf(path,260,"%s/fixture98",argv[1]);file_tests(path,work);table_tests(work);check(rmdir(work)==0,"all temporary file-test artifacts cleaned");
     printf("\n%d assertions passed. Windows 98 runtime and in-game loading remain untested.\n",assertions);return 0;

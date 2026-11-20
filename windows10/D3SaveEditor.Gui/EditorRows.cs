@@ -170,4 +170,22 @@ namespace D3SaveEditor.Gui
             set => SetField(ref allowed, value);
         }
     }
+
+    internal sealed class GuideBotSupplyRow : BindableItem
+    {
+        private string countText;
+
+        internal GuideBotSupplyRow(string name, int count)
+        {
+            Name = name;
+            countText = count.ToString(CultureInfo.CurrentCulture);
+        }
+
+        public string Name { get; }
+        public string CountText
+        {
+            get => countText;
+            set => SetField(ref countText, value);
+        }
+    }
 }

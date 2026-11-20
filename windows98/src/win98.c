@@ -15,8 +15,9 @@ ID_PRIMARY=160,ID_SECONDARY,ID_CHECK,
 ID_ALL_PRI=170,ID_NONE_PRI,ID_CAP_PRI,ID_STORE_PRI,ID_ALL_SEC,ID_NONE_SEC,ID_CAP_SEC,ID_STORE_SEC,
 ID_OWN=200,ID_AMMO=240,ID_MAX=280,
 ID_CARGO_COUNT=320,ID_COUNTERMEASURE_COUNT=330,ID_SHIP_UNLOCK=340,ID_BLACK_PYRO_UNLOCK=350,ID_BLACK_PYRO_PREFER,
-ID_COUNTERMEASURE_OWN=360,ID_COUNTERMEASURE_MAX=370,ID_COUNTERMEASURE_ACTIVE=380,ID_ALL_COUNTERMEASURES,ID_NONE_COUNTERMEASURES,ID_CAP_COUNTERMEASURES};
-enum {PLAYER_PAGE,PRIMARY_PAGE,SECONDARY_PAGE,COUNTERMEASURE_PAGE,INVENTORY_PAGE,REVIEW_PAGE};
+ID_COUNTERMEASURE_OWN=360,ID_COUNTERMEASURE_MAX=370,ID_COUNTERMEASURE_ACTIVE=380,ID_ALL_COUNTERMEASURES,ID_NONE_COUNTERMEASURES,ID_CAP_COUNTERMEASURES,
+ID_GUIDEBOT_NAME=390,ID_GUIDEBOT_CHATTER,ID_GUIDEBOT_SUPPLY=400};
+enum {PLAYER_PAGE,PRIMARY_PAGE,SECONDARY_PAGE,COUNTERMEASURE_PAGE,INVENTORY_PAGE,GUIDEBOT_PAGE,REVIEW_PAGE};
 typedef struct {HWND hwnd;int page,needs_file;} Widget;
 static HINSTANCE instance;
 static HWND main_window,tab,info,status,hint,review;
@@ -32,6 +33,7 @@ static int countermeasure_choices[1+D3_COUNTERMEASURE_TYPES+D3_MAX_ITEMS],counte
 static HWND unlock_ships[D3_STANDARD_SHIPS],saved_inventory;
 static HWND unlock_black_pyro,prefer_black_pyro_button;
 static int prefer_black_pyro;
+static HWND guidebot_info,guidebot_name,guidebot_chatter,guidebot_shield,guidebot_supplies[D3_GUIDEBOT_POWERUPS];
 static D3Game *game;
 static D3Buffer opened;
 static D3U8 original_hash[32];
@@ -262,6 +264,28 @@ static void load_inventory_values(void) {
     if (!game->inventory.count)
         SendMessageA(saved_inventory,LB_ADDSTRING,0,(LPARAM)"Das Inventar ist leer.");
 }
+static void load_guidebot_values(void) {
+    const D3GuideBot *bot=&game->guidebot;
+    int i,available=bot->offset!=0;
+    char value[48],line[112];
+    text(guidebot_info,available ? "Name, Funkmeldungen und Vorraete im gespeicherten Level. Mengen von 0 bis 127." :
+        "Dieser Spielstand enthaelt keinen eindeutig erkannten Guide-Bot-Zustand.");
+    text(guidebot_name,bot->name);
+    EnableWindow(guidebot_name,available);
+    check(guidebot_chatter,bot->chatter);
+    EnableWindow(guidebot_chatter,available);
+    line[0]=0;
+    if (available) {
+        d3_format_float(value,bot->shields);
+        d3_string(line,sizeof(line),"Gespeicherter Schildwert: ");d3_append(line,sizeof(line),value);
+    }
+    text(guidebot_shield,line);
+    for (i=0; i<D3_GUIDEBOT_POWERUPS; i++) {
+        d3_format_u32(value,bot->counts[i]);
+        text(guidebot_supplies[i],available ? value : "-");
+        EnableWindow(guidebot_supplies[i],available);
+    }
+}
 static void load_values(void){
     D3Options o;int i,visible=0,has_second=0;char s[1400],n[48];
     if(!game)return;loading=1;enable_controls();d3_current(game,&o);
@@ -270,6 +294,7 @@ static void load_values(void){
     check(god,d3_god(game));check(cloak,d3_cloak(game));check(cooler,d3_has_item(game,game->cooler_id));check(converter,d3_has_item(game,game->converter_id));check(quad,d3_quad(game));check(full_map,0);
     EnableWindow(cooler,game->cooler_id>=0);EnableWindow(converter,game->converter_id>=0);EnableWindow(quad,game->quad_id>=0 && game->object.batteries==21);
     load_inventory_values();
+    load_guidebot_values();
     for(i=0;i<20;i++){check(owned[i],o.owned[i]);d3_format_u32(n,o.ammo[i]);text(ammo[i],n);if(i>=10 && o.owned[i])has_second=1;}
     SendMessageA(primary,CB_SETCURSEL,o.primary,0);SendMessageA(secondary,CB_SETCURSEL,has_second?(WPARAM)(o.secondary-9):0,0);
     god_request=cloak_request=cooler_request=converter_request=quad_request=-1;
@@ -330,6 +355,16 @@ static int read_options(D3Options *o){
     }
     bit=d3_ship_permission_bit(game,D3_BLACK_PYRO);
     o->unlock_black_pyro=(D3U8)(!o->prefer_black_pyro && bit!=0 && !(d3_ship_permissions(game) & bit) && checked(unlock_black_pyro));
+    if (game->guidebot.offset) {
+        get_text(guidebot_name,o->guidebot_name,sizeof(o->guidebot_name));
+        o->rename_guidebot=!d3_string_equal(o->guidebot_name,game->guidebot.name);
+        if (checked(guidebot_chatter)!=game->guidebot.chatter) o->guidebot_chatter=checked(guidebot_chatter);
+        for (i=0; i<D3_GUIDEBOT_POWERUPS; i++) {
+            get_text(guidebot_supplies[i],s,sizeof(s));
+            if (!d3_integer(s,0,D3_GUIDEBOT_MAX_COUNT,&n)) return 0;
+            if (n!=game->guidebot.counts[i]) o->guidebot_counts[i]=n;
+        }
+    }
     o->primary=(int)SendMessageA(primary,CB_GETCURSEL,0,0);i=(int)SendMessageA(secondary,CB_GETCURSEL,0,0);if(i>0)o->secondary=i+9;
     o->god=god_request;o->cloak=cloak_request;o->cooler=cooler_request;o->converter=converter_request;o->quad=quad_request;o->reveal_map=checked(full_map);return 1;
 }
@@ -343,7 +378,7 @@ static void report_supply_counts(char *report,D3U32 size,const D3Supply *items,c
 }
 static int build_output(D3Buffer *out){
     D3Options o;char s[4096],n[48];int i;
-    if(!game)return 0;if(!read_options(&o)){error_box("Ungueltige Zahl. Bitte Spielerwerte, Munition und Inventarmengen pruefen.");return 0;}
+    if(!game)return 0;if(!read_options(&o)){error_box("Ungueltige Zahl. Bitte Spielerwerte, Munition und Mengen pruefen.");return 0;}
     if(!d3_edit(game,&o,out)){error_box(game->error);return 0;}
     file_report(s,4096);d3_append(s,4096,"\r\nGEPRUEFTE AUSGABE\r\nGroesse: ");append_number(s,4096,game->size);d3_append(s,4096," -> ");append_number(s,4096,out->size);d3_append(s,4096," Byte\r\n");
     if(out->size==game->size && d3_equal(out->data,game->data,out->size))d3_append(s,4096,"Keine Aenderung. Ausgabe ist byte-identisch.\r\n");
@@ -367,6 +402,12 @@ static int build_output(D3Buffer *out){
         }
         if (o.prefer_black_pyro) d3_append(s,sizeof(s),"Schiffsfreigaben auf Black Pyro zuruecksetzen und angewaehlte Schiffe erlauben\r\n");
         else if (o.unlock_black_pyro) d3_append(s,sizeof(s),"Black Pyro freischalten\r\n");
+        if (o.rename_guidebot || o.guidebot_chatter>=0) d3_append(s,sizeof(s),"Guide-Bot-Eigenschaften bearbeiten\r\n");
+        for (i=0; i<D3_GUIDEBOT_POWERUPS; i++) {
+            if (o.guidebot_counts[i]<0) continue;
+            d3_append(s,sizeof(s),"Guide-Bot-Vorraete bearbeiten\r\n");
+            break;
+        }
     }
     d3_append(s,4096,"\r\nAusgabe wurde erneut erfolgreich eingelesen.");text(review,s);set_status("Pruefung bestanden. Ausgabe konnte erneut gelesen werden.");return 1;
 }
@@ -465,8 +506,26 @@ static void inventory_page(int page) {
     saved_inventory=control("LISTBOX","",LBS_NOINTEGRALHEIGHT|WS_BORDER|WS_VSCROLL|WS_HSCROLL|WS_TABSTOP,28,355,701,101,0,page,1);
     SendMessageA(saved_inventory,LB_SETHORIZONTALEXTENT,2800,0);
 }
+static void guidebot_page(void) {
+    const char *supplies[]={"Feuerloescher","Go Wingnut","Fernsteuerung","Begleitschutz","Antivirus"};
+    int i,y,page=GUIDEBOT_PAGE;
+    guidebot_info=label("",28,150,701,31,page);
+    group("Eigenschaften",24,186,338,161,page);
+    label("Name",38,214,124,18,page);
+    guidebot_name=edit(171,210,172,ID_GUIDEBOT_NAME,page,0);
+    SendMessageA(guidebot_name,EM_LIMITTEXT,7,0);
+    guidebot_chatter=checkbox("Regelmaessige Funkmeldungen",38,243,303,ID_GUIDEBOT_CHATTER,page);
+    guidebot_shield=label("",38,271,303,34,page);
+    group("Vorraete",378,186,356,161,page);
+    for (i=0; i<D3_GUIDEBOT_POWERUPS; i++) {
+        y=210+i*25;
+        label(supplies[i],392,y+4,198,18,page);
+        guidebot_supplies[i]=edit(606,y,111,ID_GUIDEBOT_SUPPLY+i,page,1);
+        SendMessageA(guidebot_supplies[i],EM_LIMITTEXT,3,0);
+    }
+}
 static void make_ui(void){
-    TCITEMA item;HWND heading;int i;const char *names[]={"Spieler","Primaerwaffen","Sekundaerwaffen","Gegenmassnahmen","Inventar / Schiffe","Datei / Pruefung"};
+    TCITEMA item;HWND heading;int i;const char *names[]={"Spieler","Primaerwaffen","Sekundaerwaffen","Gegenmassnahmen","Inventar / Schiffe","Guide-Bot","Datei / Pruefung"};
     font=(HFONT)GetStockObject(DEFAULT_GUI_FONT);title_font=CreateFontA(-18,0,0,0,FW_BOLD,0,0,0,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH|FF_SWISS,"MS Sans Serif");
     heading=label("DESCENT 3  -  SAVEGAME EDITOR / WINDOWS 98",12,10,736,25,-1);SendMessageA(heading,WM_SETFONT,(WPARAM)title_font,TRUE);
     button("Oeffnen...",12,42,105,ID_OPEN,-1,0);button("Speichern + Backup",123,42,144,ID_SAVE,-1,1);button("Kopie speichern...",273,42,128,ID_COPY,-1,1);
@@ -474,7 +533,7 @@ static void make_ui(void){
     info=label("Noch kein Spielstand geoeffnet. Im Spiel speichern, dann saveg000 usw. oeffnen.",12,76,736,34,-1);
     tab=control(WC_TABCONTROLA,"",WS_TABSTOP|WS_CLIPSIBLINGS,12,114,736,355,ID_TAB,-1,0);
     d3_zero(&item,sizeof(item));item.mask=TCIF_TEXT;for(i=0;i<(int)(sizeof(names)/sizeof(names[0]));i++){item.pszText=(LPSTR)names[i];SendMessageA(tab,TCM_INSERTITEMA,(WPARAM)i,(LPARAM)&item);}
-    player_page();weapon_page(0,PRIMARY_PAGE);weapon_page(10,SECONDARY_PAGE);countermeasure_page();inventory_page(INVENTORY_PAGE);
+    player_page();weapon_page(0,PRIMARY_PAGE);weapon_page(10,SECONDARY_PAGE);countermeasure_page();inventory_page(INVENTORY_PAGE);guidebot_page();
     button("Aenderungen pruefen",28,147,178,ID_CHECK,REVIEW_PAGE,1);
     review=control("EDIT","Geplante Aenderungen und Dateidaten erscheinen hier.\r\n\r\nDer Editor bearbeitet vorhandene Spielstaende; er erzeugt keinen\r\nvollstaendigen Levelzustand allein aus dem Quelltext.",ES_MULTILINE|ES_READONLY|ES_AUTOVSCROLL|WS_VSCROLL|WS_HSCROLL,28,180,701,276,0,REVIEW_PAGE,0);
     hint=label("",12,475,736,16,-1);status=label("Bereit.",12,495,736,32,-1);
@@ -491,7 +550,8 @@ static LRESULT CALLBACK window_proc(HWND hwnd,UINT message,WPARAM w,LPARAM l){
         if(code==EN_CHANGE){
             if(id>=ID_COUNTERMEASURE_COUNT && id<ID_COUNTERMEASURE_COUNT+D3_COUNTERMEASURE_TYPES){refresh_countermeasures(1);changed();}
             if((id>=ID_ENERGY && id<=ID_SCORE) || (id>=ID_AMMO && id<ID_AMMO+20) ||
-                (id>=ID_CARGO_COUNT && id<ID_CARGO_COUNT+D3_CARGO_TYPES))changed();
+                (id>=ID_CARGO_COUNT && id<ID_CARGO_COUNT+D3_CARGO_TYPES) || id==ID_GUIDEBOT_NAME ||
+                (id>=ID_GUIDEBOT_SUPPLY && id<ID_GUIDEBOT_SUPPLY+D3_GUIDEBOT_POWERUPS))changed();
             return 0;
         }
         if(id==ID_COUNTERMEASURE_ACTIVE && code==CBN_SELCHANGE){select_countermeasure();return 0;}
@@ -517,6 +577,7 @@ static LRESULT CALLBACK window_proc(HWND hwnd,UINT message,WPARAM w,LPARAM l){
         case ID_ALL_COUNTERMEASURES:change_all_countermeasures(1);break;
         case ID_NONE_COUNTERMEASURES:change_all_countermeasures(0);break;
         case ID_CAP_COUNTERMEASURES:change_all_countermeasures(2);break;
+        case ID_GUIDEBOT_CHATTER:changed();break;
         }return 0;
     case WM_CLOSE:if(discard())DestroyWindow(hwnd);return 0;
     case WM_DESTROY:if(title_font)DeleteObject(title_font);PostQuitMessage(0);return 0;

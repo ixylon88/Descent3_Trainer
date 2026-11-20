@@ -291,6 +291,43 @@
                 </ScrollViewer>
             </TabItem>
 
+            <TabItem x:Name="GuideBotTab" Header="Guide-Bot" IsEnabled="False">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="12">
+                        <TextBlock x:Name="GuideBotInfo" TextWrapping="Wrap" Margin="0,0,0,12" />
+                        <Grid x:Name="GuideBotEditor">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <GroupBox Header="Eigenschaften">
+                                <StackPanel>
+                                    <DockPanel LastChildFill="False">
+                                        <Label Style="{StaticResource ValueLabel}" Content="Name" Target="{Binding ElementName=GuideBotName}" />
+                                        <TextBox x:Name="GuideBotName" MinWidth="105" VerticalContentAlignment="Center" MaxLength="7" TextChanged="OnInputChanged" />
+                                    </DockPanel>
+                                    <CheckBox x:Name="GuideBotChatter" Content="Regelmäßige Funkmeldungen" Checked="OnInputChanged" Unchecked="OnInputChanged" />
+                                    <TextBlock x:Name="GuideBotShield" Margin="0,6,0,0" />
+                                </StackPanel>
+                            </GroupBox>
+                            <GroupBox Grid.Column="1" Header="Vorräte">
+                                <ItemsControl x:Name="GuideBotSupplies">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <DockPanel Margin="0,1">
+                                                <TextBox x:Name="GuideBotCount" DockPanel.Dock="Right" Width="74" Style="{StaticResource NumericInput}"
+                                                         Text="{Binding CountText, UpdateSourceTrigger=PropertyChanged}" />
+                                                <Label Style="{StaticResource ValueLabel}" Content="{Binding Name}" Target="{Binding ElementName=GuideBotCount}" />
+                                            </DockPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </GroupBox>
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
             <TabItem Header="Datei / Änderungen">
                 <DockPanel Margin="12">
                     <Button x:Name="ReviewButton" DockPanel.Dock="Top" HorizontalAlignment="Left" IsEnabled="False"

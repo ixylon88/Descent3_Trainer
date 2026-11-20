@@ -28,6 +28,8 @@ const char *const d3_standard_ships[D3_STANDARD_SHIPS] = {"Pyro-GL", "Phoenix", 
 
 enum {OBJ_WEAPON = 5, OBJ_POWERUP = 7, SHIP_PERMISSIONS_OFFSET = 468};
 enum {MAX_OBJECT_IDS = 910, MAX_WEAPONS = 200, MAX_SHIPS = 30};
+/* AIGame.cpp guidebot_data is pointer-free under the supported ABIs. */
+enum {BOT_SIZE=992, BOT_ITEMS=8, BOT_OWNER_SLOT=40, BOT_OWNER=44, BOT_FLAGS=96, BOT_HANDLE=108, BOT_NO_CHATTER=8};
 #define SHIP_PERMISSION_MASK ((1u << MAX_SHIPS) - 1u)
 void d3_zero(void *p,D3U32 n) { D3U8 *d=(D3U8*)p;while(n--)*d++=0; }
 void d3_copy(void *dest,const void *source,D3U32 n) { D3U8 *d=(D3U8*)dest;const D3U8 *s=(const D3U8*)source;while(n--)*d++=*s++; }
@@ -78,7 +80,7 @@ static int object(const D3U8 *data,D3U32 size,D3U32 pos,int version,D3Object *o)
     o->type=u8(&r);if(o->type==255){o->end=r.p;return r.ok;}
     if(o->type>25)return 0;
     u8(&r);if(boolean(&r))skip(&r,52);
-    o->handle=(D3U32)i32(&r);u8(&r);skip(&r,4+12+12+36);n=u8(&r);skip(&r,(D3U32)n);
+    o->handle=(D3U32)i32(&r);o->dummy_type=u8(&r);skip(&r,4+12+12+36);n=u8(&r);skip(&r,(D3U32)n);
     o->id=i16(&r);skip(&r,4);u8(&r);u8(&r);render=u8(&r);skip(&r,2+4);
     o->shield=r.p;shield=f32(&r);if(!d3_finite(shield))return 0;
     skip(&r,3+12+4+8);n=i32(&r);if(n<0 || n>1024)return 0;
@@ -89,6 +91,102 @@ static int object(const D3U8 *data,D3U32 size,D3U32 pos,int version,D3Object *o)
     o->effect_record=r.p;o->has_effect=boolean(&r);
     if(o->has_effect){n=i16(&r);if(n!=164)return 0;o->effect=r.p;skip(&r,164);}
     o->end=r.p;return r.ok;
+}
+static int guidebot_object(const D3Game *g,D3U32 handle,D3Object *result) {
+    D3U32 slot=handle&0x7ffu,player_slot=g->object.handle&0x7ffu;
+    D3U32 p,i,where,end;
+    D3Object obj,next;
+    int found=0;
+    if (slot>=1500 || slot==player_slot) return 0;
+    if (slot>player_slot) {
+        p=g->object.end;
+        for (i=player_slot+1; i<=slot && p<g->player-2; i++) {
+            if (!object(g->data,g->size,p,g->version,&obj)) return 0;
+            if (i==slot) { *result=obj; return obj.handle==handle; }
+            p=obj.end;
+        }
+        return 0;
+    }
+    /* Earlier object slots must join the verified player sequence. */
+    for (p=g->map+g->map_count; p+11<=g->object.start; p++) {
+        if (g->data[p]!=11 || d3_u32(g->data+p)!=0x00BADB0Bu || (g->data[p+4]!=2 && g->data[p+4]!=21)) continue;
+        where=p+7+(g->data[p+6]==1 ? 52 : 0);
+        if (where+4>g->object.start || d3_u32(g->data+where)!=handle || !object(g->data,g->size,p,g->version,&obj)) continue;
+        end=obj.end;
+        for (i=slot+1; i<player_slot; i++) {
+            if (end>=g->object.start || !object(g->data,g->size,end,g->version,&next) ||
+                (next.type!=255 && (next.handle&0x7ffu)!=i)) { end=g->size; break; }
+            end=next.end;
+        }
+        if (end!=g->object.start) continue;
+        if (found) return 0;
+        *result=obj;found=1;
+    }
+    return found;
+}
+static int read_guidebot_state(const D3Game *g,D3U32 start,D3GuideBot *bot) {
+    const D3U8 *bytes=g->data;
+    D3U32 length=d3_u32(bytes+start+8),candidate=0,handle=0,owner,body;
+    D3I32 size;
+    int i,kind,id,modules,ai_game=0;
+    Reader r;
+    D3Object obj;
+    if (length<90 || length>g->size-start) return 0;
+    r=reader(bytes,start+length,start+12);
+    skip(&r,4); /* timer counter */
+    for (i=0; i<64; i++) if (boolean(&r)) skip(&r,34);
+    while (r.ok && (size=i32(&r))!=0) {
+        kind=u8(&r);
+        if (kind>2) return 0;
+        owner=kind==2 ? 0 : (D3U32)i32(&r);
+        id=i32(&r);body=r.p;
+        if (!need(&r,(D3U32)size)) return 0;
+        skip(&r,(D3U32)size);
+        if (kind!=0 || id!=4 || size!=BOT_SIZE || d3_u16(bytes+body+BOT_OWNER_SLOT)!=0 ||
+            d3_u32(bytes+body+BOT_OWNER)!=g->object.handle || d3_u32(bytes+body+BOT_HANDLE)!=owner) continue;
+        if (candidate) return 0;
+        candidate=body;handle=owner;
+    }
+    if (!r.ok || !candidate) return 0;
+    for (i=0; i<8 && bytes[candidate+i]; i++) {}
+    if (i==8) return 0;
+    for (i=0; i<D3_GUIDEBOT_POWERUPS; i++) if (bytes[candidate+BOT_ITEMS+i]>D3_GUIDEBOT_MAX_COUNT) return 0;
+    modules=u8(&r);
+    if (modules>64) return 0;
+    for (i=0; i<modules; i++) {
+        const char *name;
+        int n=u8(&r);
+        if (n<2 || !need(&r,(D3U32)n) || bytes[r.p+n-1]!=0) return 0;
+        name=(const char*)bytes+r.p;
+        if (d3_length(name)!=(D3U32)n-1) return 0;
+        if (d3_string_iequal(name,"AIGame") || d3_string_iequal(name,"AIGame.dll")) ai_game=1;
+        skip(&r,(D3U32)n);
+        size=i32(&r);
+        skip(&r,(D3U32)size);
+    }
+    if (!ai_game || !need(&r,5) || !guidebot_object(g,handle,&obj) || obj.id<0 ||
+        (obj.id!=g->guidebot_id && obj.id!=g->guidebot_red_id) || (obj.type!=2 && !(obj.type==21 && obj.dummy_type==2))) return 0;
+    bot->offset=candidate;
+    bot->shields=d3_float(bytes+obj.shield);
+    d3_string(bot->name,sizeof(bot->name),(const char*)bytes+candidate);
+    bot->chatter=(d3_u32(bytes+candidate+BOT_FLAGS)&BOT_NO_CHATTER)==0;
+    d3_copy(bot->counts,bytes+candidate+BOT_ITEMS,sizeof(bot->counts));
+    return 1;
+}
+static void find_guidebot(D3Game *g) {
+    D3U32 pos;
+    D3GuideBot candidate,found={0};
+    int signatures=0;
+    if (g->guidebot_id<0 && g->guidebot_red_id<0) return;
+    /* The length-delimited OSIRIS v1 directory follows the engine's visual state. */
+    for (pos=g->countermeasures.end; pos+12<=g->size; pos++) {
+        if (g->data[pos]!='O' || !d3_equal(g->data+pos,"OSIRIS\0\1",8)) continue;
+        if (++signatures>16) return;
+        if (!read_guidebot_state(g,pos,&candidate)) continue;
+        if (found.offset) return;
+        found=candidate;
+    }
+    g->guidebot=found;
 }
 static int snapshot(Reader *r){
     int id,cmap,type,mips,width,height,m,run;D3U32 pixels,total,w,h;
@@ -107,6 +205,7 @@ static int header(D3Game *g){
     d3_string(g->description,32,(const char*)g->data);skip(&r,32);g->version=i16(&r);if(g->version<0 || g->version>2)return 0;
     if(boolean(&r) && !snapshot(&r))return 0;
     g->cooler_id=g->converter_id=g->quad_id=-1;
+    g->guidebot_id=g->guidebot_red_id=-1;
     for(j=0;j<D3_CARGO_TYPES;j++)g->cargo_ids[j]=-1;
     for(j=0;j<D3_COUNTERMEASURE_TYPES;j++)g->countermeasure_ids[j]=g->countermeasure_pickups[j]=-1;
     for(table=0;table<6;table++){
@@ -116,6 +215,8 @@ static int header(D3Game *g){
             if(!z(&r,text,512))return 0;
             if(table==0){if(d3_string_iequal(text,"Afterburner"))g->cooler_id=i;if(d3_string_iequal(text,"Converter"))g->converter_id=i;if(d3_string_iequal(text,"QuadLaser"))g->quad_id=i;}
             if(table==0 && i<MAX_OBJECT_IDS) {
+                if (d3_string_iequal(text,"GuideBot")) g->guidebot_id=i;
+                if (d3_string_iequal(text,"GuideBotRed")) g->guidebot_red_id=i;
                 for (j=0; j<D3_CARGO_TYPES; j++)
                     if (g->cargo_ids[j]<0 && d3_string_iequal(text,d3_cargo_items[j].key)) g->cargo_ids[j]=i;
                 for (j=0; j<D3_COUNTERMEASURE_TYPES; j++)
@@ -171,7 +272,7 @@ int d3_parse(D3Game *g,const D3U8 *data,D3U32 size){
     }
     if(matches!=1)return fail(g,matches ? "Mehrere passende Spielerbloecke. Bearbeitung abgelehnt." : "Kein passender historischer 32-Bit-Spielerblock (496 Byte) gefunden.");
     if(!valid_player(g,best_player,&best))return fail(g,"Spielerblock konnte nicht erneut bestaetigt werden.");
-    g->player=best_player;g->object=best;d3_string(g->callsign,20,(const char*)data+best_player+64);g->error=0;return 1;
+    g->player=best_player;g->object=best;d3_string(g->callsign,20,(const char*)data+best_player+64);find_guidebot(g);g->error=0;return 1;
 }
 const char *d3_ship(const D3Game *g){return g->ships[d3_u32(g->data+g->player+60)];}
 D3U32 d3_ship_permissions(const D3Game *g){return d3_u32(g->data+g->player+SHIP_PERMISSIONS_OFFSET);}
@@ -213,6 +314,8 @@ void d3_current(const D3Game *g,D3Options *o){
     for(i=0;i<D3_CARGO_TYPES;i++)o->cargo_counts[i]=-1;
     for(i=0;i<D3_COUNTERMEASURE_TYPES;i++)o->countermeasure_counts[i]=-1;
     o->active_countermeasure_weapon_id=-1;
+    o->guidebot_chatter=-1;
+    for(i=0;i<D3_GUIDEBOT_POWERUPS;i++)o->guidebot_counts[i]=-1;
 }
 
 typedef struct {D3U32 start,length,size;const D3U8 *bytes;} Patch;
@@ -303,10 +406,45 @@ static void patch_inventory(const D3Game *g,const D3Inventory *inv,D3U8 *raw_cou
     if (size!=original_size || !d3_equal(bytes,g->data+inv->start,size))
         add_patch(patches,n,inv->start,original_size,bytes,size);
 }
+static const char *edit_guidebot(const D3Game *g,const D3Options *o,D3U8 *values,D3U8 *flag_bytes,Patch *patches,int *n) {
+    D3U32 offset=g->guidebot.offset,flags;
+    int i,count,requested=o->rename_guidebot || o->guidebot_chatter>=0;
+    for (i=0; i<D3_GUIDEBOT_POWERUPS; i++) if (o->guidebot_counts[i]!=-1) requested=1;
+    if (!requested) return 0;
+    if (!offset) return "Kein bearbeitbarer Guide-Bot-Zustand im Spielstand.";
+    d3_copy(values,g->data+offset,BOT_ITEMS+D3_GUIDEBOT_POWERUPS);
+    if (o->rename_guidebot) {
+        for (i=0; i<BOT_ITEMS && o->guidebot_name[i]; i++) {
+            D3U8 ch=(D3U8)o->guidebot_name[i];
+            if (ch<32 || ch==127) break;
+        }
+        if (i==0 || i==BOT_ITEMS || o->guidebot_name[i]) return "Der Guide-Bot-Name muss 1 bis 7 ANSI-Zeichen enthalten.";
+        d3_zero(values,BOT_ITEMS);
+        d3_copy(values,o->guidebot_name,(D3U32)i);
+    }
+    for (i=0; i<D3_GUIDEBOT_POWERUPS; i++) {
+        count=o->guidebot_counts[i];
+        if (count==-1) continue;
+        if (count<0 || count>D3_GUIDEBOT_MAX_COUNT) return "Guide-Bot-Mengen muessen zwischen 0 und 127 liegen.";
+        values[BOT_ITEMS+i]=(D3U8)count;
+    }
+    if (!d3_equal(values,g->data+offset,BOT_ITEMS+D3_GUIDEBOT_POWERUPS))
+        add_patch(patches,n,offset,BOT_ITEMS+D3_GUIDEBOT_POWERUPS,values,BOT_ITEMS+D3_GUIDEBOT_POWERUPS);
+    if (o->guidebot_chatter>=0 && o->guidebot_chatter!=g->guidebot.chatter) {
+        flags=d3_u32(g->data+offset+BOT_FLAGS);
+        flags=o->guidebot_chatter ? flags & ~(D3U32)BOT_NO_CHATTER : flags | BOT_NO_CHATTER;
+        d3_put32(flag_bytes,flags);
+        add_patch(patches,n,offset+BOT_FLAGS,4,flag_bytes,4);
+    }
+    return 0;
+}
 int d3_edit(D3Game *g,const D3Options *o,D3Buffer *out){
     D3U8 raw[496],shield[4],effect[167],quad0[4],quad5[4];D3U8 *inv_bytes=0,*map=0;D3Inventory *lists=0;D3Game *verify=0;
-    Patch patches[8],temp;int n=0,i,j,primary,secondary,primaries=0,removing;D3U32 mask,oldmask,flags,permissions,total,source_pos,dest_pos;
+    D3U8 bot_values[BOT_ITEMS+D3_GUIDEBOT_POWERUPS],bot_flags[4];
+    Patch patches[10],temp;int n=0,i,j,primary,secondary,primaries=0,removing;D3U32 mask,oldmask,flags,permissions,total,source_pos,dest_pos;
     const char *error=0;out->data=0;out->size=0;
+    error=edit_guidebot(g,o,bot_values,bot_flags,patches,&n);
+    if (error) return fail(g,error);
     if(!d3_finite(o->energy) || o->energy<0 || o->energy>1e9f || !d3_finite(o->shields) || o->shields<0 || o->shields>1e9f || !d3_finite(o->afterburner) || o->afterburner<0 || o->afterburner>1e6f || o->lives<0 || o->lives>255)return fail(g,"Ungueltiger Spielerwert.");
     oldmask=d3_u32(g->data+g->player+168);for(i=0;i<10;i++)if(o->owned[i])primaries++;
     if(!primaries && (oldmask&1023))return fail(g,"Mindestens eine Primaerwaffe muss vorhanden bleiben.");

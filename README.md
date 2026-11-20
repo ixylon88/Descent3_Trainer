@@ -45,9 +45,8 @@ ein leeres Symbolfeld.
 
 Force Wall und Go Wingnut stammen aus den allgemeinen Spielskripten. Ob sie
 als Spieler-Gegenstände verfügbar sind und welche Wirkung sie haben, hängt
-von der Spielversion und den Spieldaten ab. Die Liste zeigt auch Guide-Bot und
-Missionsgegenstände an. Deren Zustand kann an Levelobjekte und Skripte gekoppelt
-sein.
+von der Spielversion und den Spieldaten ab. Im Spielerinventar werden auch
+Missionsgegenstände und vorhandene Guide-Bot-Einträge angezeigt.
 
 Die Häkchen ergänzen die Schiffserlaubnisse im Spielstand. Die reguläre
 Schiffsauswahl im Einzelspieler-Briefing bietet Pyro-GL, Phoenix und Magnum-AHT
@@ -66,6 +65,18 @@ Quelltextstellen für das Format und die Spielregeln
 - Spielerdaten und beide Inventare in [`main`](https://github.com/DescentDevelopers/Descent3/blob/de4bebf5f2d2523261956d0f28603e426eb88c63/Descent3/gamesave.cpp#L962-L975) und [`d3-historical`](https://github.com/DescentDevelopers/Descent3/blob/84e25b0b411284bad57b34f50fd976f1a8a2367f/Descent3/gamesave.cpp#L1014-L1030).
 - [Aufsammeldefinitionen und Mengenbegrenzungen](https://github.com/DescentDevelopers/Descent3/blob/de4bebf5f2d2523261956d0f28603e426eb88c63/Descent3/multisafe.cpp#L2800-L2981).
 - [Zugelassene Schiffsnamen im Briefing](https://github.com/DescentDevelopers/Descent3/blob/de4bebf5f2d2523261956d0f28603e426eb88c63/Descent3/ship.cpp#L124-L129), [automatische Auswahl](https://github.com/DescentDevelopers/Descent3/blob/de4bebf5f2d2523261956d0f28603e426eb88c63/Descent3/TelCom.cpp#L3425-L3456) und [Mercenary-Skript](https://github.com/DescentDevelopers/Descent3/blob/de4bebf5f2d2523261956d0f28603e426eb88c63/scripts/Merc02.cpp#L5095-L5104).
+
+## Guide-Bot
+
+Der Reiter **Guide-Bot** bearbeitet den Namen im gespeicherten Level, die
+regelmäßigen Funkmeldungen sowie Feuerlöscher, Go Wingnut, Fernsteuerung,
+Begleitschutz und Antivirus. Der Name darf bis zu sieben ANSI-Zeichen und jeder
+Vorrat 0 bis 127 Stück umfassen. Der gespeicherte Schildwert dient zur Anzeige.
+Die Felder sind verfügbar, wenn das Objekt und sein OSIRIS-Skriptblock eindeutig
+dem Spieler zugeordnet werden können und das gespeicherte Layout bekannt ist.
+Die Tests verwenden synthetische Spielstände für beide ABI-Varianten.
+
+- [Guide-Bot-Skriptzustand](https://github.com/DescentDevelopers/Descent3/blob/de4bebf5f2d2523261956d0f28603e426eb88c63/scripts/AIGame.cpp#L1476-L1536) und [Serialisierung der OSIRIS-Skriptblöcke](https://github.com/DescentDevelopers/Descent3/blob/de4bebf5f2d2523261956d0f28603e426eb88c63/Descent3/OsirisLoadandBind.cpp#L2993-L3015).
 
 ## Builds auf GitHub
 

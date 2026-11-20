@@ -284,11 +284,11 @@ template<class T> void write(T value) {
 void zeros(size_t n,uint8_t value=0) {out.insert(out.end(),n,value);}
 void z(const char* text) {out.insert(out.end(),text,text+std::strlen(text)+1);}
 void u8(uint8_t x){write(x);} void i16(int16_t x){write(x);} void i32(int32_t x){write(x);} void f32(float x){write(x);}
-void object_record(int index,int version,bool effects) {
+void object_record(int index,int version,bool effects,int id=0) {
   i32(0xBADB0B);u8(index==0?4:2);u8(0);u8(0); // player or robot, lighting, light_info absent
   i32(0x1000+index);u8(0);i32(0);zeros(24); // handle, dummy, room, positions
   f32(1);zeros(12);f32(1);zeros(12);f32(1); // 3x3 identity
-  u8(3);u8('A');u8('B');u8('C');i16(0);i32(0x01000000); // name, id, flags
+  u8(3);u8('A');u8('B');u8('C');i16(id);i32(0x01000000); // name, id, flags
   u8(index==0?4:1);u8(1);u8(1);i16(0);f32(5.5f);f32(index==0?87.25f:20.0f);
   u8(255);u8(0);u8(0);f32(0);f32(0);f32(0);i32(-1);i32(-1);i32(-1);
   i32(2);if(version>=2)i32(0);else {i32(-1);i32(-1);} // n_attach and children allocation
@@ -308,6 +308,23 @@ void inventory_item(int type,int original_type,int id,int original_id,int count,
   z("Saved description"); z(icon); z(name); i32(flags);
 }
 
+void guidebot_state() {
+  i16(0); // visual effects
+  i16(0); zeros(50); // spew
+  size_t start=out.size();
+  z("OSIRIS"); u8(1); i32(0); // length placeholder
+  i32(0); zeros(64); // timer counter and free timers
+  i32(992); u8(0); i32(0x1001); i32(4); // GuideBot object memory
+  z("Buddy"); zeros(2); u8(3); u8(1); u8(2); u8(0); u8(1);
+  zeros(27); i16(0); i16(0); i32(0x1000); // padding, sounds, time, owner slot/handle
+  zeros(48); i32(0x20); zeros(8); i32(0x1001); zeros(880); // flags and bot handle
+  i32(0); // end of memory chunks
+  u8(1); u8(sizeof("AIGame.dll")); z("AIGame.dll"); i32(0);
+  i16(0); i16(0); u8(0); // empty OMMS
+  unsigned length=static_cast<unsigned>(out.size()-start);
+  for(int i=0;i<4;i++) out[start+8+i]=(length>>(8*i))&0xff;
+}
+
 int main(int argc,char**argv) {
   if(argc<2)return 2;
   int version=argc>2?std::atoi(argv[2]):2;
@@ -315,9 +332,10 @@ int main(int argc,char**argv) {
   bool guided=argc>4 && std::atoi(argv[4])!=0;
   bool snapshot=argc>5 && std::atoi(argv[5])!=0;
   bool loadout=argc>6 && std::atoi(argv[6])!=0;
+  bool guidebot=argc>7 && std::atoi(argv[7])!=0;
   char description[32]="Synthetic parser fixture";for(auto c:description)u8(c);i16(version);u8(snapshot?1:0);
   if(snapshot){u8(0);u8(0);u8(122);z("test.ogf");u8(1);zeros(9);i16(2);i16(2);u8(32);u8(40);u8(4);i16(0x7fff);}
-  i16(loadout?11:4); z("Afterburner"); z("Converter"); z("QuadLaser"); z("Robot");
+  i16(loadout?11:4); z("Afterburner"); z("Converter"); z("QuadLaser"); z(guidebot?"GuideBot":"Robot");
   if(loadout) {
     z("Forcewall"); z("GoWingNut"); z("Chaff"); z("Betty4Pack");
     z("Seeker3Pack"); z("GunboyPowerup"); z("ProxMinePowerup");
@@ -335,7 +353,7 @@ int main(int argc,char**argv) {
   i32(0);i16(64);for(int i=0;i<64;i++){i16(1);u8(0);} // marker text
   i16(1);i32(1500);i32(0);for(int i=0;i<1500;i++)i32(-1);
   i32(0);i32(0);i32(400);i32(0);for(int i=0;i<400;i++)i32(-1);
-  object_record(0,version,effect);object_record(1,version,true);
+  object_record(0,version,effect);object_record(1,version,true,guidebot?3:0);
   player pl{};pl.start_index=0;pl.ship_index=0;std::strcpy(pl.callsign,"Testpilot");pl.flags=4096;pl.score=25;
   pl.energy=100.125f;pl.lives=3;pl.level=1;pl.starting_level=1;pl.killer_objnum=-1;pl.objnum=0;pl.team=-1;
   pl.weapon_flags=(1u<<31)|(1u<<20)|(1u<<10)|1u;pl.weapon_ammo[1]=120;pl.weapon_ammo[10]=4;
@@ -365,7 +383,8 @@ int main(int argc,char**argv) {
     inventory_item(5,7,0,10,1,"Custom countermeasure","",0x87);
   }
   i32(loadout?1:0);
-  i32(0); // matcens, then an opaque tail that must survive byte for byte
+  i32(0); // matcens
+  if(guidebot) guidebot_state();
   z("OPAQUE-OSIRIS-TAIL");for(int i=0;i<257;i++)u8((i*73)%256);
   std::ofstream file(argv[1],std::ios::binary);file.write(reinterpret_cast<const char*>(out.data()),out.size());
   std::printf("%s: player=%zu fx=%zu wb=%zu, %zu bytes\n",argv[1],sizeof(player),sizeof(effect_info_s),sizeof(dynamic_wb_info),out.size());

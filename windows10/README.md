@@ -23,6 +23,7 @@
 | Ausrüstung | Nachbrenner-Kühler, Energie-Schild-Konverter und Quad-Laser zuweisen/entfernen |
 | Gegenmaßnahmen | Bestand und aktive Gegenmaßnahme einstellen, vorhandene Gegenmaßnahmen bis zum Spiellimit auffüllen |
 | Inventar / Schiffe | Spielerinventar ansehen, unterstützte Gegenstände bearbeiten, Schiffe freischalten und den Black Pyro für ein Briefing vormerken |
+| Guide-Bot | Name, Funkmeldungen und Vorräte bei eindeutig erkanntem Skriptzustand bearbeiten |
 | Karte | Gespeicherte Kartensichtbarkeit vollständig aufdecken; ohne Häkchen bleibt die gespeicherte Erkundung erhalten |
 | Weitere Werte | Leben und Punktestand bearbeiten |
 | Dateien | Änderungen prüfen, Kopie speichern, automatische Backups und Erkennung nachträglich veränderter Originaldateien |

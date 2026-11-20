@@ -78,9 +78,35 @@ namespace D3SaveEditor.Tests
             Reject(() => noDefGame.Edit(noDefEdit), "missing equipment definition rejected");
             foreach (string name in new[] { "fixture32-loadout", "fixture64-loadout" })
                 LoadoutTests(Path.Combine(dir, name));
+            foreach (string name in new[] { "fixture32-guidebot", "fixture64-guidebot" })
+                GuideBotTests(File.ReadAllBytes(Path.Combine(dir, name)));
             FileTests(dir, baseBytes);
             TableTests(dir);
             Console.WriteLine("\n" + passed + " assertions passed. No real in-game save/load test has been performed.");
+        }
+        private static void GuideBotTests(byte[] bytes)
+        {
+            var original = SaveGame.Parse(bytes);
+            int body = FindAscii(bytes, "Buddy");
+            Check(original.GuideBot?.Name == "Buddy" && original.GuideBot.Shields == 20 && original.GuideBot.Chatter &&
+                original.GuideBot.Counts.SequenceEqual(new[] { 3, 1, 2, 0, 1 }), "GuideBot memory and owning robot are decoded");
+            Check(original.Edit(original.CurrentOptions()).Bytes.SequenceEqual(bytes), "untouched GuideBot is byte-identical");
+            var edit = original.CurrentOptions();
+            edit.GuideBotName = "Buddy 2";
+            edit.GuideBotChatter = false;
+            edit.GuideBotCounts = new[] { 0, 127, 3, 4, 5 };
+            var saved = original.Edit(edit).Parsed;
+            Check(saved.GuideBot?.Name == "Buddy 2" && !saved.GuideBot.Chatter && saved.GuideBot.Counts.SequenceEqual(edit.GuideBotCounts),
+                "GuideBot name, chatter and supplies round-trip");
+            var expected = Changed(bytes, body, Encoding.ASCII.GetBytes("Buddy 2\0"));
+            for (int i = 0; i < edit.GuideBotCounts.Length; i++) expected[body + 8 + i] = (byte)edit.GuideBotCounts[i];
+            SaveGame.Put(expected, body + 96, 0x28u);
+            Check(saved.Bytes.SequenceEqual(expected), "GuideBot edit preserves the rest of the script state and the save");
+            var foreign = SaveGame.Parse(Changed(bytes, body + 44, BitConverter.GetBytes(0x1002)));
+            Check(foreign.GuideBot == null, "a GuideBot chunk owned by another player is not offered");
+            Reject(() => foreign.Edit(edit), "unrecognized GuideBot cannot be edited");
+            edit.GuideBotCounts[0] = 128;
+            Reject(() => original.Edit(edit), "GuideBot signed-byte supply limit is enforced");
         }
         private static void LoadoutTests(string path)
         {
