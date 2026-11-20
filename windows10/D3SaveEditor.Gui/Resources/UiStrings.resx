@@ -531,7 +531,7 @@ Map: {5} entries · Inventory: {6} types · Countermeasures: {7} types
     <value>These limits apply to all ships. Extra saved countermeasure types stay in the loadout.</value>
   </data>
   <data name="Player1MMax" xml:space="preserve">
-    <value>1M</value>
+    <value>Max 1M</value>
   </data>
   <data name="Player1MMaxTip" xml:space="preserve">
     <value>Sets a value of 1 million in the save. The HUD may overflow.</value>

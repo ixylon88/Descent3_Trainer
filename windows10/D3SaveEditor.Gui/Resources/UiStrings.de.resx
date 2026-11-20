@@ -187,7 +187,7 @@
     <value>Setzt die Restdauer des aktiven Effekts beim Speichern auf 1.000.000.000 s.</value>
   </data>
   <data name="Invulnerability" xml:space="preserve">
-    <value>unverwundbar</value>
+    <value>Unverwundbarkeit</value>
   </data>
   <data name="InvulnerabilityTip" xml:space="preserve">
     <value>Schaltet die Unverwundbarkeit ein oder aus.</value>
@@ -531,7 +531,7 @@ Karte: {5} Einträge · Inventar: {6} Arten · Gegenmaßnahmen: {7} Arten
     <value>Die Limits gelten für alle Schiffe. Weitere gespeicherte Gegenmaßnahmen bleiben im Bestand.</value>
   </data>
   <data name="Player1MMax" xml:space="preserve">
-    <value>1 Mio</value>
+    <value>Max 1 Mio</value>
   </data>
   <data name="Player1MMaxTip" xml:space="preserve">
     <value>Setzt einen Wert von einer Million im Spielstand. Die HUD-Anzeige kann dabei überlaufen.</value>
