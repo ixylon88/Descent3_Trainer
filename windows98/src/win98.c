@@ -17,7 +17,7 @@ ID_OWN=200,ID_AMMO=240,ID_MAX=280,
 ID_CARGO_COUNT=320,ID_COUNTERMEASURE_COUNT=330,ID_SHIP_UNLOCK=340,ID_BLACK_PYRO_UNLOCK=350,ID_BLACK_PYRO_PREFER,
 ID_COUNTERMEASURE_OWN=360,ID_COUNTERMEASURE_MAX=370,ID_COUNTERMEASURE_ACTIVE=380,ID_ALL_COUNTERMEASURES,ID_NONE_COUNTERMEASURES,ID_CAP_COUNTERMEASURES,
 ID_GUIDEBOT_NAME=390,ID_GUIDEBOT_CHATTER,ID_GUIDEBOT_SUPPLY=400};
-enum {PLAYER_PAGE,PRIMARY_PAGE,SECONDARY_PAGE,COUNTERMEASURE_PAGE,INVENTORY_PAGE,GUIDEBOT_PAGE,REVIEW_PAGE};
+enum {PLAYER_PAGE,PRIMARY_PAGE,SECONDARY_PAGE,COUNTERMEASURE_PAGE,INVENTORY_PAGE,GUIDEBOT_PAGE,REVIEW_PAGE,HELP_PAGE};
 typedef struct {HWND hwnd;int page,needs_file;} Widget;
 static HINSTANCE instance;
 static HWND main_window,tab,info,status,hint,review;
@@ -430,8 +430,25 @@ static void choose_limits(void){
 static void maximum_one(int i,int storage){char s[24];d3_format_u32(s,(!storage && use_caps())?caps[i]:65535);text(ammo[i],s);changed();}
 static void select_all(int first,int on){int i;for(i=first;i<first+10;i++){check(owned[i],on);if(!on)text(ammo[i],"0");}refresh_weapons(1);changed();}
 static void max_all(int first,int storage){int i;if(!storage && !use_caps()){error_box("Bitte zuerst passende Schiffslimits aus Table.gam / d3.hog laden.");return;}for(i=first;i<first+10;i++)if(checked(owned[i]) && uses_ammo(i))maximum_one(i,storage);}
-static void help(void){
-    MessageBoxA(main_window,"Descent 3 Savegame Editor - Windows 98\r\n\r\n1. Im Spiel speichern und das Spiel beenden.\r\n2. saveg000 bis saveg007 im Ordner savegame oeffnen.\r\n3. Werte aendern und Speichern + Backup waehlen.\r\n4. Im Spiel neu laden.\r\n\r\nJede ueberschriebene Datei wird zuvor als .bak gesichert.\r\nKopien mit .edited zum Laden passend in savegNNN umbenennen.\r\nBei unterbrochenem Dateiaustausch das Backup unter den Slotnamen kopieren.\r\n\r\nInventar / Schiffe bearbeitet Bestaende und Freigaben fuer das Briefing.\r\nMax nutzt das geladene Schiffslimit, sonst 65.535.\r\nVerlaengern setzt 1.000.000.000 s Restdauer fuer einen aktiven Effekt.\r\n\r\nGrundlage: d3-historical, Spielerblock 496 Byte, Format 0-2.\r\nGPL-3.0-or-later. Quelltext und Anleitung stehen im Repository.","Anleitung",MB_OK|MB_ICONINFORMATION);
+static void show_help(void) {
+    selected_page=HELP_PAGE;
+    SendMessageA(tab,TCM_SETCURSEL,HELP_PAGE,0);
+    apply_visibility();
+}
+static void help_page(void) {
+    group("Spielstaende oeffnen und speichern",24,146,710,83,HELP_PAGE);
+    label("Im Spiel speichern und das Spiel beenden. Danach eine Datei wie saveg000 aus dem Ordner savegame oeffnen. "
+          "Beim Ueberschreiben entsteht eine datierte Sicherung. Eine Kopie mit Endung .edited vor dem Laden in einen savegNNN-Slot umbenennen.",
+          38,167,681,54,HELP_PAGE);
+    group("Waffen und Gegenmassnahmen",24,232,710,70,HELP_PAGE);
+    label("Schiffslimits laden liest normale Munitionsgrenzen aus Table.gam, d3.hog oder einem Missionsarchiv. "
+          "Vorhandene: Schiffslimit fuellt Waffen damit auf. Fuer Gegenmassnahmen gelten die angezeigten Spiellimits.",38,253,681,42,HELP_PAGE);
+    group("Unverwundbarkeit und Tarnung",24,305,710,65,HELP_PAGE);
+    label("Das Haekchen schaltet den Effekt ein oder aus. Verlaengern setzt die Restdauer eines aktiven Effekts "
+          "beim Speichern auf 1.000.000.000 Sekunden.",38,326,681,37,HELP_PAGE);
+    group("Black Pyro und Guide-Bot",24,373,710,83,HELP_PAGE);
+    label("Nur Black Pyro erlauben waehlt die anderen Schiffe ab. Das Spiel uebernimmt den Black Pyro beim passenden Briefing. "
+          "Der Reiter Guide-Bot bearbeitet Name, Funkmeldungen und Vorraete, wenn der Skriptzustand erkannt wurde.",38,394,681,53,HELP_PAGE);
 }
 static void player_page(void){
     group("Versorgung",24,146,338,181,0);
@@ -525,7 +542,7 @@ static void guidebot_page(void) {
     }
 }
 static void make_ui(void){
-    TCITEMA item;HWND heading;int i;const char *names[]={"Spieler","Primaerwaffen","Sekundaerwaffen","Gegenmassnahmen","Inventar / Schiffe","Guide-Bot","Datei / Pruefung"};
+    TCITEMA item;HWND heading;int i;const char *names[]={"Spieler","Primaerwaffen","Sekundaerwaffen","Gegenmassnahmen","Inventar / Schiffe","Guide-Bot","Datei / Pruefung","Hilfe"};
     font=(HFONT)GetStockObject(DEFAULT_GUI_FONT);title_font=CreateFontA(-18,0,0,0,FW_BOLD,0,0,0,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH|FF_SWISS,"MS Sans Serif");
     heading=label("DESCENT 3  -  SAVEGAME EDITOR / WINDOWS 98",12,10,736,25,-1);SendMessageA(heading,WM_SETFONT,(WPARAM)title_font,TRUE);
     button("Oeffnen...",12,42,105,ID_OPEN,-1,0);button("Speichern + Backup",123,42,144,ID_SAVE,-1,1);button("Kopie speichern...",273,42,128,ID_COPY,-1,1);
@@ -533,7 +550,7 @@ static void make_ui(void){
     info=label("Noch kein Spielstand geoeffnet. Im Spiel speichern, dann saveg000 usw. oeffnen.",12,76,736,34,-1);
     tab=control(WC_TABCONTROLA,"",WS_TABSTOP|WS_CLIPSIBLINGS,12,114,736,355,ID_TAB,-1,0);
     d3_zero(&item,sizeof(item));item.mask=TCIF_TEXT;for(i=0;i<(int)(sizeof(names)/sizeof(names[0]));i++){item.pszText=(LPSTR)names[i];SendMessageA(tab,TCM_INSERTITEMA,(WPARAM)i,(LPARAM)&item);}
-    player_page();weapon_page(0,PRIMARY_PAGE);weapon_page(10,SECONDARY_PAGE);countermeasure_page();inventory_page(INVENTORY_PAGE);guidebot_page();
+    player_page();weapon_page(0,PRIMARY_PAGE);weapon_page(10,SECONDARY_PAGE);countermeasure_page();inventory_page(INVENTORY_PAGE);guidebot_page();help_page();
     button("Aenderungen pruefen",28,147,178,ID_CHECK,REVIEW_PAGE,1);
     review=control("EDIT","Geplante Aenderungen und Dateidaten erscheinen hier.\r\n\r\nDer Editor bearbeitet vorhandene Spielstaende; er erzeugt keinen\r\nvollstaendigen Levelzustand allein aus dem Quelltext.",ES_MULTILINE|ES_READONLY|ES_AUTOVSCROLL|WS_VSCROLL|WS_HSCROLL,28,180,701,276,0,REVIEW_PAGE,0);
     hint=label("",12,475,736,16,-1);status=label("Bereit.",12,495,736,32,-1);
@@ -546,7 +563,7 @@ static LRESULT CALLBACK window_proc(HWND hwnd,UINT message,WPARAM w,LPARAM l){
     case WM_NOTIFY:notify=(NMHDR*)l;if(notify->idFrom==ID_TAB && notify->code==TCN_SELCHANGE){selected_page=(int)SendMessageA(tab,TCM_GETCURSEL,0,0);apply_visibility();}return 0;
     case WM_COMMAND:
         id=LOWORD(w);code=HIWORD(w);if(loading)return 0;
-        if(id==ID_OPEN){choose_open();return 0;}if(id==ID_HELP){help();return 0;}if(!game)return 0;
+        if(id==ID_OPEN){choose_open();return 0;}if(id==ID_HELP){show_help();return 0;}if(!game)return 0;
         if(code==EN_CHANGE){
             if(id>=ID_COUNTERMEASURE_COUNT && id<ID_COUNTERMEASURE_COUNT+D3_COUNTERMEASURE_TYPES){refresh_countermeasures(1);changed();}
             if((id>=ID_ENERGY && id<=ID_SCORE) || (id>=ID_AMMO && id<ID_AMMO+20) ||

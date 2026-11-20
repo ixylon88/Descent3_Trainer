@@ -338,6 +338,27 @@
                              Text="Hier erscheinen die Dateianalyse und die geplanten Änderungen." />
                 </DockPanel>
             </TabItem>
+            <TabItem x:Name="HelpTab" Header="Hilfe">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="12">
+                        <GroupBox Header="Spielstände öffnen und speichern">
+                            <StackPanel>
+                                <TextBlock TextWrapping="Wrap" Text="Im Spiel speichern und das Spiel beenden. Danach eine Datei wie saveg000 aus dem Ordner savegame öffnen, Werte bearbeiten und den geänderten Spielstand im Spiel laden." />
+                                <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" Text="Beim Überschreiben erstellt der Editor eine datierte Sicherung. Eine Kopie mit der Endung .edited zum Laden in einen passenden savegNNN-Slot umbenennen." />
+                            </StackPanel>
+                        </GroupBox>
+                        <GroupBox Header="Waffen und Gegenmaßnahmen">
+                            <TextBlock TextWrapping="Wrap" Text="Schiffslimits laden liest normale Munitionsgrenzen aus Table.gam, d3.hog oder einem Missionsarchiv. Vorhandene: Schiffslimit nutzt diese Werte für die Waffen. Bei Gegenmaßnahmen gelten die angezeigten Spiellimits für alle Schiffe." />
+                        </GroupBox>
+                        <GroupBox Header="Unverwundbarkeit und Tarnung">
+                            <TextBlock TextWrapping="Wrap" Text="Das Häkchen schaltet den Effekt ein oder aus. Verlängern setzt die Restdauer eines bereits aktiven Effekts beim Speichern auf 1.000.000.000 Sekunden." />
+                        </GroupBox>
+                        <GroupBox Header="Black Pyro und Guide-Bot">
+                            <TextBlock TextWrapping="Wrap" Text="Nur Black Pyro erlauben wählt alle anderen Schiffe ab, damit das Spiel beim nächsten passenden Briefing den Black Pyro übernimmt. Der Reiter Guide-Bot bearbeitet Name, Funkmeldungen und Vorräte des gespeicherten Roboters, wenn der Skriptzustand eindeutig erkannt wurde." />
+                        </GroupBox>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
         </TabControl>
         <TextBlock x:Name="Status" Grid.Row="3" Margin="0,8,0,0" Foreground="#465B70"
                    Text="Bereit · Dateien können auch in das Fenster gezogen werden." TextWrapping="Wrap" />

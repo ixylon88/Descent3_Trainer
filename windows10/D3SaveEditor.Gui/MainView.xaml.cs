@@ -645,20 +645,6 @@ namespace D3SaveEditor.Gui
             MessageBox.Show(this, ex.Message, EditorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
-        private void OnHelp(object sender, RoutedEventArgs e)
-        {
-            MessageBox.Show(this,
-                "1. Im Spiel speichern und das Spiel beenden.\r\n" +
-                "2. saveg000, saveg001 usw. aus dem Ordner savegame öffnen.\r\n" +
-                "3. Werte ändern und „Speichern + Backup“ wählen.\r\n" +
-                "4. Den Spielstand im Spiel neu laden.\r\n\r\n" +
-                "Bei jedem Überschreiben entsteht daneben eine datierte .bak-Datei.\r\n" +
-                "Kopien mit Endung .edited zum Laden in einen passenden savegNNN-Slot umbenennen.\r\n\r\n" +
-                "„Inventar / Schiffe“ bearbeitet Bestände und die Freigaben für das Briefing.\r\n" +
-                "„Max“ nutzt das Schiffslimit aus Table.gam / d3.hog, sonst 65.535.\r\n" +
-                "„Verlängern“ setzt 1.000.000.000 s Restdauer für einen aktiven Effekt.\r\n\r\n" +
-                "Unterstützt Windows-Strukturen mit 496 bzw. 536 Byte und Format 0–2.",
-                "Anleitung", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
+        private void OnHelp(object sender, RoutedEventArgs e) => EditorTabs.SelectedItem = HelpTab;
     }
 }
