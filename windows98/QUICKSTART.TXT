@@ -1,0 +1,80 @@
+DESCENT 3 SAVEGAME EDITOR - WINDOWS 98
+Version 1.0.0 / d3-historical
+German guide: LIESMICH.TXT
+
+GETTING STARTED
+Run D3EDIT98.EXE. It needs no installation or .NET.
+The interface needs a screen resolution of at least 800 x 600.
+
+1. Save in Descent 3 and exit the game.
+2. Choose Open in the editor and open a file such as saveg000
+   with no extension in the savegame folder.
+3. Set the values and checkboxes you want. Click Check changes
+   on the File / changes tab.
+4. Choose Save + backup, then reload the save in the game.
+
+FEATURES
+Add or remove individual primary and secondary weapons. Set the
+active weapon and ammo counts. Edit energy, shields, afterburner charge,
+lives, and score. Set god mode, cloaking, Rapid Fire, the cooler,
+converter, and quad lasers. Reveal the entire saved map.
+Use DE/EN to switch languages. See the Help tab for instructions.
+
+INVENTORY, COUNTERMEASURES, AND SHIPS
+The Saved entries list on the Inventory / ships tab shows the player's
+inventory. You can edit counts for Force Wall and Go Wingnut when
+their definitions are present in the save.
+
+On the Countermeasures tab, set counts and choose the active
+countermeasure. A count of 0 removes an editable entry.
+"Owned: game limit" refills Chaff, Bouncing Betty, Seeker Mine,
+and Proximity Mine to 12 each, and GunBoy to 4.
+
+Unlock the Pyro-GL, Phoenix, Magnum-AHT, and Black Pyro when they are
+defined in the save. "Allow only the Black Pyro" clears the other
+ship checkboxes. The game chooses the Black Pyro at the next suitable
+briefing as the only permitted ship. This worked when advancing from
+level 1 to level 2 in the main campaign.
+
+GUIDE-BOT
+Edit the name, radio messages, and supplies when the editor recognizes
+the saved Guide-Bot script block. The name can have 1 to 7 ANSI
+characters, and each supply can have a count from 0 to 127.
+The editor displays the saved shield value.
+
+REFILL LIMITS
+The normal maximum is 200 each for energy and shields.
+The normal afterburner charge is 5 seconds.
+Max 1M sets energy, shields, or afterburner charge to 999,999.
+The ammo Max buttons use loaded ship limits, or 65,535 by default.
+Load ship limits reads Table.gam, d3.hog, or a HOG2 mission archive.
+65,535 is the largest value the ammo counter can store. The game uses
+separate ship limits during normal play.
+Extend sets an active effect's remaining time to 1,000,000,000 seconds.
+Rapid Fire sets the base delay between shots to 70 percent.
+An existing pickup timer can end Rapid Fire.
+Level changes, deaths, and scripts can reset these settings.
+
+BACKUPS
+The editor creates a dated .bak file before overwriting a save.
+On FAT, replacement uses separate renames. A power loss in between
+can leave the slot file missing. Copy the backup to the original
+slot name, such as saveg000, to restore it.
+Rename .edited copies to savegNNN to open them in the game.
+
+COMPATIBILITY
+Historical 32-bit player block of 496 bytes and save format 0 through 2.
+ANSI destination paths up to 200 characters and saves up to 32 MiB.
+The EXE requires only classic Windows system DLLs.
+
+The original editor was tested with real saves on Windows 98.
+The new inventory and ship features still need further in-game testing.
+
+BUILDING AND TESTING
+The GitHub download includes SOURCE.txt with a link to the source archive.
+On a modern computer with i686 MinGW-w64, build from windows98 with
+build.cmd or sh build.sh. The manual is in windows98/README.md
+and test details are in windows98/TESTS.md in the repository.
+https://github.com/ixylon88/Descent3_Trainer
+
+GPL-3.0-or-later. See LICENSE. No proprietary game content is included.

@@ -1,39 +1,57 @@
 DESCENT 3 SAVEGAME EDITOR - WINDOWS 98
 Version 1.0.0 / d3-historical
+Englische Kurzanleitung: README.TXT
 
 START
 D3EDIT98.EXE starten. Keine Installation und kein .NET notwendig.
 Die Oberflaeche benoetigt mindestens 800 x 600.
 
 1. In Descent 3 speichern und das Spiel beenden.
-2. Im Editor Oeffnen waehlen und saveg000 bis saveg007 oeffnen.
-3. Werte und Haken einstellen; Aenderungen pruefen.
+2. Im Editor Oeffnen waehlen und im Ordner savegame eine Datei
+   wie saveg000 ohne Endung oeffnen.
+3. Werte und Haekchen einstellen. Im Reiter Datei / Pruefung
+   Aenderungen pruefen waehlen.
 4. Speichern + Backup waehlen. Anschliessend im Spiel neu laden.
 
 FUNKTIONSUMFANG
-Alle Primaer- und Sekundaerwaffen, aktive Waffenauswahl,
-Munition, Energie, Schild, Nachbrennerladung, Leben, Punkte,
-God-Mode, Tarnung, Kuehler, Konverter, Quad-Laser und volle Karte.
-Im Reiter Inventar / Schiffe stehen die Gegenstaende und Schiffsfreigaben.
-Im Reiter Gegenmassnahmen lassen sich der Bestand und die aktive
-Gegenmassnahme einstellen. 0 entfernt einen bearbeitbaren Eintrag.
-Die Schiffshaekchen speichern Freigaben. "Nur Black Pyro erlauben"
-waehlt die anderen Schiffe ab. Ist der Black Pyro im Spielstand definiert,
-uebernimmt das Spiel ihn beim naechsten passenden Briefing automatisch.
-In der Hauptkampagne ist der Wechsel von Level 1 zu 2 bestaetigt.
-Guide-Bot bearbeitet Name, Funkmeldungen und Vorraete (0 bis 127),
-wenn der Skriptblock eindeutig zum Guide-Bot des Spielers passt.
+Primaer- und Sekundaerwaffen einzeln an- oder abwaehlen, die aktive Waffe
+bestimmen und Munition einstellen. Energie, Schild, Nachbrennerladung,
+Leben und Punkte bearbeiten. God-Mode, Tarnung, Schnellfeuer, Kuehler,
+Konverter und Quad-Laser setzen. Die gespeicherte Karte ganz aufdecken.
 DE/EN schaltet die Sprache um. Die Anleitung steht im Reiter Hilfe / Help.
+
+INVENTAR, GEGENMASSNAHMEN UND SCHIFFE
+Im Reiter Inventar / Schiffe zeigt Gespeicherte Eintraege das
+Spielerinventar. Die Mengen fuer Force Wall und Go Wingnut lassen sich
+bearbeiten, wenn ihre Definitionen im Spielstand vorhanden sind.
+
+Im Reiter Gegenmassnahmen den Bestand und die aktive Gegenmassnahme
+einstellen. 0 entfernt einen bearbeitbaren Eintrag. Vorhandene: Spiellimit
+fuellt Stoerspreu, Huepfende Betty, Suchermine und Annaeherungsmine bis
+auf jeweils 12 Stueck auf. Bei GunBoy sind es 4.
+
+Pyro-GL, Phoenix, Magnum-AHT und Black Pyro lassen sich freischalten,
+wenn sie im Spielstand definiert sind. "Nur Black Pyro erlauben" waehlt
+die anderen Schiffe ab. Das Spiel waehlt den Black Pyro als einzig
+erlaubtes Schiff beim naechsten passenden Briefing. In der Hauptkampagne
+ist der Wechsel von Level 1 zu 2 bestaetigt.
+
+GUIDE-BOT
+Name, Funkmeldungen und Vorraete lassen sich bearbeiten, wenn der
+Editor den gespeicherten Guide-Bot-Skriptblock eindeutig zuordnet.
+Der Name darf 1 bis 7 ANSI-Zeichen lang sein, die Vorraete reichen
+von 0 bis 127 Stueck. Der gespeicherte Schildwert wird angezeigt.
 
 MAXIMA
 Energie und Schild: normal jeweils 200.
 Nachbrenner: normal 5 Sekunden.
 Max 1 Mio setzt Energie, Schild oder Nachbrenner auf 999999.
 Max bei Munition nutzt geladene Schiffslimits, sonst 65535.
-Schiffslimits laden liest Table.gam oder d3.hog aus deiner Installation.
+Schiffslimits laden liest Table.gam, d3.hog oder ein HOG2-Missionsarchiv.
 65535 ist das technische Speichermaximum, keine normale Spielgrenze.
 Verlaengern setzt die Restdauer eines aktiven Effekts auf 1.000.000.000 s.
 Schnellfeuer setzt die Grundwartezeit zwischen Schuessen auf 70 Prozent.
+Ein bereits laufender Power-up-Timer kann Schnellfeuer beenden.
 Levelwechsel, Tod und Skripte koennen Zustaende zuruecksetzen.
 
 BACKUPS
@@ -45,18 +63,19 @@ Kopien mit .edited fuer das Spiel passend in savegNNN umbenennen.
 
 KOMPATIBILITAET
 Historischer 32-Bit-Spielerblock: 496 Byte, Speicherformat 0 bis 2.
-ANSI-Zielpfade maximal 200 Zeichen; Spielstaende maximal 32 MiB.
+ANSI-Zielpfade sind auf 200 Zeichen, Spielstaende auf 32 MiB begrenzt.
 Die EXE braucht nur klassische Windows-System-DLLs.
 
 Der fruehere Editor wurde unter Windows 98 mit echten Spielstaenden
-erprobt. Der Ingame-Test der neuen Inventar- und Schiffsfunktionen
-steht aus.
+erprobt. Fuer die neueren Inventar- und Schiffsfunktionen stehen weitere
+Tests im Spiel aus.
 
 WEITERARBEITEN
 Das GitHub-Artefakt verweist in SOURCE.txt auf das passende Quellarchiv.
 Auf einem modernen Rechner mit i686-MinGW-w64 kann der Editor aus
 dem Ordner windows98 mit build.cmd oder sh build.sh gebaut werden.
-Handbuch und Tests stehen im Repository unter
+Das Handbuch steht im Repository unter windows98/README-Deutsch.md,
+die Testdokumentation unter windows98/TESTS.md.
 https://github.com/ixylon88/Descent3_Trainer
 
 GPL-3.0-or-later, siehe LICENSE. Keine proprietaeren Spielinhalte.

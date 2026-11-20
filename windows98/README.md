@@ -1,93 +1,149 @@
-# Descent 3 Savegame Editor für Windows 98
+# Descent 3 Savegame Editor for Windows 98
 
-**Version 1.0.0, Grundlage `d3-historical`.**
+[Deutsch](README-Deutsch.md)
 
-Nach dem Neubau ist `D3EDIT98.EXE` eine eigenständige, native 32-Bit-Win32-Anwendung mit deutschen Beschriftungen. Sie braucht **kein .NET, MFC, KernelEx oder zusätzliches Visual-C++-Laufzeitpaket**. Es werden ausschließlich klassische Windows-Systembibliotheken importiert. Die Oberfläche ist für **800 × 600 oder größer** ausgelegt.
+**Version 1.0.0, based on `d3-historical`.**
 
-Die EXE wurde gezielt für den klassischen Windows-Loader gebaut. Sie nutzt PE32/x86, Betriebssystem- und Subsystemversion 4.0, ANSI-APIs und einen eigenen Programmeinstieg ohne CRT.
+The build produces `D3EDIT98.EXE`, a standalone native 32-bit Win32 application
+with English and German labels. It imports only classic Windows system
+libraries and runs without .NET, MFC, KernelEx, or an additional Visual C++
+runtime. The interface is designed for **800 × 600 or higher**.
 
-## Verwenden
+The EXE targets the classic Windows loader. It uses PE32/x86, operating system
+and subsystem versions 4.0, ANSI APIs, and a custom entry point without a C
+runtime.
 
-1. Auf einem modernen Entwicklungsrechner mit `build.cmd` oder `sh build.sh` kompilieren und die erzeugte `D3EDIT98.EXE` auf den Windows-98-Rechner kopieren. Für das Starten genügt diese EXE; `LIESMICH.TXT` enthält die Kurzanleitung für den alten Editor.
-2. In Descent 3 einen Spielstand anlegen und das Spiel beenden.
-3. **Oeffnen…** wählen und eine Datei wie `saveg000` bis `saveg007` im Ordner `savegame` öffnen. Diese Dateien haben normalerweise keine Endung.
-4. Werte und Häkchen einstellen. **Datei / Pruefung → Aenderungen pruefen** zeigt die geplante Ausgabe. Dabei wird sie erneut eingelesen und geprüft.
-5. **Speichern + Backup** wählen und anschließend den Spielstand im Spiel neu laden.
+## Getting started
 
-**Kopie speichern…** erzeugt stattdessen eine weitere Datei, vorgeschlagen mit der Endung `.edited`. Damit Descent 3 sie als Slot anzeigt, muss sie im Spielstandsordner unter einem passenden Slotnamen wie `saveg001` liegen. Die `.cnt`-Begleitdateien werden nicht geändert.
+1. On a modern development computer, build with `build.cmd` or `sh build.sh`. Copy the resulting `D3EDIT98.EXE` to the Windows 98 computer and run it there. The [English quick-start guide](QUICKSTART.TXT) is included in the Windows 98 ZIP as `README.TXT`.
+2. Create a save in Descent 3 and exit the game.
+3. Choose **Open...** and open a file such as `saveg000` through `saveg007` in the `savegame` folder. These files usually have no extension.
+4. Set the values and checkboxes you want. **File / changes → Check changes** shows the proposed output and verifies it by reading it back.
+5. Choose **Save + backup**, then reload the save in the game.
 
-Windows 98 verwendet hier ANSI-Dateipfade. Verwendet werden maximal 200 Zeichen für den vollständigen Zielpfad, damit Platz für Backupnamen bleibt. Unterstützt werden Spielstände bis 32 MiB. Ein kurzer Pfad wie `C:\D3\savegame\saveg000` vermeidet Probleme mit langen Pfaden.
+**Save copy...** creates a separate file with the suggested extension
+`.edited`. To make Descent 3 show the copy as a slot, put it in the save folder
+under a slot name such as `saveg001`. The editor leaves `.cnt` companion files
+alone.
 
-## Funktionen
+The editor uses ANSI file paths on Windows 98. The complete destination path
+can contain up to 200 characters to leave room for backup names. The editor
+supports saves up to 32 MiB. Use a short path such as
+`C:\D3\savegame\saveg000` to stay within the limit.
 
-| Bereich | Bearbeitungsmöglichkeiten |
+## Features
+
+| Area | Options |
 |---|---|
-| Primärwaffen | Alle zehn Waffen an-/abwählen, aktive Waffe bestimmen; gespeicherte Munitionszähler für Vauss, Mass Driver und Napalm setzen |
-| Sekundärwaffen | Alle zehn Waffen an-/abwählen, aktive Waffe und Stückzahlen von 0 bis 65.535 setzen |
-| Versorgung | Schild und Energie setzen oder jeweils auf 200 maximieren; Nachbrenner auf 5 Sekunden auffüllen |
-| Effekte | God-Mode, Cloaked-Mode und Schnellfeuer aktivieren/deaktivieren. God-Mode und Tarnung verlängern |
-| Ausrüstung | Nachbrenner-Kühler, Energie-Schild-Konverter und Quad-Laser hinzufügen/entfernen |
-| Gegenmaßnahmen | Bestand und aktive Gegenmaßnahme einstellen, vorhandene Gegenmaßnahmen bis zum Spiellimit auffüllen |
-| Inventar / Schiffe | Spielerinventar ansehen, unterstützte Gegenstände bearbeiten, Schiffe freischalten und den Black Pyro für ein Briefing vormerken |
-| Guide-Bot | Name, Funkmeldungen und Vorräte bei eindeutig erkanntem Skriptzustand bearbeiten |
-| Karte | Gespeicherte Kartensichtbarkeit vollständig aufdecken |
-| Weitere Werte | Leben und Punktestand ändern |
-| Dateiverwaltung | Ausgabe prüfen, Kopie schreiben, Original sichern, nachträglich geändertes Original erkennen |
+| Primary weapons | Select or clear each of the ten weapons, choose the active weapon, and set stored ammo counts for Vauss, Mass Driver, and Napalm |
+| Secondary weapons | Select or clear each of the ten weapons, choose the active weapon, and set ammo counts from 0 to 65,535 |
+| Supplies | Set shields and energy or fill each to 200, and refill the afterburner to 5 seconds |
+| Effects | Toggle god mode, cloaking, and Rapid Fire. Extend god mode and cloaking |
+| Equipment | Add or remove the afterburner cooler, energy-to-shield converter, and quad lasers |
+| Countermeasures | Set counts and the active countermeasure, and refill owned countermeasures to the game limit |
+| Inventory / ships | View the player's inventory, edit supported items, unlock ships, and enable the Black Pyro for a briefing |
+| Guide-Bot | Edit the name, radio messages, and supplies when the editor can identify the script state |
+| Map | Reveal the entire saved map |
+| Other values | Edit lives and score |
+| Files | Review the output, write a copy, back up the original, and detect changes to the original file after opening |
 
-Eine vorhandene letzte Primärwaffe kann nicht entfernt werden. **Keine Sekundaerwaffe** entfernt sämtliche Sekundärwaffen samt Munition. Abgewählte Waffen erhalten in der Oberfläche Munition 0. Aktive Waffen werden bei Bedarf auf vorhandene Waffen zurückgesetzt. Flare, zusätzliche Besitzbits und die sonstigen Daten bleiben erhalten.
+Keep the last remaining primary weapon. **No secondary weapon** removes all
+secondary weapons and their ammo. Clearing a weapon's checkbox sets its displayed
+ammo count to zero. The editor sets the active weapon to one you still have when
+needed. It preserves the flare, additional ownership bits, and other data.
 
-Die Bedienung des Reiters **Inventar / Schiffe** steht in der
-[gemeinsamen Anleitung](../README.md#inventar-und-schiffsfreigaben).
+See the [main guide](../README.md#inventory-countermeasures-and-ship-permissions)
+for instructions on the **Inventory / ships** tab.
 
-## Maximale Vorräte
+## Refill limits
 
-**Max 200** setzt Schild und Energie auf das normale Maximum. **Voll (5 s)**
-füllt den Nachbrenner normal auf. **Max 1 Mio** setzt den jeweiligen Wert auf
-999.999.
+**Max 200** sets shields and energy to their normal maximum. **Full (5 s)**
+refills the afterburner to its normal capacity. **Max 1M** sets the corresponding
+value to 999,999.
 
-Die normalen Kapazitäten stehen in den Spieldaten, nicht im Spielstand und nicht als vollständige Liste im Quelltext. **Schiffslimits laden…** liest sie aus `Table.gam`, `d3.hog` oder einem HOG2-Missionsarchiv anhand des gespeicherten Schiffsnamens. Bei Mods die passenden Moddaten verwenden; später geladene Definitionen ersetzen frühere für das gewählte Schiff.
+The normal ammo capacities come from game data. **Load ship limits...** reads
+them from `Table.gam`, `d3.hog`, or a HOG2 mission archive and matches them to the
+saved ship name. For mods, load the corresponding data. A later definition
+for a ship replaces an earlier one.
 
-- **Vorhandene: Schiffslimit** füllt nur bereits vorhandene Waffen bis zu den geladenen normalen Schiffsgrenzen auf.
-- **Vorhandene: 65.535** setzt ausdrücklich das technische Speichermaximum. Dies sind nicht die normalen Spielgrenzen. Das Spiel kann solche Mengen bei einem Schiffswechsel wieder begrenzen.
-- Die einzelnen **Max**-Knöpfe verwenden geladene Schiffsgrenzen, sonst 65.535. Die verwendete Variante steht unter der Waffenliste.
+- **Owned: ship limit** refills only owned weapons to the loaded normal ship limits.
+- **Owned: 65,535** uses the maximum value of the stored ammo counter. The game may reduce ammo to its normal limits when you switch ships.
+- Each **Max** button uses the loaded ship limit, or 65,535 when none is available. The limit in use appears below the weapon list.
 
-Es werden die direkt gespeicherten Munitionszähler bearbeitet. Neue Ausrüstungsgegenstände erhalten generische Namen; ihre Spielsymbole und lokalisierten Beschreibungen werden nicht aus proprietären Spieldaten rekonstruiert.
+The editor changes the ammo counts stored directly in the save. New equipment
+entries receive generic names. Recreating their original icons and localized
+descriptions would require the proprietary game data.
 
-## God-Mode, Tarnung und Ausrüstung
+## God mode, cloaking, and equipment
 
-Unverwundbarkeit braucht ein Flag und eine Restdauer im Spielerblock. Tarnung liegt am Spielerobjekt. Beim Aktivieren setzt der Editor **1.000.000.000 Sekunden** Restdauer. **Verlängern** setzt diese Dauer auch bei einem schon aktiven Effekt. Bereits gespeicherte endliche Effekte bleiben beim unveränderten Speichern erhalten.
+Invulnerability uses a flag and remaining time in the player block. Cloaking
+is stored on the player object. Turning on either effect sets its remaining
+duration to **1,000,000,000 seconds**. **Extend** also sets this duration for
+an active effect. Saving without changing a timed effect preserves its remaining
+time.
 
-Quad-Laser werden im Inventar und in beiden Laser-Waffenbatterien gesetzt. Der Nachbrenner-Kühler ist der Inventargegenstand `Afterburner`, der Konverter `Converter`. Gegenstände lassen sich nur zuweisen, wenn ihre Definition in der Übersetzungstabelle des Spielstands vorhanden ist.
+The editor sets quad lasers in the inventory and both laser weapon batteries.
+The afterburner cooler is the inventory item `Afterburner` and the converter is
+`Converter`. You can add items when their definitions are in the save's
+translation table.
 
-Dies ist ein Dateieditor, kein laufender Trainer. Levelwechsel, Tod, Skripte und Spielregeln können Effekte oder Ausrüstung zurücksetzen. Der Editor verändert die Spiel-EXE nicht.
+The editor works on saved files and leaves the game EXE untouched. Level
+changes, deaths, scripts, and game rules can reset effects or equipment.
 
-## Backups und Wiederherstellung
+## Backups and recovery
 
-Vor dem Überschreiben entsteht beispielsweise `saveg000.bak-20261024-210000-0`. Der Editor schreibt und flusht zunächst eine geprüfte neue Datei im Zielordner. Anschließend benennt er das Original als Backup um und setzt die neue Datei an dessen Platz. Scheitert der letzte Schritt, versucht er das Original zurückzusetzen. Scheitert auch das, nennt die Fehlermeldung den Pfad des erhaltenen Original-Backups.
+Overwriting a save creates a backup such as `saveg000.bak-20261024-210000-0`.
+The editor first verifies the new file, writes it to the destination folder,
+and flushes it to disk. It then renames the original to the backup name and
+puts the new file in its place. If the last step fails, the editor tries to
+restore the original. If restoration fails too, the error message gives the
+path to the preserved backup.
 
-**Dieser Austausch ist auf FAT nicht transaktional.** Bei einem Stromausfall zwischen den Umbenennungen kann der Slotname vorübergehend fehlen. In diesem Fall das erhaltene Backup wieder unter den ursprünglichen Namen wie `saveg000` kopieren. Eine vorhandene Sicherungsdatei wird nicht überschrieben.
+On FAT, the file replacement uses two separate renames. A power loss in between
+can temporarily leave the slot file missing. To recover, copy the preserved
+backup back to the original name, such as `saveg000`. The editor preserves
+existing backups.
 
-## Kompatibilität und Prüfstand
+## Compatibility and testing
 
-Grundlage ist der gewünschte [Branch `d3-historical`](https://github.com/DescentDevelopers/Descent3/tree/d3-historical), festgehalten auf Commit `84e25b0b411284bad57b34f50fd976f1a8a2367f` vom 16.04.2024.
+The format is based on the [`d3-historical` branch](https://github.com/DescentDevelopers/Descent3/tree/d3-historical)
+at commit `84e25b0b411284bad57b34f50fd976f1a8a2367f` from April 16, 2024.
 
-Unterstützt werden das dortige Little-Endian-Speicherformat 0–2 und der **historische 32-Bit-Spielerblock mit 496 Byte**. Moderne 64-Bit-Spielerblöcke werden absichtlich abgelehnt. Das Speicherlayout wird nicht in andere Spielversionen konvertiert.
+The editor supports little-endian save format versions 0–2 and the
+**historical 32-bit, 496-byte player block**. It rejects modern 64-bit player
+blocks and preserves the supported save's original layout.
 
-Der ursprüngliche Editor wurde vom Projektinhaber mit echten Spielständen unter Windows 98 erprobt. Der aktuelle Build wurde mit synthetischen Dateien und auf PE-Header sowie alle 49 importierten Funktionen geprüft. Der Ingame-Test der neuen Funktionen steht noch aus. Details stehen in `TESTS.md`.
+The project owner tested the original editor with real saves on Windows 98.
+The current build was checked with synthetic files and audited for PE headers
+and all 49 imported functions. The new features still need in-game testing.
+See [`TESTS.md`](TESTS.md).
 
-## Weiterarbeiten und Neubau
+## Source code and building
 
-`../PROJEKTSTAND-Descent3.md` dokumentiert beide bisherigen Versionen, Quellen, Layouts, Entscheidungen, Tests und offene Punkte. Die Windows-10/11-Version mit C#-Quelltext liegt im Nachbarordner `../windows10`. Dieses Quelltextpaket enthält keine fertigen EXE-Dateien; die ursprünglichen vollständigen Projektarchive bleiben separat erhalten.
+[`PROJEKTSTAND-Descent3.md`](../PROJEKTSTAND-Descent3.md) documents both
+versions, including sources, layouts, decisions, tests, and open issues. The
+[Windows 10/11 edition](../windows10/README.md) and its C# source are in the
+neighboring folder. The source package contains no prebuilt EXEs. The original
+complete project archives are kept separately.
 
-Der vollständige native Quelltext liegt unter `src`, Tests unter `tests`. Zum Neubau werden auf einem **modernen Entwicklungsrechner** der i686-MinGW-w64-C-Compiler und sein Ressourcencompiler `windres` benötigt. Auf dem Windows-98-Zielrechner ist kein Compiler erforderlich.
+The complete native source is in `src`, with tests in `tests`. Build the EXE on
+a **modern development computer** with an i686 MinGW-w64 C compiler and its
+`windres` resource compiler. The Windows 98 computer only needs the resulting
+EXE.
 
-Die Versionsnummer in `src/version.h` gilt für die EXE und die Anzeige neben der Sprachauswahl.
+The version in `src/version.h` controls the EXE version and the display next
+to the language selector.
 
 ```sh
 sh build.sh
 python3 tests/pe_audit.py D3EDIT98.EXE
 ```
 
-Auf einem modernen Windows-Rechner mit passendem MinGW-Compiler im PATH kann `build.cmd` verwendet werden. Keine zusätzliche Runtime anbinden und den eigenen CRT-freien Programmeinstieg beibehalten.
+On a modern Windows computer with the appropriate MinGW compiler on PATH,
+use `build.cmd`. Keep the custom CRT-free entry point and build without an
+additional runtime.
 
-Lizenz: **GPL-3.0-or-later**, siehe `LICENSE`. Format und übernommene C++-Deklarationen stammen aus Descent 3, Copyright (C) 2024 Parallax Software. Es werden keine proprietären Spielinhalte mitgeliefert. Dies ist kein offizieller Editor der Descent-Entwickler.
+The editor is licensed under **GPL-3.0-or-later**. See [`LICENSE`](LICENSE).
+The package contains no proprietary game content. The save format and reused
+C++ declarations come from Descent 3, Copyright (C) 2024 Parallax Software.
+This editor is an independent community project.
