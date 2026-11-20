@@ -48,11 +48,18 @@ static void show_frame(HBITMAP bitmap) {
 }
 
 int launcher_animation_start(HWND window, HINSTANCE instance, int x, int y) {
+    const int clip_inset = 2;
+    HRGN clip;
+
     if (!load_frames()) goto failed;
 
     image = CreateWindowExA(0, "STATIC", "", WS_CHILD | SS_BITMAP | SS_CENTERIMAGE,
                             x, y, FRAME_SIZE, FRAME_SIZE, window, NULL, instance, NULL);
     if (!image || !SetTimer(window, ANIMATION_TIMER_ID, FRAME_INTERVAL_MS, NULL)) goto failed;
+
+    clip = CreateEllipticRgn(clip_inset, clip_inset, FRAME_SIZE - clip_inset, FRAME_SIZE - clip_inset);
+    /* The window owns the region after SetWindowRgn succeeds. */
+    if (clip && !SetWindowRgn(image, clip, FALSE)) DeleteObject(clip);
 
     current_frame = 0;
     show_frame(frames[current_frame]);

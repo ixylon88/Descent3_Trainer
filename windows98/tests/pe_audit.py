@@ -9,7 +9,7 @@ from pathlib import Path
 ALLOW = {
     'comctl32.dll': {'InitCommonControls'},
     'comdlg32.dll': {'CommDlgExtendedError','GetOpenFileNameA','GetSaveFileNameA'},
-    'gdi32.dll': {'CreateFontA','DeleteObject','GetObjectA','GetStockObject'},
+    'gdi32.dll': {'CreateEllipticRgn','CreateFontA','DeleteObject','GetObjectA','GetStockObject'},
     'kernel32.dll': {'CloseHandle','CreateFileA','DeleteFileA','ExitProcess','FlushFileBuffers',
         'GetCommandLineA','GetFileAttributesA','GetFileSize','GetFullPathNameA','GetLocalTime',
         'GetModuleFileNameA','GetModuleHandleA','GetProcessHeap','GetTempFileNameA','HeapAlloc','HeapFree',
@@ -18,7 +18,7 @@ ALLOW = {
         'DefWindowProcA','DestroyMenu','DestroyWindow','DispatchMessageA','EnableWindow',
         'GetMessageA','GetSystemMetrics','GetWindowRect','GetWindowTextA',
         'IsDialogMessageA','KillTimer','LoadCursorA','LoadIconA','LoadImageA','MessageBoxA','PostQuitMessage',
-        'RegisterClassA','SendMessageA','SetTimer','SetWindowTextA','ShowWindow','SystemParametersInfoA',
+        'RegisterClassA','SendMessageA','SetTimer','SetWindowRgn','SetWindowTextA','ShowWindow','SystemParametersInfoA',
         'TrackPopupMenu','TranslateMessage','UpdateWindow','wsprintfA'},
 }
 
