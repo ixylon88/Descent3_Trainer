@@ -17,17 +17,17 @@
   <ItemGroup>
     <ProjectReference Include="..\D3SaveEditor.Core\D3SaveEditor.Core.csproj" />
     <InternalsVisibleTo Include="D3SaveEditor.Tests" />
-    <Content Include="..\..\pics\Anim?.bmp" Link="%(Filename)%(Extension)"
+    <Content Include="..\..\pics\Anim?.bmp" Link="Images\%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Never" />
   </ItemGroup>
 
   <!-- build: put the images listed here in the respective folder -->
   <!-- run: if you simply want to use the artifact (executable), put the images in the folder where the executable is located  -->
   <!--<ItemGroup>
-    <Content Include="..\..\pics\flashmen_1.jpg" Link="flashmen_1.jpg">
+    <Content Include="..\..\pics\flashmen_1.jpg" Link="Images\flashmen_1.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\pics\SETUP.BMP" Link="SETUP.BMP">
+    <Content Include="..\..\pics\SETUP.BMP" Link="Images\SETUP.BMP">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>-->
