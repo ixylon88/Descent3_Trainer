@@ -21,6 +21,7 @@ static HWND main_window,tab,info,status,hint,review;
 static HFONT font,title_font;
 static Widget widgets[256];static int widget_count,selected_page,loading,dirty;
 static HWND energy,shields,afterburner,lives,score,god,cloak,cooler,converter,quad,full_map,god_time,cloak_time,map_info;
+static HWND god_renew,cloak_renew;
 static HWND owned[20],ammo[20],max_buttons[20],cap_labels[20],primary,secondary;
 static HWND cargo_counts[D3_CARGO_TYPES],countermeasure_counts[D3_COUNTERMEASURE_TYPES];
 static HWND unlock_ships[D3_STANDARD_SHIPS],saved_inventory;
@@ -75,7 +76,13 @@ static void refresh_weapons(int normalize){
     }
 }
 static void append_number(char *out,D3U32 capacity,D3U32 value){char s[24];d3_format_u32(s,value);d3_append(out,capacity,s);}
-static void effect_label(HWND h,int on,float duration){char s[100],n[48];if(!on){text(h,"Gespeichert: inaktiv");return;}if(duration>=1e8f){text(h,"Gespeichert: lange Restdauer");return;}d3_string(s,100,"Gespeichert: ");d3_format_float(n,duration);d3_append(s,100,n);d3_append(s,100," s Restdauer");text(h,s);}
+static void effect_label(HWND h,int request,int on,float duration){char s[100],n[48];if(request>=0){text(h,request?"Beim Speichern: 1.000.000.000 s Restdauer":"Beim Speichern: inaktiv");return;}if(!on){text(h,"Gespeichert: inaktiv");return;}if(duration>=1e8f){text(h,"Gespeichert: lange Restdauer");return;}d3_string(s,100,"Gespeichert: ");d3_format_float(n,duration);d3_append(s,100,n);d3_append(s,100," s Restdauer");text(h,s);}
+static void refresh_effect_timers(void) {
+    effect_label(god_time,god_request,d3_god(game),d3_float(game->data+game->player+116));
+    effect_label(cloak_time,cloak_request,d3_cloak(game),game->object.has_effect?d3_float(game->data+game->object.effect+12):0);
+    EnableWindow(god_renew,d3_god(game) && god_request<0);
+    EnableWindow(cloak_renew,d3_cloak(game) && cloak_request<0);
+}
 static void file_report(char *out,D3U32 cap){
     int i;char hash[65];const char *hex="0123456789abcdef";
     for(i=0;i<32;i++){hash[2*i]=hex[original_hash[i]>>4];hash[2*i+1]=hex[original_hash[i]&15];}hash[64]=0;
@@ -171,12 +178,13 @@ static void load_values(void){
     load_inventory_values();
     for(i=0;i<20;i++){check(owned[i],o.owned[i]);d3_format_u32(n,o.ammo[i]);text(ammo[i],n);if(i>=10 && o.owned[i])has_second=1;}
     SendMessageA(primary,CB_SETCURSEL,o.primary,0);SendMessageA(secondary,CB_SETCURSEL,has_second?(WPARAM)(o.secondary-9):0,0);
-    effect_label(god_time,d3_god(game),d3_float(game->data+game->player+116));effect_label(cloak_time,d3_cloak(game),game->object.has_effect?d3_float(game->data+game->object.effect+12):0);
+    god_request=cloak_request=cooler_request=converter_request=quad_request=-1;
+    refresh_effect_timers();
     for(i=0;i<=game->highest_room;i++)if(game->data[game->map+i])visible++;
     d3_string(s,1400,"Gespeichert sichtbar: ");append_number(s,1400,(D3U32)visible);d3_append(s,1400," von ");append_number(s,1400,(D3U32)(game->highest_room+1));d3_append(s,1400," Raumplaetzen.\r\nOhne Haken bleibt die Erkundung erhalten.");text(map_info,s);
     d3_string(s,1400,opened_path);d3_append(s,1400,"\r\n");d3_append(s,1400,game->callsign);d3_append(s,1400," | ");d3_append(s,1400,d3_ship(game));d3_append(s,1400," | ");d3_append(s,1400,game->mission);d3_append(s,1400," / Level ");append_number(s,1400,(D3U32)game->level);text(info,s);
     file_report(s,1400);d3_append(s,1400,"\r\nKeine geplanten Aenderungen.");text(review,s);
-    god_request=cloak_request=cooler_request=converter_request=quad_request=-1;dirty=0;SetWindowTextA(main_window,"Descent 3 Savegame Editor - Windows 98");refresh_weapons(0);loading=0;
+    dirty=0;SetWindowTextA(main_window,"Descent 3 Savegame Editor - Windows 98");refresh_weapons(0);loading=0;
 }
 static int load_path(const char *path,int ask){
     D3Buffer bytes;D3Game *parsed;const char *error;char full[260];DWORD n;
@@ -281,7 +289,7 @@ static void maximum_one(int i,int storage){char s[24];d3_format_u32(s,(!storage 
 static void select_all(int first,int on){int i;for(i=first;i<first+10;i++){check(owned[i],on);if(!on)text(ammo[i],"0");}refresh_weapons(1);changed();}
 static void max_all(int first,int storage){int i;if(!storage && !use_caps()){error_box("Bitte zuerst passende Schiffslimits aus Table.gam / d3.hog laden.");return;}for(i=first;i<first+10;i++)if(checked(owned[i]) && uses_ammo(i))maximum_one(i,storage);}
 static void help(void){
-    MessageBoxA(main_window,"Descent 3 Savegame Editor - Windows 98\r\n\r\n1. Im Spiel speichern und das Spiel beenden.\r\n2. saveg000 bis saveg007 im Ordner savegame oeffnen.\r\n3. Werte aendern und Speichern + Backup waehlen.\r\n4. Im Spiel neu laden.\r\n\r\nJede ueberschriebene Datei wird zuvor als .bak gesichert.\r\nKopien mit .edited zum Laden passend in savegNNN umbenennen.\r\nBei unterbrochenem Dateiaustausch das Backup unter den Slotnamen kopieren.\r\n\r\nInventar / Schiffe bearbeitet Bestaende und Freigaben fuer das Briefing.\r\nMax nutzt das geladene Schiffslimit, sonst 65.535.\r\nErneuern setzt 1.000.000.000 s Restdauer fuer God-Mode und Tarnung.\r\n\r\nGrundlage: d3-historical, Spielerblock 496 Byte, Format 0-2.\r\nGPL-3.0-or-later. Quelltext und Anleitung stehen im Repository.","Anleitung",MB_OK|MB_ICONINFORMATION);
+    MessageBoxA(main_window,"Descent 3 Savegame Editor - Windows 98\r\n\r\n1. Im Spiel speichern und das Spiel beenden.\r\n2. saveg000 bis saveg007 im Ordner savegame oeffnen.\r\n3. Werte aendern und Speichern + Backup waehlen.\r\n4. Im Spiel neu laden.\r\n\r\nJede ueberschriebene Datei wird zuvor als .bak gesichert.\r\nKopien mit .edited zum Laden passend in savegNNN umbenennen.\r\nBei unterbrochenem Dateiaustausch das Backup unter den Slotnamen kopieren.\r\n\r\nInventar / Schiffe bearbeitet Bestaende und Freigaben fuer das Briefing.\r\nMax nutzt das geladene Schiffslimit, sonst 65.535.\r\nVerlaengern setzt 1.000.000.000 s Restdauer fuer einen aktiven Effekt.\r\n\r\nGrundlage: d3-historical, Spielerblock 496 Byte, Format 0-2.\r\nGPL-3.0-or-later. Quelltext und Anleitung stehen im Repository.","Anleitung",MB_OK|MB_ICONINFORMATION);
 }
 static void player_page(void){
     group("Versorgung",24,146,338,181,0);
@@ -291,8 +299,8 @@ static void player_page(void){
     label("Leben",38,254,100,18,0);lives=edit(145,250,100,ID_LIVES,0,1);
     label("Punktestand",38,282,100,18,0);score=edit(145,278,155,ID_SCORE,0,0);
     group("Ausruestung",24,335,338,119,0);cooler=checkbox("Nachbrenner-Kuehler",38,356,300,ID_COOLER,0);converter=checkbox("Energie -> Schild-Konverter",38,384,300,ID_CONVERTER,0);quad=checkbox("Quad-Laser",38,412,300,ID_QUAD,0);
-    group("Effekte",378,146,356,151,0);god=checkbox("God-Mode / unverwundbar",392,167,240,ID_GOD,0);button("Erneuern",640,165,79,ID_GOD_RENEW,0,1);god_time=label("",392,191,327,18,0);
-    cloak=checkbox("Cloaked-Mode / getarnt",392,226,240,ID_CLOAK,0);button("Erneuern",640,224,79,ID_CLOAK_RENEW,0,1);cloak_time=label("",392,250,327,18,0);
+    group("Effekte",378,146,356,151,0);god=checkbox("God-Mode / unverwundbar",392,167,213,ID_GOD,0);god_renew=button("Verlaengern",610,165,109,ID_GOD_RENEW,0,1);god_time=label("",392,191,327,18,0);
+    cloak=checkbox("Cloaked-Mode / getarnt",392,226,213,ID_CLOAK,0);cloak_renew=button("Verlaengern",610,224,109,ID_CLOAK_RENEW,0,1);cloak_time=label("",392,250,327,18,0);
     group("Karte",378,308,356,146,0);full_map=checkbox("Gesamte Karte aufdecken",392,331,325,ID_MAP,0);map_info=label("",392,365,326,55,0);
 }
 static void weapon_page(int first,int page){
@@ -380,8 +388,8 @@ static LRESULT CALLBACK window_proc(HWND hwnd,UINT message,WPARAM w,LPARAM l){
         case ID_SAVE:save_game(0);break;case ID_COPY:save_game(1);break;case ID_RESET:load_values();set_status("Originalwerte geladen.");break;case ID_LIMITS:choose_limits();break;
         case ID_CHECK:if(build_output(&out))d3_free(out.data);break;
         case ID_ENERGY_MAX:text(energy,"200");changed();break;case ID_SHIELD_MAX:text(shields,"200");changed();break;case ID_AB_MAX:text(afterburner,"5");changed();break;
-        case ID_GOD:god_request=checked(god);changed();break;case ID_CLOAK:cloak_request=checked(cloak);changed();break;
-        case ID_GOD_RENEW:check(god,1);god_request=1;changed();break;case ID_CLOAK_RENEW:check(cloak,1);cloak_request=1;changed();break;
+        case ID_GOD:case ID_GOD_RENEW:god_request=checked(god);refresh_effect_timers();changed();break;
+        case ID_CLOAK:case ID_CLOAK_RENEW:cloak_request=checked(cloak);refresh_effect_timers();changed();break;
         case ID_COOLER:cooler_request=checked(cooler);changed();break;case ID_CONVERTER:converter_request=checked(converter);changed();break;case ID_QUAD:quad_request=checked(quad);changed();break;case ID_MAP:changed();break;
         case ID_ALL_PRI:select_all(0,1);break;case ID_NONE_PRI:select_all(0,0);break;case ID_ALL_SEC:select_all(10,1);break;case ID_NONE_SEC:select_all(10,0);break;
         case ID_CAP_PRI:max_all(0,0);break;case ID_STORE_PRI:max_all(0,1);break;case ID_CAP_SEC:max_all(10,0);break;case ID_STORE_SEC:max_all(10,1);break;

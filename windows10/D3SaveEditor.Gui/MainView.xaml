@@ -191,14 +191,16 @@
                         <GroupBox Grid.Column="1" Header="Effekte">
                             <StackPanel>
                                 <DockPanel>
-                                    <Button DockPanel.Dock="Right" Content="Erneuern" Click="OnRenewEffect" Tag="{Binding ElementName=GodModeInput}" />
+                                    <Button x:Name="GodRenewButton" DockPanel.Dock="Right" Content="Verlängern" Click="OnRenewEffect" Tag="{Binding ElementName=GodModeInput}"
+                                            ToolTipService.ShowOnDisabled="True" ToolTip="Setzt die Restdauer des aktiven Effekts beim Speichern auf 1.000.000.000 s." />
                                     <CheckBox x:Name="GodModeInput" Content="God-Mode / unverwundbar"
                                               Checked="OnEffectChanged" Unchecked="OnEffectChanged"
-                                              ToolTip="„Erneuern“ setzt die lange Restdauer auch bei bereits aktivem Effekt." />
+                                              ToolTip="Schaltet die Unverwundbarkeit ein oder aus." />
                                 </DockPanel>
                                 <TextBlock x:Name="GodTime" Margin="0,0,0,10" TextWrapping="Wrap" />
                                 <DockPanel>
-                                    <Button DockPanel.Dock="Right" Content="Erneuern" Click="OnRenewEffect" Tag="{Binding ElementName=CloakInput}" />
+                                    <Button x:Name="CloakRenewButton" DockPanel.Dock="Right" Content="Verlängern" Click="OnRenewEffect" Tag="{Binding ElementName=CloakInput}"
+                                            ToolTipService.ShowOnDisabled="True" ToolTip="Setzt die Restdauer des aktiven Effekts beim Speichern auf 1.000.000.000 s." />
                                     <CheckBox x:Name="CloakInput" Content="Cloaked-Mode / getarnt" Checked="OnEffectChanged" Unchecked="OnEffectChanged"
                                               ToolTip="Tarnung wird am Spielerobjekt gesetzt. Fade-Übergänge werden beim Ändern beendet." />
                                 </DockPanel>

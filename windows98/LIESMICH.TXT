@@ -27,7 +27,7 @@ Nachbrenner: normal 5 Sekunden.
 Max bei Munition nutzt geladene Schiffslimits, sonst 65535.
 Schiffslimits laden liest Table.gam oder d3.hog aus deiner Installation.
 65535 ist das technische Speichermaximum, keine normale Spielgrenze.
-Erneuern setzt God-Mode/Tarnung auf eine sehr lange Restdauer.
+Verlaengern setzt die Restdauer eines aktiven Effekts auf 1.000.000.000 s.
 Levelwechsel, Tod und Skripte koennen Zustaende zuruecksetzen.
 
 BACKUPS

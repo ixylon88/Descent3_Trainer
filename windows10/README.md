@@ -46,7 +46,7 @@ Die einzelnen **Max**-Knöpfe verwenden geladene Schiffslimits; wenn für das Sc
 
 Descent 3 speichert dafür ein Flag und eine Restdauer. Der Editor setzt beim Aktivieren **1.000.000.000 Sekunden**. Es ist keine Veränderung der Spiel-EXE und kein laufender Trainer. Levelwechsel, Missionen, Skripte oder das Spiel selbst können solche Effekte wieder aufheben.
 
-Bereits gespeicherte endliche Power-up-Effekte bleiben beim bloßen Öffnen/Speichern einschließlich ihrer Restdauer erhalten. Zum Verlängern eines schon aktiven Effekts **Erneuern** anklicken. Die Tarnung wird im Effektblock des Spielerobjekts bearbeitet; God-Mode im Spielerblock. Quad-Laser werden sowohl im Inventar als auch an den beiden Laser-Waffenbatterien gesetzt.
+Bereits gespeicherte endliche Power-up-Effekte bleiben beim bloßen Öffnen/Speichern einschließlich ihrer Restdauer erhalten. Zum Verlängern eines schon aktiven Effekts **Verlängern** anklicken. Die Tarnung wird im Effektblock des Spielerobjekts bearbeitet; God-Mode im Spielerblock. Quad-Laser werden sowohl im Inventar als auch an den beiden Laser-Waffenbatterien gesetzt.
 
 ## Backups wiederherstellen
 

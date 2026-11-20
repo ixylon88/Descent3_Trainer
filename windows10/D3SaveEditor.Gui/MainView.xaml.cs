@@ -175,8 +175,8 @@ namespace D3SaveEditor.Gui
                 RefreshWeaponLimits();
                 LoadInventory();
 
-                GodTime.Text = EffectTime(game.Invulnerable, game.InvulnerableTime);
-                CloakTime.Text = EffectTime(game.IsCloaked, game.CloakTime);
+                touchedEffects.Clear();
+                RefreshEffectTimers();
                 MapInfo.Text = $"Gespeichert sichtbar: {game.RevealedRooms} von {game.HighestRoom + 1} Raumplätzen.";
                 SaveTitle.Text = $"{Path.GetFileName(openedPath)}  ·  {game.Description}";
                 SaveDetails.Text = $"{game.Callsign}  ·  {game.ShipName}  ·  {game.Mission} / Level {game.Level}  ·  Format {game.Version}  ·  {game.Layout.Name}";
@@ -184,7 +184,6 @@ namespace D3SaveEditor.Gui
 
                 SaveButton.IsEnabled = CopyButton.IsEnabled = ResetButton.IsEnabled = true;
                 PlayerEditor.IsEnabled = PrimaryTab.IsEnabled = SecondaryTab.IsEnabled = InventoryTab.IsEnabled = ReviewButton.IsEnabled = true;
-                touchedEffects.Clear();
                 dirty = false;
                 Title = EditorTitle;
             }
@@ -253,8 +252,18 @@ namespace D3SaveEditor.Gui
                 ((!preferBlackPyro && !game.PrefersBlackPyro) || shipRows.Any(row => row.Allowed));
         }
 
-        private static string EffectTime(bool enabled, float seconds)
+        private void RefreshEffectTimers()
         {
+            GodTime.Text = EffectTime(ReadEffect(GodModeInput), game.Invulnerable, game.InvulnerableTime);
+            CloakTime.Text = EffectTime(ReadEffect(CloakInput), game.IsCloaked, game.CloakTime);
+            GodRenewButton.IsEnabled = game.Invulnerable && !touchedEffects.Contains(GodModeInput);
+            CloakRenewButton.IsEnabled = game.IsCloaked && !touchedEffects.Contains(CloakInput);
+        }
+
+        private static string EffectTime(bool? edit, bool enabled, float seconds)
+        {
+            if (edit.HasValue)
+                return edit.Value ? "Beim Speichern: 1.000.000.000 s Restdauer" : "Beim Speichern: inaktiv";
             if (!enabled)
                 return "Gespeichert: inaktiv";
             return seconds >= 100000000
@@ -282,6 +291,7 @@ namespace D3SaveEditor.Gui
                 return;
 
             touchedEffects.Add((CheckBox)sender);
+            RefreshEffectTimers();
             MarkDirty();
         }
 
@@ -566,7 +576,7 @@ namespace D3SaveEditor.Gui
                 "Kopien mit Endung .edited zum Laden in einen passenden savegNNN-Slot umbenennen.\r\n\r\n" +
                 "„Inventar / Schiffe“ bearbeitet Bestände und die Freigaben für das Briefing.\r\n" +
                 "„Max“ nutzt das Schiffslimit aus Table.gam / d3.hog, sonst 65.535.\r\n" +
-                "„Erneuern“ setzt 1.000.000.000 s Restdauer für God-Mode und Tarnung.\r\n\r\n" +
+                "„Verlängern“ setzt 1.000.000.000 s Restdauer für einen aktiven Effekt.\r\n\r\n" +
                 "Unterstützt Windows-Strukturen mit 496 bzw. 536 Byte und Format 0–2.",
                 "Anleitung", MessageBoxButton.OK, MessageBoxImage.Information);
         }

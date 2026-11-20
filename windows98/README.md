@@ -49,7 +49,7 @@ Es werden die direkt gespeicherten Munitionszähler bearbeitet. Neue Ausrüstung
 
 ## God-Mode, Tarnung und Ausrüstung
 
-Unverwundbarkeit braucht ein Flag und eine Restdauer im Spielerblock. Tarnung liegt am Spielerobjekt. Beim Aktivieren setzt der Editor **1.000.000.000 Sekunden** Restdauer. **Erneuern** setzt diese Dauer auch bei einem schon aktiven Effekt. Bereits gespeicherte endliche Effekte bleiben beim unveränderten Speichern erhalten.
+Unverwundbarkeit braucht ein Flag und eine Restdauer im Spielerblock. Tarnung liegt am Spielerobjekt. Beim Aktivieren setzt der Editor **1.000.000.000 Sekunden** Restdauer. **Verlängern** setzt diese Dauer auch bei einem schon aktiven Effekt. Bereits gespeicherte endliche Effekte bleiben beim unveränderten Speichern erhalten.
 
 Quad-Laser werden im Inventar und in beiden Laser-Waffenbatterien gesetzt. Der Nachbrenner-Kühler ist der Inventargegenstand `Afterburner`, der Konverter `Converter`. Gegenstände lassen sich nur zuweisen, wenn ihre Definition in der Übersetzungstabelle des Spielstands vorhanden ist.
 
