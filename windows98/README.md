@@ -41,7 +41,7 @@ Die Bedienung des Reiters **Inventar / Schiffe** steht in der
 
 Die normalen Kapazitäten stehen in den Spieldaten, nicht im Spielstand und nicht als vollständige Liste im Quelltext. **Schiffslimits laden…** liest sie aus `Table.gam`, `d3.hog` oder einem HOG2-Missionsarchiv anhand des gespeicherten Schiffsnamens. Bei Mods die passenden Moddaten verwenden; später geladene Definitionen ersetzen frühere für das gewählte Schiff.
 
-- **Vorhandene: Schiff-Max** füllt nur bereits vorhandene Waffen bis zu den geladenen normalen Schiffsgrenzen auf.
+- **Vorhandene: Schiffslimit** füllt nur bereits vorhandene Waffen bis zu den geladenen normalen Schiffsgrenzen auf.
 - **Vorhandene: 65.535** setzt ausdrücklich das technische Speichermaximum. Dies sind nicht die normalen Spielgrenzen. Das Spiel kann solche Mengen bei einem Schiffswechsel wieder begrenzen.
 - Die einzelnen **Max**-Knöpfe verwenden geladene Schiffsgrenzen, sonst 65.535. Die verwendete Variante steht unter der Waffenliste.
 

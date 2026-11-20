@@ -37,7 +37,7 @@ Die Bedienung des Reiters **Inventar / Schiffe** steht in der
 
 **Munition:** Der Spielstand enthält die aktuellen Mengen, aber nicht die normalen Kapazitäten des Schiffs. Diese stehen in den proprietären Spieldaten. Deshalb sind zwei Varianten vorhanden:
 
-- **Vorhandene: Schiff-Max** verwendet die tatsächlichen Schiffsgrenzen. Dafür **Schiffslimits laden…** wählen und `Table.gam`, `d3.hog` oder ein passendes HOG2-Missionsarchiv aus deiner Installation öffnen. Die Werte werden anhand des gespeicherten Schiffsnamens zugeordnet. Bei Mods müssen deren passende Definitionen geladen werden; später geladene Definitionen gleichen Namens überschreiben frühere.
+- **Vorhandene: Schiffslimit** verwendet die tatsächlichen Schiffsgrenzen. Dafür **Schiffslimits laden…** wählen und `Table.gam`, `d3.hog` oder ein passendes HOG2-Missionsarchiv aus deiner Installation öffnen. Die Werte werden anhand des gespeicherten Schiffsnamens zugeordnet. Bei Mods müssen deren passende Definitionen geladen werden; später geladene Definitionen gleichen Namens überschreiben frühere.
 - **Vorhandene: 65.535** setzt bewusst das technische Maximum eines vorzeichenlosen 16-Bit-Munitionszählers. Das sind **nicht** die normalen Spielgrenzen. Das Spiel kann die Menge beispielsweise bei einem Schiffswechsel wieder auf seine normalen Grenzen reduzieren.
 
 Die einzelnen **Max**-Knöpfe verwenden geladene Schiffslimits; wenn für das Schiff keine Definition geladen ist, setzen sie 65.535. Die Oberfläche zeigt die verwendete Variante an. Maximiert wird nur Munition der bereits angehakten Waffen.

@@ -371,7 +371,7 @@ namespace D3SaveEditor.Gui
             var caps = useShipLimit ? limits.ForShip(game.ShipName) : null;
             if (useShipLimit && caps == null)
             {
-                MessageBox.Show(this, "Bitte zuerst Table.gam oder d3.hog über „Schiffslimits laden“ auswählen.",
+                MessageBox.Show(this, "Bitte über „Schiffslimits laden“ eine Spieldatendatei mit einer Definition für das aktuelle Schiff öffnen.",
                     "Schiffslimits fehlen", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
@@ -410,8 +410,8 @@ namespace D3SaveEditor.Gui
                 row.Limit = !row.UsesAmmo ? "Energiewaffe" : caps == null ? "nicht geladen" : caps[row.Index].ToString("N0");
 
             string hint = caps == null
-                ? "„Max“ setzt 65.535 (Speichermaximum). Für normale Spielgrenzen „Schiffslimits laden“ wählen."
-                : $"„Max“ nutzt die Grenzen für {game.ShipName} aus {limits.Source}.";
+                ? "„Vorhandene: Schiffslimit“ braucht die Munitionsgrenzen des aktuellen Schiffs. Öffne dafür „Schiffslimits laden“. „Max“ pro Zeile setzt bis dahin 65.535."
+                : $"„Vorhandene: Schiffslimit“ füllt alle vorhandenen Munitionswaffen bis zur angezeigten Kapazität für {game.ShipName} auf. „Max“ füllt jeweils eine Zeile.";
             primary.Hint = secondary.Hint = hint;
         }
 

@@ -66,7 +66,7 @@ static void refresh_weapons(int normalize){
         EnableWindow(ammo[i],checked(owned[i]) && uses_ammo(i));EnableWindow(max_buttons[i],checked(owned[i]) && uses_ammo(i));
         if(!uses_ammo(i))text(cap_labels[i],"Energiewaffe");else if(use_caps()){d3_format_u32(buffer,caps[i]);text(cap_labels[i],buffer);}else text(cap_labels[i],"nicht geladen");
     }
-    text(hint,use_caps()?"Max verwendet die geladenen Schiffslimits. 65.535 setzt ausdruecklich das Speichermaximum.":"Max setzt 65.535 (Speichermaximum). Normale Grenzen: Schiffslimits aus Table.gam / d3.hog laden.");
+    text(hint,use_caps()?"Schiffslimit fuellt vorhandene Munitionswaffen auf. Max fuellt eine Zeile.":"Schiffslimit braucht Spieldaten fuer das aktuelle Schiff. Max pro Zeile setzt bis dahin 65.535.");
     if(normalize){
         loading=1;p=(int)SendMessageA(primary,CB_GETCURSEL,0,0);
         if(p<0 || !checked(owned[p])){for(first=0;first<10;first++)if(checked(owned[first]))break;SendMessageA(primary,CB_SETCURSEL,first==10?(WPARAM)-1:(WPARAM)first,0);}
@@ -315,7 +315,7 @@ static void weapon_page(int first,int page){
         max_buttons[i]=control("BUTTON","Max",BS_PUSHBUTTON|WS_TABSTOP,420,y-1,70,22,ID_MAX+i,page,1);cap_labels[i]=label("nicht geladen",512,y+2,185,18,page);
     }
     button("Alle auswaehlen",28,437,130,first?ID_ALL_SEC:ID_ALL_PRI,page,1);button("Alle abwaehlen",166,437,130,first?ID_NONE_SEC:ID_NONE_PRI,page,1);
-    button("Vorhandene: Schiff-Max",304,437,204,first?ID_CAP_SEC:ID_CAP_PRI,page,1);button("Vorhandene: 65.535",516,437,204,first?ID_STORE_SEC:ID_STORE_PRI,page,1);
+    button("Vorhandene: Schiffslimit",304,437,204,first?ID_CAP_SEC:ID_CAP_PRI,page,1);button("Vorhandene: 65.535",516,437,204,first?ID_STORE_SEC:ID_STORE_PRI,page,1);
 }
 static void inventory_page(int page) {
     int i,y;
