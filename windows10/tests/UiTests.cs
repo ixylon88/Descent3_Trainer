@@ -27,6 +27,7 @@ namespace D3SaveEditor.Tests
             try
             {
                 view.Show();
+                ChangeLanguage(view, "de");
                 Update(view);
                 Check(!Field<Button>(view, "SaveButton").IsEnabled, "Save requires a loaded file");
                 Check(view.OpenPath(source), "WPF opens independent synthetic fixture");

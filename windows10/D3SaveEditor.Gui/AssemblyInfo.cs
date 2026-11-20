@@ -8,5 +8,5 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
 [assembly: AssemblyInformationalVersion("1.0-preview; format research 76049bb32d0a391ab35aedcd0716073c1e64d72a")]
-[assembly: NeutralResourcesLanguage("de")]
+[assembly: NeutralResourcesLanguage("en")]
 [assembly: ComVisible(false)]

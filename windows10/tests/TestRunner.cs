@@ -97,7 +97,7 @@ namespace D3SaveEditor.Tests
                     string message = null;
                     try { SaveGame.Parse(new byte[1]); }
                     catch (FormatProblem ex) { message = ex.Message; }
-                    string prefix = language.StartsWith("en", StringComparison.Ordinal) ? "Unsupported" : "Keine unterstützte";
+                    string prefix = language.StartsWith("de", StringComparison.Ordinal) ? "Keine unterstützte" : "Unsupported";
                     Check(message?.StartsWith(prefix, StringComparison.Ordinal) == true,
                         "Parser errors resolve resources for " + language);
                 }

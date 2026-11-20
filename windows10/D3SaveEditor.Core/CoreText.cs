@@ -3,6 +3,8 @@ using System;
 using System.Globalization;
 using System.Resources;
 
+[assembly: NeutralResourcesLanguage("en")]
+
 namespace D3SaveEditor.Core {
     internal static class CoreText {
         private static readonly ResourceManager Messages = new ResourceManager(

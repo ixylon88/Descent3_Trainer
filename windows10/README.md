@@ -4,7 +4,7 @@
 
 ## Start und Verwendung
 
-1. Das Programm-ZIP vollständig entpacken und **D3SaveEditor.exe** starten. `D3SaveEditor.Core.dll` und `D3SaveEditor.exe.config` gehören in denselben Ordner. Der Unterordner `en` enthält die englische Übersetzung. Für einen Start aus dem Quelltext siehe [Quelltext und Neubau](#quelltext-und-neubau).
+1. Das Programm-ZIP vollständig entpacken und **D3SaveEditor.exe** starten. `D3SaveEditor.Core.dll` und `D3SaveEditor.exe.config` gehören in denselben Ordner. Der Unterordner `de` enthält die deutsche Übersetzung. Für einen Start aus dem Quelltext siehe [Quelltext und Neubau](#quelltext-und-neubau).
 2. In Descent 3 zunächst einen Spielstand anlegen und das Spiel beenden.
 3. Im Editor **Spielstand öffnen…** anklicken. Descent 3 nennt die eigentlichen Speicherdateien üblicherweise `saveg000` bis `saveg007`, ohne Dateiendung, im Unterordner `savegame` des beschreibbaren Spielverzeichnisses. Eine Datei lässt sich auch in das Fenster ziehen oder als Startargument übergeben.
 4. Gewünschte Werte und Häkchen einstellen. **Datei / Änderungen → Änderungen prüfen** zeigt die geplanten Änderungen.
@@ -77,10 +77,10 @@ werden die Workload **.NET-Desktopentwicklung** und das **.NET Framework 4.8-Zie
 | `D3SaveEditor.Tests` | Datentests und WPF-Oberflächentest im Visual-Studio-Test-Explorer |
 
 Der WPF-Dienst `LocalizationService` liest die Oberflächentexte aus `UiStrings.resx`
-und `UiStrings.en.resx`. Beim Sprachwechsel aktualisiert WPF die gebundenen Texte
+und `UiStrings.de.resx`. Beim Sprachwechsel aktualisiert WPF die gebundenen Texte
 über `INotifyPropertyChanged`. Meldungen des Spielstandkerns stehen separat in
-`Messages.resx` und `Messages.en.resx`. `ResourceManager` verwendet Deutsch als
-Rückfallsprache.
+`Messages.resx` und `Messages.de.resx`. Englisch ist die neutrale Sprache. Bei
+deutscher Windows-Oberflächensprache startet der Editor auf Deutsch.
 
 `build-windows10.cmd` im Repo-Hauptordner baut unter Windows mit dem .NET SDK die
 Release-Konfiguration des Editors. `test-windows10.cmd` baut und startet das Testprojekt.

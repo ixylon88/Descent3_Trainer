@@ -38,7 +38,8 @@ namespace D3SaveEditor.Gui
 
         public MainView()
         {
-            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("de");
+            string language = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "de" ? "de" : "en";
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(language);
             InitializeComponent();
             //LoadIconWithFallback("d3_orb__2006+2.ico");
             PrimaryWeaponEditor.Content = primary;

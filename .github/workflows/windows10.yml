@@ -62,8 +62,8 @@ jobs:
             'D3SaveEditor.exe'
             'D3SaveEditor.exe.config'
             'D3SaveEditor.Core.dll'
-            'en/D3SaveEditor.resources.dll'
-            'en/D3SaveEditor.Core.resources.dll'
+            'de/D3SaveEditor.resources.dll'
+            'de/D3SaveEditor.Core.resources.dll'
           )
           $checksums = foreach ($file in $programFiles) {
             $source = Join-Path $output $file
@@ -77,7 +77,7 @@ jobs:
           $repository = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY"
           @(
             'Descent 3 Savegame Editor for Windows 10 and 11'
-            'Extract the entire ZIP. Keep the en folder for the English translation.'
+            'Extract the entire ZIP. Keep the de folder for the German translation.'
             'Run D3SaveEditor.exe and open a Descent 3 save file.'
             "Manual: $repository/blob/$env:GITHUB_SHA/windows10/README.md"
           ) | Set-Content -LiteralPath (Join-Path $package 'README.txt') -Encoding ascii

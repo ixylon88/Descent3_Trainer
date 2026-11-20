@@ -12,7 +12,7 @@ void *d3_alloc(D3U32 bytes) { return calloc(1,bytes ? bytes : 1); }
 void d3_free(void *p) { free(p); }
 #endif
 
-static int english;
+static int english=1;
 static const char *const editor_texts[][2] = {
     {"", ""},
 #define D3_TEXT(key, de, en) {de, en},

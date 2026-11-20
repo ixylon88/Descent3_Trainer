@@ -88,7 +88,7 @@ sich auch manuell über **Run workflow** starten.
 | Workflow | Prüfungen und Build | ZIP unter **Artifacts** |
 | --- | --- | --- |
 | Windows 98 | MinGW-w64-Build auf Ubuntu, native Datentests mit ASan/UBSan und Prüfung der Win98-Importe | `Descent3_Trainer-Win98` mit `D3EDIT98.EXE` |
-| Windows 10 and 11 | Datentests mit Mono auf Ubuntu, WPF-Build und Oberflächentest unter Windows | `Descent3_Trainer-Win10-Win11` mit Programmdateien und dem Ordner `en` für die englische Übersetzung |
+| Windows 10 and 11 | Datentests mit Mono auf Ubuntu, WPF-Build und Oberflächentest unter Windows | `Descent3_Trainer-Win10-Win11` mit Programmdateien und dem Ordner `de` für die deutsche Übersetzung |
 
 Nach einem erfolgreichen Lauf findest du das Programm-ZIP auf der Seite des
 Laufs. Es enthält die Programmdateien, eine Kurzanleitung und die Lizenzhinweise.
