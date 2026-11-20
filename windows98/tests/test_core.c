@@ -224,10 +224,20 @@ static void number_tests(void){
     check(!d3_integer("2147483648",(-2147483647-1),2147483647,&n) && !d3_integer("65536",0,65535,&n),"integer overflow rejected");
     d3_format_float(s,100.125f);check(!strcmp(s,"100.125"),"decimal formatting");
 }
-static void storage_max_test(const char *path) {
+static void player_value_tests(const char *path) {
     D3Buffer source=read_file(path),out,again;
     D3Game *game=parse(&source),*saved;
     D3Options options;
+    d3_current(game,&options);
+    check(d3_number("999999",&options.energy),"high-value preset can be parsed");
+    options.shields=options.afterburner=options.energy;
+    check(d3_edit(game,&options,&out),"high values for energy, shields and afterburner can be saved");
+    saved=parse(&out);
+    d3_current(saved,&options);
+    check(options.energy==999999 && options.shields==999999 && options.afterburner==999999,
+          "high values for all three supplies reopen exactly");
+    d3_free(saved);d3_free(out.data);
+
     d3_current(game,&options);
     options.energy=options.shields=FLT_MAX;
     check(d3_edit(game,&options,&out),"maximum energy and shields can be saved");
@@ -246,6 +256,6 @@ int main(int argc,char **argv){
     snprintf(path,260,"%s/fixture98-guidebot",argv[1]);guidebot_tests(path);
     localization_test();
     snprintf(work,260,"%s/io-%ld",argv[1],(long)getpid());if(mkdir(work,0700))return 2;
-    snprintf(path,260,"%s/fixture98",argv[1]);storage_max_test(path);file_tests(path,work);table_tests(work);check(rmdir(work)==0,"all temporary file-test artifacts cleaned");
+    snprintf(path,260,"%s/fixture98",argv[1]);player_value_tests(path);file_tests(path,work);table_tests(work);check(rmdir(work)==0,"all temporary file-test artifacts cleaned");
     printf("\n%d assertions passed. Windows 98 runtime and in-game loading remain untested.\n",assertions);return 0;
 }

@@ -152,12 +152,13 @@ namespace D3SaveEditor.Tests
                     "WPF saves the Black Pyro briefing mode and shows the saved state");
                 tabs.SelectedIndex = 0;
                 Update(view);
-                Click(Field<Button>(view, "EnergyStorageMaxButton"));
-                Click(Field<Button>(view, "ShieldsStorageMaxButton"));
+                Click(Field<Button>(view, "EnergyHighButton"));
+                Click(Field<Button>(view, "ShieldsHighButton"));
+                Click(Field<Button>(view, "AfterburnerHighButton"));
                 Click(save);
-                var atMaximum = SaveFiles.Open(source);
-                Check(atMaximum.Energy == float.MaxValue && atMaximum.Shields == float.MaxValue,
-                    "WPF storage maximum buttons save the exact Float32 limit");
+                var highValues = SaveFiles.Open(source);
+                Check(highValues.Energy == 999999 && highValues.Shields == 999999 && highValues.Afterburner == 999999,
+                    "WPF high-value presets save 999,999 for all three supplies");
                 Console.WriteLine(passed + " WPF assertions passed.");
             }
             finally

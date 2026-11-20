@@ -606,7 +606,4 @@ D3_TEXT(COUNTERMEASURE_BETTY, "H\xFCpfende Betty", "Bouncing Betty")
 D3_TEXT(COUNTERMEASURE_SEEKER_MINE, "Suchermine", "Seeker Mine")
 D3_TEXT(COUNTERMEASURE_GUNBOY, "GunBoy", "GunBoy")
 D3_TEXT(COUNTERMEASURE_PROX_MINE, "Nahmine", "Prox Mine")
-D3_TEXT(FLOAT_MAX, "Float-Max", "Float max")
-D3_TEXT(FLOAT_MAX_HINT,
-    "Float-Max setzt das Float32-Speichermaximum. Die HUD-Anzeige kann dabei ueberlaufen.",
-    "Float max sets the Float32 save limit. The HUD may overflow.")
+D3_TEXT(PLAYER_HIGH_VALUE, "Max 1 Mio", "Max 1M")

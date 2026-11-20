@@ -21,6 +21,7 @@ namespace D3SaveEditor.Gui
     public partial class MainView : Window
     {
         private const string EditorTitle = "Descent 3 · Savegame Editor";
+        private const string HighPlayerValue = "999999";
         private readonly ShipLimits limits = new ShipLimits();
         private readonly WeaponGroup primary = new WeaponGroup(0, false);
         private readonly WeaponGroup secondary = new WeaponGroup(10, true);
@@ -349,11 +350,11 @@ namespace D3SaveEditor.Gui
         }
 
         private void OnMaxEnergy(object sender, RoutedEventArgs e) => EnergyInput.Text = "200";
-        private void OnEnergyStorageMax(object sender, RoutedEventArgs e) => EnergyInput.Text = "999999";
+        private void OnHighEnergy(object sender, RoutedEventArgs e) => EnergyInput.Text = HighPlayerValue;
         private void OnMaxShields(object sender, RoutedEventArgs e) => ShieldsInput.Text = "200";
-        private void OnShieldsStorageMax(object sender, RoutedEventArgs e) => ShieldsInput.Text = "999999";
+        private void OnHighShields(object sender, RoutedEventArgs e) => ShieldsInput.Text = HighPlayerValue;
         private void OnMaxAfterburner(object sender, RoutedEventArgs e) => AfterburnerInput.Text = "5";
-        private void OnAfterburnerStorageMax(object sender, RoutedEventArgs e) => AfterburnerInput.Text = "999999";
+        private void OnHighAfterburner(object sender, RoutedEventArgs e) => AfterburnerInput.Text = HighPlayerValue;
 
         private void OnWeaponChanged(object sender, PropertyChangedEventArgs e)
         {

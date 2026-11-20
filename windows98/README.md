@@ -41,9 +41,9 @@ Die Bedienung des Reiters **Inventar / Schiffe** steht in der
 
 ## Maximale Vorräte
 
-Bei Schild und Energie setzt **Max 200** das normale Maximum. **Float-Max**
-setzt das Float32-Speichermaximum von rund `3,40282347 × 10^38`. Die HUD-Anzeige
-des Spiels kann dabei überlaufen.
+**Max 200** setzt Schild und Energie auf das normale Maximum. **Voll (5 s)**
+füllt den Nachbrenner normal auf. **Max 1 Mio** setzt den jeweiligen Wert auf
+999.999.
 
 Die normalen Kapazitäten stehen in den Spieldaten, nicht im Spielstand und nicht als vollständige Liste im Quelltext. **Schiffslimits laden…** liest sie aus `Table.gam`, `d3.hog` oder einem HOG2-Missionsarchiv anhand des gespeicherten Schiffsnamens. Bei Mods die passenden Moddaten verwenden; später geladene Definitionen ersetzen frühere für das gewählte Schiff.
 

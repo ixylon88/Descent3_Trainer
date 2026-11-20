@@ -5,14 +5,13 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <commdlg.h>
-#include <float.h>
 #include "d3core.h"
 #include "d3text.h"
 #include "d3files.h"
 #include "version.h"
 
 enum {ID_OPEN=100,ID_SAVE,ID_COPY,ID_RESET,ID_LIMITS,ID_LANGUAGE,ID_TAB,
-ID_ENERGY=120,ID_SHIELDS,ID_AB,ID_LIVES,ID_SCORE,ID_ENERGY_MAX,ID_SHIELD_MAX,ID_AB_MAX,ID_ENERGY_FLOAT_MAX,ID_SHIELD_FLOAT_MAX,
+ID_ENERGY=120,ID_SHIELDS,ID_AB,ID_LIVES,ID_SCORE,ID_ENERGY_MAX,ID_SHIELD_MAX,ID_AB_MAX,ID_ENERGY_HIGH,ID_SHIELD_HIGH,ID_AB_HIGH,
 ID_GOD=140,ID_CLOAK,ID_COOLER,ID_CONVERTER,ID_QUAD,ID_MAP,ID_GOD_RENEW,ID_CLOAK_RENEW,
 ID_PRIMARY=160,ID_SECONDARY,ID_CHECK,
 ID_ALL_PRI=170,ID_NONE_PRI,ID_CAP_PRI,ID_STORE_PRI,ID_ALL_SEC,ID_NONE_SEC,ID_CAP_SEC,ID_STORE_SEC,
@@ -42,6 +41,7 @@ static D3Buffer opened;
 static D3U8 original_hash[32];
 static char opened_path[260],energy_text[48],shield_text[48],ab_text[48],caps_ship[128];
 static D3U16 caps[21];static int caps_loaded;
+static const char high_player_value[]="999999";
 static int god_request=-1,cloak_request=-1,cooler_request=-1,converter_request=-1,quad_request=-1;
 static const D3Text page_names[]={D3_TEXT_PLAYER_TAB,D3_TEXT_PRIMARY_TAB,D3_TEXT_SECONDARY_TAB,
     D3_TEXT_COUNTERMEASURE_TAB,D3_TEXT_INVENTORY_TAB,D3_TEXT_GUIDEBOT_TAB,D3_TEXT_REVIEW_TAB,D3_TEXT_HELP_TAB};
@@ -578,13 +578,13 @@ static void help_page(void) {
 static void player_page(void){
     local_group(D3_TEXT_SUPPLIES,24,146,338,181,0);
     local_label(D3_TEXT_ENERGY,38,170,78,18,0);energy=edit(122,166,102,ID_ENERGY,0,0);button("Max 200",231,165,56,ID_ENERGY_MAX,0,1);
-    local_button(D3_TEXT_FLOAT_MAX,293,165,58,ID_ENERGY_FLOAT_MAX,0,1);
+    local_button(D3_TEXT_PLAYER_HIGH_VALUE,293,165,63,ID_ENERGY_HIGH,0,1);
     local_label(D3_TEXT_SHIELDS,38,198,78,18,0);shields=edit(122,194,102,ID_SHIELDS,0,0);button("Max 200",231,193,56,ID_SHIELD_MAX,0,1);
-    local_button(D3_TEXT_FLOAT_MAX,293,193,58,ID_SHIELD_FLOAT_MAX,0,1);
-    local_label(D3_TEXT_AFTERBURNER,38,226,100,18,0);afterburner=edit(145,222,100,ID_AB,0,0);local_button(D3_TEXT_FILL_AFTERBURNER,255,221,92,ID_AB_MAX,0,1);
+    local_button(D3_TEXT_PLAYER_HIGH_VALUE,293,193,63,ID_SHIELD_HIGH,0,1);
+    local_label(D3_TEXT_AFTERBURNER,38,226,94,18,0);afterburner=edit(134,222,90,ID_AB,0,0);local_button(D3_TEXT_FILL_AFTERBURNER,231,221,56,ID_AB_MAX,0,1);
+    local_button(D3_TEXT_PLAYER_HIGH_VALUE,293,221,63,ID_AB_HIGH,0,1);
     local_label(D3_TEXT_LIVES,38,254,100,18,0);lives=edit(145,250,100,ID_LIVES,0,1);
     local_label(D3_TEXT_SCORE,38,282,100,18,0);score=edit(145,278,155,ID_SCORE,0,0);
-    local_label(D3_TEXT_FLOAT_MAX_HINT,38,301,308,25,0);
     local_group(D3_TEXT_EQUIPMENT,24,335,338,119,0);cooler=local_checkbox(D3_TEXT_COOLER,38,356,300,ID_COOLER,0);converter=local_checkbox(D3_TEXT_CONVERTER,38,384,300,ID_CONVERTER,0);quad=local_checkbox(D3_TEXT_QUAD_LASERS,38,412,300,ID_QUAD,0);
     local_group(D3_TEXT_EFFECTS,378,146,356,151,0);god=local_checkbox(D3_TEXT_INVULNERABILITY,392,167,213,ID_GOD,0);god_renew=local_button(D3_TEXT_EXTEND_EFFECT,610,165,109,ID_GOD_RENEW,0,1);god_time=label("",392,191,327,18,0);
     cloak=local_checkbox(D3_TEXT_CLOAK,392,226,213,ID_CLOAK,0);cloak_renew=local_button(D3_TEXT_EXTEND_EFFECT,610,224,109,ID_CLOAK_RENEW,0,1);cloak_time=label("",392,250,327,18,0);
@@ -687,7 +687,7 @@ static void make_ui(void){
     enable_controls();selected_page=0;apply_visibility();
 }
 static LRESULT CALLBACK window_proc(HWND hwnd,UINT message,WPARAM w,LPARAM l){
-    int id,code,i,selected;D3Buffer out;NMHDR *notify;char maximum[32];
+    int id,code,i,selected;D3Buffer out;NMHDR *notify;
     switch(message){
     case WM_CREATE:main_window=hwnd;make_ui();return 0;
     case WM_NOTIFY:notify=(NMHDR*)l;if(notify->idFrom==ID_TAB && notify->code==TCN_SELCHANGE){selected_page=(int)SendMessageA(tab,TCM_GETCURSEL,0,0);apply_visibility();}return 0;
@@ -716,8 +716,9 @@ static LRESULT CALLBACK window_proc(HWND hwnd,UINT message,WPARAM w,LPARAM l){
         case ID_SAVE:save_game(0);break;case ID_COPY:save_game(1);break;case ID_RESET:load_values();set_status(T(VALUES_RESET));break;case ID_LIMITS:choose_limits();break;
         case ID_CHECK:if(build_output(&out))d3_free(out.data);break;
         case ID_ENERGY_MAX:text(energy,"200");changed();break;case ID_SHIELD_MAX:text(shields,"200");changed();break;case ID_AB_MAX:text(afterburner,"5");changed();break;
-        case ID_ENERGY_FLOAT_MAX:case ID_SHIELD_FLOAT_MAX:
-            d3_format_float(maximum,FLT_MAX);text(id==ID_ENERGY_FLOAT_MAX ? energy : shields,maximum);changed();break;
+        case ID_ENERGY_HIGH:text(energy,high_player_value);changed();break;
+        case ID_SHIELD_HIGH:text(shields,high_player_value);changed();break;
+        case ID_AB_HIGH:text(afterburner,high_player_value);changed();break;
         case ID_GOD:case ID_GOD_RENEW:god_request=checked(god);refresh_effect_timers();changed();break;
         case ID_CLOAK:case ID_CLOAK_RENEW:cloak_request=checked(cloak);refresh_effect_timers();changed();break;
         case ID_COOLER:cooler_request=checked(cooler);changed();break;case ID_CONVERTER:converter_request=checked(converter);changed();break;case ID_QUAD:quad_request=checked(quad);changed();break;case ID_MAP:changed();break;

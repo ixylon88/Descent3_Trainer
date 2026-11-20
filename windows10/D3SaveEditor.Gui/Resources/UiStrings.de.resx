@@ -534,6 +534,6 @@ Karte: {5} Einträge · Inventar: {6} Arten · Gegenmaßnahmen: {7} Arten
     <value>Max 1 Mio</value>
   </data>
   <data name="Player1MMaxTip" xml:space="preserve">
-    <value>Setzt einen Wert von einer Million im Spielstand. Die HUD-Anzeige kann dabei überlaufen.</value>
+    <value>Setzt den Wert auf 999.999.</value>
   </data>
 </root>
