@@ -17,16 +17,16 @@ verschiedene Eigenschaften. Die Editoren konvertieren keine Speicherformate.
 
 ## Funktionen
 
-- Primär- und Sekundärwaffen einzeln hinzufügen/entfernen und aktive Waffen auswählen.
-- Schild, Energie, Munition, Nachbrennerladung, Leben und Punktestand bearbeiten.
-- God-Mode, Tarnung, Schnellfeuer, Nachbrenner-Kühler, Konverter und Quad-Laser setzen.
-- Gegenstände und Gegenmaßnahmen im Spielstand einsehen. Mengen für Force Wall,
+- Primär- und Sekundärwaffen sowie Gegenmaßnahmen einzeln hinzufügen/entfernen, aktive Waffen auswählen, Munitionsmenge festlegen.
+- Normale Munitionslimits aus eigenen Spieldaten lesen; alternativ 65.535 als technisches Maximum setzen.
+- Schild, Energie, Nachbrennerladung, Leben und Punktestand bearbeiten, auch über das Spiellimit hinaus.
+- God-Mode, Tarnung, Schnellfeuer, Nachbrenner-Kühler, Energie-Schild-Konverter und Quad-Laser setzen.
+- Gegenstände im Spielstand einsehen. Mengen für Force Wall,
   Go Wingnut sowie die fünf Standard-Gegenmaßnahmen bearbeiten, sofern die
   passenden Definitionen im Spielstand vorhanden sind.
 - Pyro-GL, Phoenix, Magnum-AHT und den Black Pyro freischalten, sofern sie im
-  Spielstand definiert sind. Automatische Wahl des Black Pyro beim Briefing ermöglichen.
+  Spielstand definiert sind. Automatische Wahl des Black Pyro beim Briefing ermöglichen, um ihn z.B. in der Haupkampagne zu nutzen.
 - Gespeicherte Kartensichtbarkeit vollständig aufdecken.
-- Normale Munitionslimits aus eigenen Spieldaten lesen; alternativ 65.535 als technisches Maximum setzen.
 - Geplante Ausgabe prüfen und beim Überschreiben Backups anlegen.
 - Deutsch und Englisch über das Sprachmenü umschalten. **Hilfe** enthält die
   Bedienhinweise als eigenen Reiter.
@@ -47,8 +47,7 @@ Einträge des Spielerinventars. Im Reiter **Gegenmaßnahmen** lassen sich der
 Bestand und die aktive Gegenmaßnahme einstellen. Die Menge `0` entfernt einen
 bearbeitbaren Eintrag. **Vorhandene: Spiellimit** füllt Chaff, Bouncing Betty,
 Seeker Mine und Proximity Mine bis 12 Stück auf. Beim Gunboy sind es 4.
-Beide Editoren zeigen für die 20 Standardwaffen und fünf Gegenmaßnahmen
-dieselben deutschen und englischen Namen an. Die Namen orientieren sich an
+Die Namen der 20 Standardwaffen und fünf Gegenmaßnahmen orientieren sich an
 der [Descent-3-Zeichenkettendatei](https://github.com/DescentDevelopers/Descent3/blob/de4bebf5f2d2523261956d0f28603e426eb88c63/scripts/data/fullhog/D3.STR).
 Die Originalbeschreibungen, Symbole und Flags vorhandener Einträge bleiben bei
 Mengenänderungen erhalten. Neu angelegte Einträge erhalten einen Textnamen und
@@ -66,8 +65,8 @@ und sperrt den Phoenix.
 
 **Nur Black Pyro erlauben** wählt alle anderen Schiffe ab. Das Spiel übernimmt
 den Black Pyro beim nächsten passenden Briefing automatisch, weil er das einzige
-erlaubte Schiff ist. In der Hauptkampagne wurde das beim Wechsel von Level 1 zu
-Level 2 im Spiel bestätigt. Der Knopf ist auch in Mercenary verfügbar, wenn der
+erlaubte Schiff ist. In der **Hauptkampagne** wurde das beim Wechsel von Level 1 zu
+Level 2 im Spiel ausprobiert und bestätigt. Der Knopf ist auch in Mercenary verfügbar, wenn der
 Spielstand eine Schiffsdefinition für den Black Pyro enthält. Das Spiel kann
 die Schiffsfreigaben beim Fortschritt auch ins Pilotenprofil übernehmen.
 
@@ -151,9 +150,9 @@ die OpenAI-Ausgaberechte heben Rechte Dritter nicht auf.
 ## Mitwirkung
 
 Projektidee und Anforderungen: ixylon88. Die Editor-Implementierungen und ihre
-Dokumentation wurden im Dialog mit ChatGPT (OpenAI) erstellt. Die Kennzeichnung
+Dokumentation wurden im Dialog mit ChatGPT/Codex (OpenAI) erstellt. Die Kennzeichnung
 beschreibt die Mitwirkung des KI-Werkzeugs; sie ist keine Behauptung eigener
-Urheberrechte von ChatGPT oder einer Prüfung/Freigabe durch OpenAI.
+Urheberrechte von ChatGPT/Codex oder einer Prüfung/Freigabe durch OpenAI.
 Die Beiträge aus Descent 3 werden durch die vorhandenen Herkunftshinweise gewürdigt.
 
 Eigenständiges Community-Projekt. Keine offizielle Veröffentlichung der
