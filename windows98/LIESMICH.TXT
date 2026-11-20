@@ -1,5 +1,5 @@
 DESCENT 3 SAVEGAME EDITOR - WINDOWS 98
-Quelltextbasierte Vorschauversion 1.0 / d3-historical
+Version 1.0.0 / d3-historical
 
 START
 D3EDIT98.EXE starten. Keine Installation und kein .NET notwendig.

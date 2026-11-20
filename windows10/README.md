@@ -1,6 +1,6 @@
 # Descent 3 Savegame Editor · Windows 10 / 11
 
-**Vorschauversion 1.0.** Der Editor verwendet WPF und .NET Framework 4.8. Er läuft ohne Netzwerkzugriff und ohne Administratorrechte. Zum Speichern werden Schreibrechte im Zielordner benötigt.
+**Version 1.0.0.** Der Editor verwendet WPF und .NET Framework 4.8. Er läuft ohne Netzwerkzugriff und ohne Administratorrechte. Zum Speichern werden Schreibrechte im Zielordner benötigt.
 
 ## Start und Verwendung
 
@@ -77,6 +77,8 @@ werden die Workload **.NET-Desktopentwicklung** und das **.NET Framework 4.8-Zie
 | `D3SaveEditor.Gui` | WPF-Fenster in `MainView.xaml`, Bedienlogik in `MainView.xaml.cs`, Dialoge und Programmstart |
 | `D3SaveEditor.Core` | Spielstandformat, Änderungen, Dateizugriff, Backups, Schiffslimits aus den Spieldaten |
 | `D3SaveEditor.Tests` | Datentests und WPF-Oberflächentest im Visual-Studio-Test-Explorer |
+
+Die Eigenschaft `Version` in `D3SaveEditor.Gui/D3SaveEditor.Gui.csproj` legt die Produktversion und die Anzeige neben der Sprachauswahl fest.
 
 Der WPF-Dienst `LocalizationService` liest die Oberflächentexte aus `UiStrings.resx`
 und `UiStrings.de.resx`. Beim Sprachwechsel aktualisiert WPF die gebundenen Texte

@@ -9,6 +9,7 @@
 #include "d3core.h"
 #include "d3text.h"
 #include "d3files.h"
+#include "version.h"
 
 enum {ID_OPEN=100,ID_SAVE,ID_COPY,ID_RESET,ID_LIMITS,ID_LANGUAGE,ID_TAB,
 ID_ENERGY=120,ID_SHIELDS,ID_AB,ID_LIVES,ID_SCORE,ID_ENERGY_MAX,ID_SHIELD_MAX,ID_AB_MAX,ID_ENERGY_FLOAT_MAX,ID_SHIELD_FLOAT_MAX,
@@ -671,10 +672,11 @@ static void guidebot_page(void) {
 static void make_ui(void){
     HWND heading;
     font=(HFONT)GetStockObject(DEFAULT_GUI_FONT);title_font=CreateFontA(-18,0,0,0,FW_BOLD,0,0,0,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH|FF_SWISS,"MS Sans Serif");
-    heading=label("DESCENT 3  -  SAVEGAME EDITOR / WINDOWS 98",12,10,736,25,-1);SendMessageA(heading,WM_SETFONT,(WPARAM)title_font,TRUE);
+    heading=label("DESCENT 3  -  SAVEGAME EDITOR / WINDOWS 98",12,10,560,25,-1);SendMessageA(heading,WM_SETFONT,(WPARAM)title_font,TRUE);
     local_button(D3_TEXT_OPEN,12,42,88,ID_OPEN,-1,0);local_button(D3_TEXT_SAVE,106,42,134,ID_SAVE,-1,1);local_button(D3_TEXT_COPY,246,42,128,ID_COPY,-1,1);
     local_button(D3_TEXT_RESET,380,42,100,ID_RESET,-1,1);local_button(D3_TEXT_LOAD_LIMITS,486,42,144,ID_LIMITS,-1,1);
-    language_button=local_button(D3_TEXT_LANGUAGE,636,42,112,ID_LANGUAGE,-1,0);
+    language_button=local_button(D3_TEXT_LANGUAGE,579,10,112,ID_LANGUAGE,-1,0);
+    control("STATIC","v" D3_VERSION_TEXT,SS_RIGHT|WS_DISABLED,697,15,51,18,0,-1,0);
     info=label(T(NO_SAVE),12,76,736,34,-1);
     tab=control(WC_TABCONTROLA,"",WS_TABSTOP|WS_CLIPSIBLINGS,12,114,736,355,ID_TAB,-1,0);
     label_tabs(TCM_INSERTITEMA);

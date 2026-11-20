@@ -112,23 +112,28 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <WrapPanel Margin="0,0,0,6">
-            <Button Content="{Binding [OpenSave], Source={StaticResource Localization}, Mode=OneWay}" Click="OnChooseOpen" />
-            <Button x:Name="SaveButton" Content="{Binding [SaveAndBackup], Source={StaticResource Localization}, Mode=OneWay}" Click="OnSave" IsEnabled="False" />
-            <Button x:Name="CopyButton" Content="{Binding [SaveCopy], Source={StaticResource Localization}, Mode=OneWay}" Click="OnSaveCopy" IsEnabled="False" />
-            <Button x:Name="ResetButton" Content="{Binding [ResetValues], Source={StaticResource Localization}, Mode=OneWay}" Click="OnReset" IsEnabled="False" />
-            <Button Content="{Binding [LoadShipLimits], Source={StaticResource Localization}, Mode=OneWay}" Click="OnLoadLimits"
-                    ToolTip="{Binding [LoadShipLimitsTip], Source={StaticResource Localization}, Mode=OneWay}" />
-            <Button x:Name="LanguageButton" Content="{Binding [Language], Source={StaticResource Localization}, Mode=OneWay}" Click="OnOpenLanguageMenu"
-                    ToolTip="{Binding [LanguageTip], Source={StaticResource Localization}, Mode=OneWay}">
-                <Button.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="_Deutsch" Tag="de" IsCheckable="True" Click="OnSelectLanguage" />
-                        <MenuItem Header="_English" Tag="en" IsCheckable="True" Click="OnSelectLanguage" />
-                    </ContextMenu>
-                </Button.ContextMenu>
-            </Button>
-        </WrapPanel>
+        <DockPanel Margin="0,0,0,6">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <Button x:Name="LanguageButton" Content="{Binding [Language], Source={StaticResource Localization}, Mode=OneWay}" Click="OnOpenLanguageMenu"
+                        ToolTip="{Binding [LanguageTip], Source={StaticResource Localization}, Mode=OneWay}">
+                    <Button.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="_Deutsch" Tag="de" IsCheckable="True" Click="OnSelectLanguage" />
+                            <MenuItem Header="_English" Tag="en" IsCheckable="True" Click="OnSelectLanguage" />
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                </Button>
+                <TextBlock x:Name="VersionText" Foreground="#637488" FontSize="12" Margin="0,0,0,4" VerticalAlignment="Center" />
+            </StackPanel>
+            <WrapPanel>
+                <Button Content="{Binding [OpenSave], Source={StaticResource Localization}, Mode=OneWay}" Click="OnChooseOpen" />
+                <Button x:Name="SaveButton" Content="{Binding [SaveAndBackup], Source={StaticResource Localization}, Mode=OneWay}" Click="OnSave" IsEnabled="False" />
+                <Button x:Name="CopyButton" Content="{Binding [SaveCopy], Source={StaticResource Localization}, Mode=OneWay}" Click="OnSaveCopy" IsEnabled="False" />
+                <Button x:Name="ResetButton" Content="{Binding [ResetValues], Source={StaticResource Localization}, Mode=OneWay}" Click="OnReset" IsEnabled="False" />
+                <Button Content="{Binding [LoadShipLimits], Source={StaticResource Localization}, Mode=OneWay}" Click="OnLoadLimits"
+                        ToolTip="{Binding [LoadShipLimitsTip], Source={StaticResource Localization}, Mode=OneWay}" />
+            </WrapPanel>
+        </DockPanel>
 
         <Border Grid.Row="1" Background="#152438" Padding="12,9" Margin="0,0,0,10">
             <DockPanel>

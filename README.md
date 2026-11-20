@@ -3,7 +3,7 @@
 Quelltexte zweier grafischer Offline-Editoren für Descent-3-Spielstände.
 Mit Hilfe von ChatGPT (OpenAI) entwickelt.
 
-**Vorschauversion 1.0.** Unterstützte Spielstände und Testumfang stehen in den Anleitungen der jeweiligen Variante.
+**Version 1.0.0.** Unterstützte Spielstände und Testumfang stehen in den Anleitungen der jeweiligen Variante.
 
 ## Varianten
 

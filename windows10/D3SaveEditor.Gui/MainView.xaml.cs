@@ -8,6 +8,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -41,6 +42,8 @@ namespace D3SaveEditor.Gui
             string language = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "de" ? "de" : "en";
             CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(language);
             InitializeComponent();
+            var version = typeof(MainView).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+            VersionText.Text = "v" + version.InformationalVersion;
             //LoadIconWithFallback("d3_orb__2006+2.ico");
             PrimaryWeaponEditor.Content = primary;
             SecondaryWeaponEditor.Content = secondary;

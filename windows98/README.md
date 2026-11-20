@@ -1,6 +1,6 @@
 # Descent 3 Savegame Editor für Windows 98
 
-**Quelltextbasierte Vorschauversion 1.0, Grundlage `d3-historical`.**
+**Version 1.0.0, Grundlage `d3-historical`.**
 
 Nach dem Neubau ist `D3EDIT98.EXE` eine eigenständige, native 32-Bit-Win32-Anwendung mit deutschen Beschriftungen. Sie braucht **kein .NET, MFC, KernelEx oder zusätzliches Visual-C++-Laufzeitpaket**. Es werden ausschließlich klassische Windows-Systembibliotheken importiert. Die Oberfläche ist für **800 × 600 oder größer** ausgelegt.
 
@@ -79,7 +79,9 @@ Der ursprüngliche Editor wurde vom Projektinhaber mit echten Spielständen unte
 
 `../PROJEKTSTAND-Descent3.md` dokumentiert beide bisherigen Versionen, Quellen, Layouts, Entscheidungen, Tests und offene Punkte. Die Windows-10/11-Version mit C#-Quelltext liegt im Nachbarordner `../windows10`. Dieses Quelltextpaket enthält keine fertigen EXE-Dateien; die ursprünglichen vollständigen Projektarchive bleiben separat erhalten.
 
-Der vollständige native Quelltext liegt unter `src`, Tests unter `tests`. Zum Neubau wird auf einem **modernen Entwicklungsrechner** ein i686-MinGW-w64-C-Compiler benötigt; auf dem Windows-98-Zielrechner ist kein Compiler erforderlich.
+Der vollständige native Quelltext liegt unter `src`, Tests unter `tests`. Zum Neubau werden auf einem **modernen Entwicklungsrechner** der i686-MinGW-w64-C-Compiler und sein Ressourcencompiler `windres` benötigt. Auf dem Windows-98-Zielrechner ist kein Compiler erforderlich.
+
+Die Versionsnummer in `src/version.h` gilt für die EXE und die Anzeige neben der Sprachauswahl.
 
 ```sh
 sh build.sh
