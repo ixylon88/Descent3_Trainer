@@ -123,22 +123,6 @@
                         </ContextMenu>
                     </Button.ContextMenu>
                 </Button>
-                <TextBlock x:Name="VersionText" Foreground="#637488" FontSize="12" Margin="0,0,0,4" VerticalAlignment="Center" />
-                <Image x:Name="LauncherOrb" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="6,-15,0,-11"
-                       Stretch="Fill" UseLayoutRounding="True" SnapsToDevicePixels="True"
-                       RenderOptions.BitmapScalingMode="NearestNeighbor">
-                    <Image.OpacityMask>
-                        <DrawingBrush Viewbox="0,0,64,64" ViewboxUnits="Absolute" Stretch="Fill">
-                            <DrawingBrush.Drawing>
-                                <GeometryDrawing Brush="Black">
-                                    <GeometryDrawing.Geometry>
-                                        <EllipseGeometry Center="32,32" RadiusX="30" RadiusY="30" />
-                                    </GeometryDrawing.Geometry>
-                                </GeometryDrawing>
-                            </DrawingBrush.Drawing>
-                        </DrawingBrush>
-                    </Image.OpacityMask>
-                </Image>
             </StackPanel>
             <WrapPanel>
                 <Button Content="{Binding [OpenSave], Source={StaticResource Localization}, Mode=OneWay}" Click="OnChooseOpen" />
@@ -151,14 +135,27 @@
         </DockPanel>
 
         <Border Grid.Row="1" Background="#152438" Padding="12,9" Margin="0,0,0,10">
-            <DockPanel>
+            <DockPanel VerticalAlignment="Center">
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" IsHitTestVisible="False">
-                    <Image MaxWidth="150" MaxHeight="48" Margin="0,-11,-8,-11" VerticalAlignment="Center"
-                           Stretch="Uniform" ImageFailed="Image_ImageFailed">
-                        <Image.Source>
-                            <BitmapImage DecodePixelWidth="200" UriSource="flashmen_1.jpg" />
-                        </Image.Source>
-                    </Image>
+                    <Canvas Height="64" Width="70" Margin="-12,-12" VerticalAlignment="Center" Visibility="{Binding Visibility, ElementName=LauncherOrb}" >
+                        <Rectangle Height="64" Width="70" Fill="#F3F6FA"/>
+                        <Image x:Name="LauncherOrb" Visibility="Collapsed" Width="64" Height="64" Canvas.Left="6"
+                               HorizontalAlignment="Right" VerticalAlignment="Center" Stretch="Fill"
+                               UseLayoutRounding="True" SnapsToDevicePixels="True"
+                               RenderOptions.BitmapScalingMode="NearestNeighbor">
+                            <Image.OpacityMask>
+                                <DrawingBrush Viewbox="0,0,64,64" ViewboxUnits="Absolute" Stretch="Fill">
+                                    <DrawingBrush.Drawing>
+                                        <GeometryDrawing Brush="Black">
+                                            <GeometryDrawing.Geometry>
+                                                <EllipseGeometry Center="32,32" RadiusX="30" RadiusY="30" />
+                                            </GeometryDrawing.Geometry>
+                                        </GeometryDrawing>
+                                    </DrawingBrush.Drawing>
+                                </DrawingBrush>
+                            </Image.OpacityMask>
+                        </Image>
+                    </Canvas>
                 </StackPanel>
                 <StackPanel>
                     <TextBlock x:Name="SaveTitle" Text="{Binding [NoSave], Source={StaticResource Localization}, Mode=OneWay}"
@@ -263,7 +260,7 @@
                         </GroupBox>
 
                         <!-- https://learn.microsoft.com/en-us/dotnet/desktop/wpf/controls/how-to-use-the-image-element -->
-                        <Image Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="12" Stretch="Fill" Height="103" Width="574" HorizontalAlignment="Right" VerticalAlignment="Bottom" ImageFailed="Image_ImageFailed">
+                        <Image Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="12" Stretch="Fill" Height="103" Width="574" HorizontalAlignment="Center" VerticalAlignment="Bottom" ImageFailed="Image_ImageFailed">
                             <Image.Source>
                                 <!-- To save significant application memory, set the DecodePixelWidth or  
                                 DecodePixelHeight of the BitmapImage value of the image source to the desired 
@@ -307,14 +304,22 @@
                             <ItemsControl x:Name="CargoInputs" ItemTemplate="{StaticResource SupplyRowTemplate}" />
                         </GroupBox>
                         <GroupBox Grid.Column="1" Header="{Binding [ShipPermissions], Source={StaticResource Localization}, Mode=OneWay}">
-                            <StackPanel>
-                                <ItemsControl x:Name="ShipInputs" ItemTemplate="{StaticResource ShipRowTemplate}" />
+                            <Grid>
+                                <Image Grid.Column="1" Grid.Row="3" MaxHeight="100" VerticalAlignment="Top" HorizontalAlignment="Right"
+                                           Stretch="Uniform" ImageFailed="Image_ImageFailed">
+                                    <Image.Source>
+                                        <BitmapImage DecodePixelWidth="200" UriSource="flashmen_1.jpg" />
+                                    </Image.Source>
+                                </Image>
+                                <StackPanel>
+                                    <ItemsControl x:Name="ShipInputs" ItemTemplate="{StaticResource ShipRowTemplate}" />
                                 <CheckBox x:Name="BlackPyroUnlockInput" Checked="OnInputChanged" Unchecked="OnInputChanged"
                                           ToolTip="{Binding [ShipPermissionTip], Source={StaticResource Localization}, Mode=OneWay}" />
                                 <Button x:Name="PreferBlackPyroButton" Content="{Binding [BlackPyroOnly], Source={StaticResource Localization}, Mode=OneWay}"
                                         HorizontalAlignment="Left" Margin="0,8,0,4" Click="OnPreferBlackPyro" />
-                                <TextBlock TextWrapping="Wrap" Text="{Binding [BlackPyroHint], Source={StaticResource Localization}, Mode=OneWay}" />
-                            </StackPanel>
+                                    <TextBlock TextWrapping="Wrap" Text="{Binding [BlackPyroHint], Source={StaticResource Localization}, Mode=OneWay}" />
+                                </StackPanel>
+                            </Grid>
                         </GroupBox>
                         <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Margin="0,0,0,10"
                                    Text="{Binding [CargoHint], Source={StaticResource Localization}, Mode=OneWay}"
@@ -398,5 +403,6 @@
         </TabControl>
         <TextBlock x:Name="Status" Grid.Row="3" Margin="0,8,0,0" Foreground="#465B70"
                    Text="{Binding [Ready], Source={StaticResource Localization}, Mode=OneWay}" TextWrapping="Wrap" />
+        <TextBlock x:Name="VersionText" Grid.Row="3" Margin="0,8,0,0" Foreground="#637488" FontSize="12" HorizontalAlignment="Right" VerticalAlignment="Center" />
     </Grid>
 </Window>

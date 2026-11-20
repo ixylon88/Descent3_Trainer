@@ -74,10 +74,10 @@ namespace D3SaveEditor.Gui
         private void ShowFrame()
         {
             var frame = frames[currentFrame];
-            var dpi = VisualTreeHelper.GetDpi(image);
+            //var dpi = VisualTreeHelper.GetDpi(image);
             // Use the bitmap's pixel dimensions independently of its DPI metadata.
-            image.Width = frame.PixelWidth / dpi.DpiScaleX;
-            image.Height = frame.PixelHeight / dpi.DpiScaleY;
+            //image.Width = frame.PixelWidth / dpi.DpiScaleX;
+            //image.Height = frame.PixelHeight / dpi.DpiScaleY;
             image.Source = frame;
         }
     }
