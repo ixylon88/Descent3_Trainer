@@ -36,7 +36,7 @@ namespace D3SaveEditor.Tests
                 var energy = Field<TextBox>(view, "EnergyInput");
                 Check(save.IsEnabled && energy.Text.StartsWith("100", StringComparison.Ordinal), "Loaded player values are displayed");
                 var tabs = Field<TabControl>(view, "EditorTabs");
-                tabs.SelectedIndex = 3;
+                tabs.SelectedItem = Field<TabItem>(view, "InventoryTab");
                 Update(view);
                 Check(!view.Title.StartsWith("*", StringComparison.Ordinal), "Viewing inventory leaves the save unchanged");
                 Click(save);
@@ -68,15 +68,27 @@ namespace D3SaveEditor.Tests
                     Field<CheckBox>(view, name).IsChecked = true;
                 Field<CheckBox>(view, "ConverterInput").IsChecked = false;
 
-                tabs.SelectedIndex = 3;
+                tabs.SelectedItem = Field<TabItem>(view, "CountermeasureTab");
+                Update(view);
+                Check(Equals(Find<ComboBox>(tabs, box => box.Name == "ActiveWeapon").SelectedItem, "Bouncing Betty"),
+                    "The saved countermeasure selection is visible");
+                var chaffInput = Find<TextBox>(tabs, box => AutomationProperties.GetName(box) == "Menge Chaff");
+                Check(chaffInput.Text == "2", "Saved Chaff count is displayed");
+                Click(Find<Button>(tabs, button => Equals(button.Content, "Alle auswählen")));
+                Click(Find<Button>(tabs, button => Equals(button.Content, "Vorhandene: Spiellimit")));
+                Update(view);
+                Check(chaffInput.Text == "12" && Find<TextBox>(tabs, box => AutomationProperties.GetName(box) == "Menge Gunboy").Text == "4",
+                    "Countermeasure fill uses the individual game limits");
+                WeaponCheck(tabs, "Bouncing Betty").SetCurrentValue(ToggleButton.IsCheckedProperty, false);
+                SelectWeapon(tabs, 4);
+
+                tabs.SelectedItem = Field<TabItem>(view, "InventoryTab");
                 Update(view);
                 var cargo = Field<ItemsControl>(view, "CargoInputs");
-                var measures = Field<ItemsControl>(view, "CountermeasureInputs");
                 var ships = Field<ItemsControl>(view, "ShipInputs");
-                Check(CountInput(cargo, 0).Text == "2" && CountInput(measures, 0).Text == "2"
-                    && CountInput(measures, 3).ToolTip.ToString().EndsWith("4"), "Both inventories and the Gunboy limit are displayed");
-                Check(Field<ListBox>(view, "SavedInventory").Items.Cast<string>().Any(item => item.Contains("Mission cargo")),
-                    "Saved mission inventory is displayed");
+                var inventory = Field<ListBox>(view, "SavedInventory").Items.Cast<string>().ToArray();
+                Check(CountInput(cargo, 0).Text == "2" && inventory.Any(item => item.Contains("Mission cargo")) &&
+                    inventory.All(item => !item.Contains("Saved Chaff")), "Saved inventory lists only player inventory entries");
                 var pyro = Find<CheckBox>(ships, box => Equals(box.Content, "Pyro-GL"));
                 var phoenix = Find<CheckBox>(ships, box => Equals(box.Content, "Phoenix"));
                 Check(pyro.IsChecked == true && !pyro.IsEnabled && phoenix.IsChecked == false && phoenix.IsEnabled,
@@ -87,8 +99,6 @@ namespace D3SaveEditor.Tests
                     "Black Pyro and its saved permission are visible");
 
                 Text(CountInput(cargo, 0), "4");
-                Text(CountInput(measures, 0), "12");
-                Text(CountInput(measures, 1), "0");
                 phoenix.SetCurrentValue(ToggleButton.IsCheckedProperty, true);
                 Update(view);
                 Click(save);
@@ -104,6 +114,7 @@ namespace D3SaveEditor.Tests
                 Check(saved.InventoryItems.Any(item => item.Name == "Force Wall" && item.Count == 4)
                     && saved.CountermeasureItems.Any(item => item.Name == "Saved Chaff" && item.Count == 12)
                     && saved.CountermeasureItems.All(item => item.Name != "Saved Betty"), "WPF save writes inventory edits");
+                Check(saved.ActiveCountermeasure?.Id == saved.CountermeasureWeaponId(3), "WPF saves the chosen active countermeasure");
                 Check(saved.ShipPermissions == 0x40000023u && saved.ShipName == "Pyro-GL", "WPF saves the unlock by ship name");
                 Check(Directory.GetFiles(root, "*.bak-*").Length == 2, "Both saves create backups");
 

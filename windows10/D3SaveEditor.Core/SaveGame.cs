@@ -186,6 +186,8 @@ namespace D3SaveEditor.Core {
         public bool RevealMap;
         public int?[] CargoCounts = new int?[SaveGame.CargoItems.Count];
         public int?[] CountermeasureCounts = new int?[SaveGame.CountermeasureTypes.Count];
+        // Select a weapon definition in the resulting countermeasure list, or keep the saved selection.
+        public int? ActiveCountermeasureWeaponId;
         public bool[] UnlockShips = new bool[SaveGame.StandardShips.Count];
         public bool UnlockBlackPyro, PreferBlackPyro;
     }
@@ -254,6 +256,10 @@ namespace D3SaveEditor.Core {
         public bool SupportsQuad { get { return PlayerObject.BatteryCount==21; } }
         public IList<InventoryItem> InventoryItems { get { return Inventory.Items.AsReadOnly(); } }
         public IList<InventoryItem> CountermeasureItems { get { return CounterMeasures.Items.AsReadOnly(); } }
+        public InventoryItem ActiveCountermeasure {
+            get { return CounterMeasures.Items.Count == 0 ? null : CounterMeasures.Items[CounterMeasures.Selected]; }
+        }
+        public int CountermeasureWeaponId(int index) { return SupplyId(CountermeasureTypes[index]); }
         public uint ShipPermissions { get { return U32(Bytes, PlayerOffset + Layout.Permissions); } }
         public string Hash { get { return HashBytes(Bytes); } }
 
@@ -476,6 +482,15 @@ namespace D3SaveEditor.Core {
                 SetEquipment(inventory, "QuadLaser", "Quad Laser", 132, edit.QuadLasers, removing, result);
                 SetSupplies(inventory, CargoItems, edit.CargoCounts, removing, result);
                 SetSupplies(countermeasures, CountermeasureTypes, edit.CountermeasureCounts, removing, result);
+            }
+            if (edit.ActiveCountermeasureWeaponId.HasValue) {
+                int id = edit.ActiveCountermeasureWeaponId.Value;
+                int selected = countermeasures.Items.FindIndex(item => item.Type == 5 && item.Id == id && id >= 0);
+                if (selected < 0) throw new FormatProblem("Die gewählte Gegenmaßnahme muss im Bestand vorhanden sein.");
+                if (selected != countermeasures.Selected) {
+                    countermeasures.Selected = selected;
+                    result.Changes.Add("Aktive Gegenmaßnahme: " + countermeasures.Items[selected].Name);
+                }
             }
             AddInventoryPatch(raw, Layout.Inventory, inventory, patches);
             AddInventoryPatch(raw, Layout.CounterMeasures, countermeasures, patches);

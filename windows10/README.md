@@ -21,7 +21,8 @@
 | Versorgung | Schild und Energie setzen oder auf 200 maximieren; Nachbrennerladung setzen oder auf 5 Sekunden auffüllen |
 | Effekte | God-Mode und Cloaked-Mode aktivieren/deaktivieren; lange Restdauer erneuern |
 | Ausrüstung | Nachbrenner-Kühler, Energie-Schild-Konverter und Quad-Laser zuweisen/entfernen |
-| Inventar / Schiffe | Gespeicherte Einträge ansehen, unterstützte Gegenstände und Gegenmaßnahmen bearbeiten, Schiffe freischalten und den Black Pyro für ein Briefing vormerken |
+| Gegenmaßnahmen | Bestand und aktive Gegenmaßnahme einstellen, vorhandene Gegenmaßnahmen bis zum Spiellimit auffüllen |
+| Inventar / Schiffe | Spielerinventar ansehen, unterstützte Gegenstände bearbeiten, Schiffe freischalten und den Black Pyro für ein Briefing vormerken |
 | Karte | Gespeicherte Kartensichtbarkeit vollständig aufdecken; ohne Häkchen bleibt die gespeicherte Erkundung erhalten |
 | Weitere Werte | Leben und Punktestand bearbeiten |
 | Dateien | Änderungen prüfen, Kopie speichern, automatische Backups und Erkennung nachträglich veränderter Originaldateien |

@@ -14,7 +14,9 @@ ID_GOD=140,ID_CLOAK,ID_COOLER,ID_CONVERTER,ID_QUAD,ID_MAP,ID_GOD_RENEW,ID_CLOAK_
 ID_PRIMARY=160,ID_SECONDARY,ID_CHECK,
 ID_ALL_PRI=170,ID_NONE_PRI,ID_CAP_PRI,ID_STORE_PRI,ID_ALL_SEC,ID_NONE_SEC,ID_CAP_SEC,ID_STORE_SEC,
 ID_OWN=200,ID_AMMO=240,ID_MAX=280,
-ID_CARGO_COUNT=320,ID_COUNTERMEASURE_COUNT=330,ID_SHIP_UNLOCK=340,ID_BLACK_PYRO_UNLOCK=350,ID_BLACK_PYRO_PREFER};
+ID_CARGO_COUNT=320,ID_COUNTERMEASURE_COUNT=330,ID_SHIP_UNLOCK=340,ID_BLACK_PYRO_UNLOCK=350,ID_BLACK_PYRO_PREFER,
+ID_COUNTERMEASURE_OWN=360,ID_COUNTERMEASURE_MAX=370,ID_COUNTERMEASURE_ACTIVE=380,ID_ALL_COUNTERMEASURES,ID_NONE_COUNTERMEASURES,ID_CAP_COUNTERMEASURES};
+enum {PLAYER_PAGE,PRIMARY_PAGE,SECONDARY_PAGE,COUNTERMEASURE_PAGE,INVENTORY_PAGE,REVIEW_PAGE};
 typedef struct {HWND hwnd;int page,needs_file;} Widget;
 static HINSTANCE instance;
 static HWND main_window,tab,info,status,hint,review;
@@ -24,6 +26,9 @@ static HWND energy,shields,afterburner,lives,score,god,cloak,cooler,converter,qu
 static HWND god_renew,cloak_renew;
 static HWND owned[20],ammo[20],max_buttons[20],cap_labels[20],primary,secondary;
 static HWND cargo_counts[D3_CARGO_TYPES],countermeasure_counts[D3_COUNTERMEASURE_TYPES];
+static HWND countermeasure_owned[D3_COUNTERMEASURE_TYPES],countermeasure_max[D3_COUNTERMEASURE_TYPES];
+static HWND countermeasure_active,extra_countermeasures;
+static int countermeasure_choices[1+D3_COUNTERMEASURE_TYPES+D3_MAX_ITEMS],countermeasure_choice_count;
 static HWND unlock_ships[D3_STANDARD_SHIPS],saved_inventory;
 static HWND unlock_black_pyro,prefer_black_pyro_button;
 static int prefer_black_pyro;
@@ -55,7 +60,7 @@ static HWND edit(int x,int y,int w,int id,int page,int numeric){
     HWND h=control("EDIT","",ES_AUTOHSCROLL|WS_TABSTOP|(numeric?ES_NUMBER:0),x,y,w,22,id,page,1);SendMessageA(h,EM_LIMITTEXT,40,0);return h;
 }
 static void group(const char *s,int x,int y,int w,int h,int page){control("BUTTON",s,BS_GROUPBOX,x,y,w,h,0,page,0);}
-static void apply_visibility(void){int i;for(i=0;i<widget_count;i++)if(widgets[i].page>=0)ShowWindow(widgets[i].hwnd,widgets[i].page==selected_page?SW_SHOW:SW_HIDE);ShowWindow(hint,selected_page==1 || selected_page==2?SW_SHOW:SW_HIDE);}
+static void apply_visibility(void){int i;for(i=0;i<widget_count;i++)if(widgets[i].page>=0)ShowWindow(widgets[i].hwnd,widgets[i].page==selected_page?SW_SHOW:SW_HIDE);ShowWindow(hint,selected_page==PRIMARY_PAGE || selected_page==SECONDARY_PAGE?SW_SHOW:SW_HIDE);}
 static void enable_controls(void){int i;for(i=0;i<widget_count;i++)if(widgets[i].needs_file)EnableWindow(widgets[i].hwnd,game!=0);}
 static int use_caps(void){return game && caps_loaded && d3_string_iequal(caps_ship,d3_ship(game));}
 static int uses_ammo(int i){return i>=10 || i==1 || i==6 || i==7;}
@@ -105,22 +110,112 @@ static void load_supply_counts(HWND *inputs,int countermeasure,int size) {
         }
     }
 }
-static void add_inventory_rows(const D3Inventory *inventory,const char *group_name) {
-    int i;
-    for (i=0; i<inventory->count; i++) {
-        const D3Item *item=&inventory->items[i];
-        char row[600],id[24];
-        d3_string(row,sizeof(row),group_name);
-        if (item->name[0]) d3_append(row,sizeof(row),item->name);
-        else {
-            d3_append(row,sizeof(row),"ID ");
-            d3_format_i32(id,item->id<0 ? item->original_id : item->id);
-            d3_append(row,sizeof(row),id);
-        }
-        d3_append(row,sizeof(row)," x ");
-        append_number(row,sizeof(row),(D3U32)item->count);
-        SendMessageA(saved_inventory,LB_ADDSTRING,0,(LPARAM)row);
+static const char *inventory_name(const D3Item *item,char id[32]) {
+    char value[24];
+    if (item->name[0]) return item->name;
+    d3_format_i32(value,item->id<0 ? item->original_id : item->id);
+    d3_string(id,32,"ID ");
+    d3_append(id,32,value);
+    return id;
+}
+static void add_inventory_row(HWND list,const D3Item *item) {
+    char row[600],id[32];
+    d3_string(row,sizeof(row),inventory_name(item,id));
+    d3_append(row,sizeof(row)," x ");
+    append_number(row,sizeof(row),(D3U32)item->count);
+    SendMessageA(list,LB_ADDSTRING,0,(LPARAM)row);
+}
+static int present_countermeasure(int choice) {
+    return choice>=D3_COUNTERMEASURE_TYPES || (choice>=0 && checked(countermeasure_owned[choice]));
+}
+static void refresh_countermeasures(int normalize) {
+    int i,selected;
+    char value[24];
+    D3I32 count;
+    for (i=0; i<D3_COUNTERMEASURE_TYPES; i++) {
+        int available=d3_supply_count(game,1,i)>=0;
+        get_text(countermeasure_counts[i],value,sizeof(value));
+        if (d3_integer(value,0,1000000,&count)) check(countermeasure_owned[i],count>0);
+        else if (!available) check(countermeasure_owned[i],0);
+        EnableWindow(countermeasure_owned[i],available);
+        EnableWindow(countermeasure_max[i],available);
     }
+    if (!normalize) return;
+    selected=(int)SendMessageA(countermeasure_active,CB_GETCURSEL,0,0);
+    if (selected>=0 && present_countermeasure(countermeasure_choices[selected])) return;
+    for (i=1; i<countermeasure_choice_count; i++) if (present_countermeasure(countermeasure_choices[i])) break;
+    SendMessageA(countermeasure_active,CB_SETCURSEL,i==countermeasure_choice_count ? 0 : (WPARAM)i,0);
+}
+static int add_countermeasure_choice(int row,const char *name) {
+    int index=(int)SendMessageA(countermeasure_active,CB_ADDSTRING,0,(LPARAM)name);
+    if (index>=0) {
+        countermeasure_choices[index]=row;
+        countermeasure_choice_count++;
+    }
+    return index;
+}
+static void load_countermeasures(void) {
+    const D3Inventory *list=&game->countermeasures;
+    const D3Item *active=list->count ? &list->items[list->selected] : 0;
+    int i,j,index,selection=0;
+    char id[32];
+    load_supply_counts(countermeasure_counts,1,D3_COUNTERMEASURE_TYPES);
+    SendMessageA(countermeasure_active,CB_RESETCONTENT,0,0);
+    SendMessageA(extra_countermeasures,LB_RESETCONTENT,0,0);
+    countermeasure_choice_count=0;
+    add_countermeasure_choice(-1,"Keine Gegenmassnahme");
+    for (i=0; i<D3_COUNTERMEASURE_TYPES; i++) {
+        if (d3_supply_count(game,1,i)<0) continue;
+        index=add_countermeasure_choice(i,d3_countermeasure_types[i].name);
+        if (index>=0 && active && active->type==5 && active->id==game->countermeasure_ids[i]) selection=index;
+    }
+    for (i=0; i<list->count; i++) {
+        const D3Item *item=&list->items[i];
+        for (j=0; j<D3_COUNTERMEASURE_TYPES; j++)
+            if (item->type==5 && item->id==game->countermeasure_ids[j]) break;
+        if (j!=D3_COUNTERMEASURE_TYPES) continue;
+        index=add_countermeasure_choice(D3_COUNTERMEASURE_TYPES+i,inventory_name(item,id));
+        add_inventory_row(extra_countermeasures,item);
+        if (index>=0 && item==active) selection=index;
+    }
+    SendMessageA(countermeasure_active,CB_SETCURSEL,(WPARAM)selection,0);
+    refresh_countermeasures(0);
+}
+static void set_countermeasure_count(int i,int count) {
+    char value[24];
+    d3_format_u32(value,(D3U32)count);
+    text(countermeasure_counts[i],value);
+}
+static void change_all_countermeasures(int mode) {
+    int i;
+    loading=1;
+    for (i=0; i<D3_COUNTERMEASURE_TYPES; i++) {
+        if (d3_supply_count(game,1,i)<0) continue;
+        if (mode==0 || (mode==1 && !checked(countermeasure_owned[i]))) set_countermeasure_count(i,mode);
+        if (mode==2 && checked(countermeasure_owned[i])) set_countermeasure_count(i,d3_countermeasure_types[i].maximum);
+    }
+    loading=0;
+    refresh_countermeasures(1);
+    changed();
+}
+static void select_countermeasure(void) {
+    int selection=(int)SendMessageA(countermeasure_active,CB_GETCURSEL,0,0);
+    int choice;
+    if (selection<0) return;
+    choice=countermeasure_choices[selection];
+    if (choice<0) change_all_countermeasures(0);
+    else if (!present_countermeasure(choice)) set_countermeasure_count(choice,1);
+    changed();
+}
+static int read_countermeasure_selection(void) {
+    int selection=(int)SendMessageA(countermeasure_active,CB_GETCURSEL,0,0);
+    int choice;
+    if (selection<0) return -1;
+    choice=countermeasure_choices[selection];
+    if (choice<0) return -1;
+    if (choice<D3_COUNTERMEASURE_TYPES) return game->countermeasure_ids[choice];
+    return game->countermeasures.items[choice-D3_COUNTERMEASURE_TYPES].type==5 ?
+        game->countermeasures.items[choice-D3_COUNTERMEASURE_TYPES].id : -1;
 }
 static void refresh_ship_controls(void) {
     int i,standard_checked=0;
@@ -149,7 +244,7 @@ static void load_inventory_values(void) {
     D3U32 bit,permissions=d3_ship_permissions(game);
     char name[64];
     load_supply_counts(cargo_counts,0,D3_CARGO_TYPES);
-    load_supply_counts(countermeasure_counts,1,D3_COUNTERMEASURE_TYPES);
+    load_countermeasures();
     for (i=0; i<D3_STANDARD_SHIPS; i++) {
         bit=d3_ship_permission_bit(game,d3_standard_ships[i]);
         check(unlock_ships[i],(permissions & bit)!=0);
@@ -163,10 +258,9 @@ static void load_inventory_values(void) {
     prefer_black_pyro=0;
     refresh_ship_controls();
     SendMessageA(saved_inventory,LB_RESETCONTENT,0,0);
-    add_inventory_rows(&game->inventory,"Inventar: ");
-    add_inventory_rows(&game->countermeasures,"Gegenmassnahme: ");
-    if (!game->inventory.count && !game->countermeasures.count)
-        SendMessageA(saved_inventory,LB_ADDSTRING,0,(LPARAM)"Inventar und Gegenmassnahmen sind leer.");
+    for (i=0; i<game->inventory.count; i++) add_inventory_row(saved_inventory,&game->inventory.items[i]);
+    if (!game->inventory.count)
+        SendMessageA(saved_inventory,LB_ADDSTRING,0,(LPARAM)"Das Inventar ist leer.");
 }
 static void load_values(void){
     D3Options o;int i,visible=0,has_second=0;char s[1400],n[48];
@@ -226,6 +320,9 @@ static int read_options(D3Options *o){
     for(i=0;i<20;i++){o->owned[i]=(D3U8)checked(owned[i]);get_text(ammo[i],s,64);if(!d3_integer(s,0,65535,&n))return 0;o->ammo[i]=(D3U16)n;}
     if (!read_supply_counts(cargo_counts,0,d3_cargo_items,D3_CARGO_TYPES,o->cargo_counts) ||
         !read_supply_counts(countermeasure_counts,1,d3_countermeasure_types,D3_COUNTERMEASURE_TYPES,o->countermeasure_counts)) return 0;
+    i=read_countermeasure_selection();
+    if (game->countermeasures.count==0 || game->countermeasures.items[game->countermeasures.selected].type!=5 ||
+        game->countermeasures.items[game->countermeasures.selected].id!=i) o->active_countermeasure_weapon_id=i;
     o->prefer_black_pyro=(D3U8)prefer_black_pyro;
     for (i=0; i<D3_STANDARD_SHIPS; i++) {
         bit=d3_ship_permission_bit(game,d3_standard_ships[i]);
@@ -260,6 +357,10 @@ static int build_output(D3Buffer *out){
         if(o.quad>=0)d3_append(s,4096,o.quad?"Quad-Laser an\r\n":"Quad-Laser aus\r\n");if(o.reveal_map)d3_append(s,4096,"Karte vollstaendig aufdecken\r\n");
         report_supply_counts(s,sizeof(s),d3_cargo_items,o.cargo_counts,D3_CARGO_TYPES);
         report_supply_counts(s,sizeof(s),d3_countermeasure_types,o.countermeasure_counts,D3_COUNTERMEASURE_TYPES);
+        if (o.active_countermeasure_weapon_id>=0) {
+            SendMessageA(countermeasure_active,WM_GETTEXT,sizeof(n),(LPARAM)n);
+            d3_append(s,sizeof(s),"Aktive Gegenmassnahme: ");d3_append(s,sizeof(s),n);d3_append(s,sizeof(s),"\r\n");
+        }
         for (i=0; i<D3_STANDARD_SHIPS; i++) {
             if (!o.unlock_ships[i]) continue;
             d3_append(s,sizeof(s),d3_standard_ships[i]);d3_append(s,sizeof(s)," freischalten\r\n");
@@ -317,41 +418,55 @@ static void weapon_page(int first,int page){
     button("Alle auswaehlen",28,437,130,first?ID_ALL_SEC:ID_ALL_PRI,page,1);button("Alle abwaehlen",166,437,130,first?ID_NONE_SEC:ID_NONE_PRI,page,1);
     button("Vorhandene: Schiffslimit",304,437,204,first?ID_CAP_SEC:ID_CAP_PRI,page,1);button("Vorhandene: 65.535",516,437,204,first?ID_STORE_SEC:ID_STORE_PRI,page,1);
 }
+static void countermeasure_page(void) {
+    int page=COUNTERMEASURE_PAGE,i,y;
+    char value[24];
+    label("Aktive Gegenmassnahme:",28,151,153,18,page);
+    countermeasure_active=control("COMBOBOX","",CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP,
+        180,147,230,235,ID_COUNTERMEASURE_ACTIVE,page,1);
+    label("Vorhanden",28,181,75,18,page);label("Gegenmassnahme",110,181,180,18,page);
+    label("Menge",298,181,115,18,page);label("Max",423,181,65,18,page);label("Spiellimit",512,181,185,18,page);
+    for (i=0; i<D3_COUNTERMEASURE_TYPES; i++) {
+        y=201+i*23;
+        countermeasure_owned[i]=checkbox("",51,y,35,ID_COUNTERMEASURE_OWN+i,page);
+        label(d3_countermeasure_types[i].name,110,y+2,180,18,page);
+        countermeasure_counts[i]=edit(298,y-1,106,ID_COUNTERMEASURE_COUNT+i,page,1);
+        SendMessageA(countermeasure_counts[i],EM_LIMITTEXT,7,0);
+        countermeasure_max[i]=control("BUTTON","Max",BS_PUSHBUTTON|WS_TABSTOP,420,y-1,70,22,ID_COUNTERMEASURE_MAX+i,page,1);
+        d3_format_u32(value,(D3U32)d3_countermeasure_types[i].maximum);
+        label(value,512,y+2,185,18,page);
+    }
+    button("Alle auswaehlen",28,326,130,ID_ALL_COUNTERMEASURES,page,1);
+    button("Alle abwaehlen",166,326,130,ID_NONE_COUNTERMEASURES,page,1);
+    button("Vorhandene: Spiellimit",304,326,204,ID_CAP_COUNTERMEASURES,page,1);
+    label("Die Limits gelten fuer alle Schiffe. Weitere gespeicherte Gegenmassnahmen bleiben im Bestand.",28,359,701,18,page);
+    extra_countermeasures=control("LISTBOX","",LBS_NOINTEGRALHEIGHT|WS_BORDER|WS_VSCROLL|WS_HSCROLL|WS_TABSTOP,
+        28,383,701,73,0,page,1);
+    SendMessageA(extra_countermeasures,LB_SETHORIZONTALEXTENT,2800,0);
+}
 static void inventory_page(int page) {
     int i,y;
-    char name[60];
-    group("Gegenstaende",24,146,218,166,page);
+    group("Gegenstaende",24,146,338,181,page);
     for (i=0; i<D3_CARGO_TYPES; i++) {
         y=172+i*25;
-        label(d3_cargo_items[i].name,36,y+2,115,18,page);
-        cargo_counts[i]=edit(153,y,77,ID_CARGO_COUNT+i,page,1);
+        label(d3_cargo_items[i].name,38,y+2,172,18,page);
+        cargo_counts[i]=edit(217,y,130,ID_CARGO_COUNT+i,page,1);
         SendMessageA(cargo_counts[i],EM_LIMITTEXT,7,0);
     }
-    label("Kuehler, Konverter und Quad-Laser\r\nstehen im Spieler-Tab.",36,231,194,34,page);
-    group("Gegenmassnahmen (Limit)",249,146,256,166,page);
-    for (i=0; i<D3_COUNTERMEASURE_TYPES; i++) {
-        y=172+i*25;
-        d3_string(name,sizeof(name),d3_countermeasure_types[i].name);
-        d3_append(name,sizeof(name)," (");
-        append_number(name,sizeof(name),(D3U32)d3_countermeasure_types[i].maximum);
-        d3_append(name,sizeof(name),")");
-        label(name,261,y+2,137,18,page);
-        countermeasure_counts[i]=edit(408,y,82,ID_COUNTERMEASURE_COUNT+i,page,1);
-        SendMessageA(countermeasure_counts[i],EM_LIMITTEXT,7,0);
-    }
-    group("Schiffsfreigaben",513,146,221,166,page);
+    label("0 entfernt den Eintrag. Kuehler, Konverter und\r\nQuad-Laser stehen im Spieler-Tab.",38,232,309,40,page);
+    group("Schiffsfreigaben",378,146,356,181,page);
     for (i=0; i<D3_STANDARD_SHIPS; i++)
-        unlock_ships[i]=checkbox(d3_standard_ships[i],525,166+i*20,193,ID_SHIP_UNLOCK+i,page);
-    unlock_black_pyro=checkbox(D3_BLACK_PYRO,525,226,193,ID_BLACK_PYRO_UNLOCK,page);
-    prefer_black_pyro_button=button("Nur Black Pyro erlauben",525,250,193,ID_BLACK_PYRO_PREFER,page,1);
-    label("Der Black Pyro fehlt im Auswahlmenue. Der Knopf waehlt alle anderen Schiffe ab.\r\n"
-          "So uebernimmt das Spiel ihn beim passenden Briefing automatisch, auch in der Hauptkampagne.",28,319,697,34,page);
-    label("Gespeicherte Eintraege (0 entfernt einen bearbeitbaren Bestand)",28,359,697,18,page);
-    saved_inventory=control("LISTBOX","",LBS_NOINTEGRALHEIGHT|WS_BORDER|WS_VSCROLL|WS_HSCROLL|WS_TABSTOP,28,378,701,78,0,page,1);
+        unlock_ships[i]=checkbox(d3_standard_ships[i],392,166+i*17,325,ID_SHIP_UNLOCK+i,page);
+    unlock_black_pyro=checkbox(D3_BLACK_PYRO,392,217,325,ID_BLACK_PYRO_UNLOCK,page);
+    prefer_black_pyro_button=button("Nur Black Pyro erlauben",392,240,198,ID_BLACK_PYRO_PREFER,page,1);
+    label("Der Knopf waehlt alle anderen Schiffe ab. Da der Black Pyro im Auswahlmenue fehlt, "
+          "uebernimmt ihn das Spiel als einziges erlaubtes Schiff beim passenden Briefing automatisch.",392,270,325,53,page);
+    label("Gespeicherte Eintraege",28,337,697,18,page);
+    saved_inventory=control("LISTBOX","",LBS_NOINTEGRALHEIGHT|WS_BORDER|WS_VSCROLL|WS_HSCROLL|WS_TABSTOP,28,355,701,101,0,page,1);
     SendMessageA(saved_inventory,LB_SETHORIZONTALEXTENT,2800,0);
 }
 static void make_ui(void){
-    TCITEMA item;HWND heading;int i;const char *names[]={"Spieler / Ausruestung","Primaerwaffen","Sekundaerwaffen","Inventar / Schiffe","Datei / Pruefung"};
+    TCITEMA item;HWND heading;int i;const char *names[]={"Spieler","Primaerwaffen","Sekundaerwaffen","Gegenmassnahmen","Inventar / Schiffe","Datei / Pruefung"};
     font=(HFONT)GetStockObject(DEFAULT_GUI_FONT);title_font=CreateFontA(-18,0,0,0,FW_BOLD,0,0,0,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH|FF_SWISS,"MS Sans Serif");
     heading=label("DESCENT 3  -  SAVEGAME EDITOR / WINDOWS 98",12,10,736,25,-1);SendMessageA(heading,WM_SETFONT,(WPARAM)title_font,TRUE);
     button("Oeffnen...",12,42,105,ID_OPEN,-1,0);button("Speichern + Backup",123,42,144,ID_SAVE,-1,1);button("Kopie speichern...",273,42,128,ID_COPY,-1,1);
@@ -359,9 +474,9 @@ static void make_ui(void){
     info=label("Noch kein Spielstand geoeffnet. Im Spiel speichern, dann saveg000 usw. oeffnen.",12,76,736,34,-1);
     tab=control(WC_TABCONTROLA,"",WS_TABSTOP|WS_CLIPSIBLINGS,12,114,736,355,ID_TAB,-1,0);
     d3_zero(&item,sizeof(item));item.mask=TCIF_TEXT;for(i=0;i<(int)(sizeof(names)/sizeof(names[0]));i++){item.pszText=(LPSTR)names[i];SendMessageA(tab,TCM_INSERTITEMA,(WPARAM)i,(LPARAM)&item);}
-    player_page();weapon_page(0,1);weapon_page(10,2);inventory_page(3);
-    button("Aenderungen pruefen",28,147,178,ID_CHECK,4,1);
-    review=control("EDIT","Geplante Aenderungen und Dateidaten erscheinen hier.\r\n\r\nDer Editor bearbeitet vorhandene Spielstaende; er erzeugt keinen\r\nvollstaendigen Levelzustand allein aus dem Quelltext.",ES_MULTILINE|ES_READONLY|ES_AUTOVSCROLL|WS_VSCROLL|WS_HSCROLL,28,180,701,276,0,4,0);
+    player_page();weapon_page(0,PRIMARY_PAGE);weapon_page(10,SECONDARY_PAGE);countermeasure_page();inventory_page(INVENTORY_PAGE);
+    button("Aenderungen pruefen",28,147,178,ID_CHECK,REVIEW_PAGE,1);
+    review=control("EDIT","Geplante Aenderungen und Dateidaten erscheinen hier.\r\n\r\nDer Editor bearbeitet vorhandene Spielstaende; er erzeugt keinen\r\nvollstaendigen Levelzustand allein aus dem Quelltext.",ES_MULTILINE|ES_READONLY|ES_AUTOVSCROLL|WS_VSCROLL|WS_HSCROLL,28,180,701,276,0,REVIEW_PAGE,0);
     hint=label("",12,475,736,16,-1);status=label("Bereit.",12,495,736,32,-1);
     enable_controls();selected_page=0;apply_visibility();
 }
@@ -373,12 +488,18 @@ static LRESULT CALLBACK window_proc(HWND hwnd,UINT message,WPARAM w,LPARAM l){
     case WM_COMMAND:
         id=LOWORD(w);code=HIWORD(w);if(loading)return 0;
         if(id==ID_OPEN){choose_open();return 0;}if(id==ID_HELP){help();return 0;}if(!game)return 0;
-        if(code==EN_CHANGE){if((id>=ID_ENERGY && id<=ID_SCORE) || (id>=ID_AMMO && id<ID_AMMO+20) ||
-            (id>=ID_CARGO_COUNT && id<ID_CARGO_COUNT+D3_CARGO_TYPES) ||
-            (id>=ID_COUNTERMEASURE_COUNT && id<ID_COUNTERMEASURE_COUNT+D3_COUNTERMEASURE_TYPES))changed();return 0;}
+        if(code==EN_CHANGE){
+            if(id>=ID_COUNTERMEASURE_COUNT && id<ID_COUNTERMEASURE_COUNT+D3_COUNTERMEASURE_TYPES){refresh_countermeasures(1);changed();}
+            if((id>=ID_ENERGY && id<=ID_SCORE) || (id>=ID_AMMO && id<ID_AMMO+20) ||
+                (id>=ID_CARGO_COUNT && id<ID_CARGO_COUNT+D3_CARGO_TYPES))changed();
+            return 0;
+        }
+        if(id==ID_COUNTERMEASURE_ACTIVE && code==CBN_SELCHANGE){select_countermeasure();return 0;}
         if(id==ID_PRIMARY && code==CBN_SELCHANGE){selected=(int)SendMessageA(primary,CB_GETCURSEL,0,0);if(selected>=0 && selected<10)check(owned[selected],1);refresh_weapons(1);changed();return 0;}
         if(id==ID_SECONDARY && code==CBN_SELCHANGE){selected=(int)SendMessageA(secondary,CB_GETCURSEL,0,0);if(selected==0)select_all(10,0);else if(selected>0){check(owned[selected+9],1);refresh_weapons(1);changed();}return 0;}
         if(code!=BN_CLICKED)return 0;
+        if(id>=ID_COUNTERMEASURE_OWN && id<ID_COUNTERMEASURE_OWN+D3_COUNTERMEASURE_TYPES){i=id-ID_COUNTERMEASURE_OWN;set_countermeasure_count(i,checked(countermeasure_owned[i]));return 0;}
+        if(id>=ID_COUNTERMEASURE_MAX && id<ID_COUNTERMEASURE_MAX+D3_COUNTERMEASURE_TYPES){i=id-ID_COUNTERMEASURE_MAX;set_countermeasure_count(i,d3_countermeasure_types[i].maximum);return 0;}
         if(id>=ID_SHIP_UNLOCK && id<ID_SHIP_UNLOCK+D3_STANDARD_SHIPS){refresh_ship_controls();changed();return 0;}
         if(id==ID_BLACK_PYRO_PREFER){select_black_pyro();return 0;}
         if(id==ID_BLACK_PYRO_UNLOCK){changed();return 0;}
@@ -393,6 +514,9 @@ static LRESULT CALLBACK window_proc(HWND hwnd,UINT message,WPARAM w,LPARAM l){
         case ID_COOLER:cooler_request=checked(cooler);changed();break;case ID_CONVERTER:converter_request=checked(converter);changed();break;case ID_QUAD:quad_request=checked(quad);changed();break;case ID_MAP:changed();break;
         case ID_ALL_PRI:select_all(0,1);break;case ID_NONE_PRI:select_all(0,0);break;case ID_ALL_SEC:select_all(10,1);break;case ID_NONE_SEC:select_all(10,0);break;
         case ID_CAP_PRI:max_all(0,0);break;case ID_STORE_PRI:max_all(0,1);break;case ID_CAP_SEC:max_all(10,0);break;case ID_STORE_SEC:max_all(10,1);break;
+        case ID_ALL_COUNTERMEASURES:change_all_countermeasures(1);break;
+        case ID_NONE_COUNTERMEASURES:change_all_countermeasures(0);break;
+        case ID_CAP_COUNTERMEASURES:change_all_countermeasures(2);break;
         }return 0;
     case WM_CLOSE:if(discard())DestroyWindow(hwnd);return 0;
     case WM_DESTROY:if(title_font)DeleteObject(title_font);PostQuitMessage(0);return 0;

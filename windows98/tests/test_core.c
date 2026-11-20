@@ -133,6 +133,17 @@ static void loadout_tests(const char *path){
     check(out.size-saved->countermeasures.end==input.size-original->countermeasures.end &&
           d3_equal(out.data+saved->countermeasures.end,input.data+original->countermeasures.end,out.size-saved->countermeasures.end) &&
           d3_u32(out.data+saved->player+D3_PLAYER_SIZE)==0x1001,"opaque tail and guided projectile handle preserved");
+    edit.active_countermeasure_weapon_id=original->countermeasure_ids[2];
+    check(d3_edit(original,&edit,&again),"new countermeasure can be selected");
+    {
+        D3Game *selected=parse(&again);
+        check(selected->countermeasures.items[selected->countermeasures.selected].id==edit.active_countermeasure_weapon_id,
+              "selection targets the weapon ID after reindexing");
+        d3_free(selected);d3_free(again.data);
+    }
+    edit.active_countermeasure_weapon_id=original->countermeasure_ids[1];
+    check(!d3_edit(original,&edit,&again),"removed countermeasure cannot be selected");
+    edit.active_countermeasure_weapon_id=-1;
     edit.countermeasure_counts[3]=5;
     check(!d3_edit(original,&edit,&again),"Gunboy maximum enforced");
     d3_current(saved,&edit);

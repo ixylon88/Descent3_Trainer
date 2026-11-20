@@ -14,8 +14,9 @@ FUNKTIONSUMFANG
 Alle Primaer- und Sekundaerwaffen, aktive Waffenauswahl,
 Munition, Energie, Schild, Nachbrennerladung, Leben, Punkte,
 God-Mode, Tarnung, Kuehler, Konverter, Quad-Laser und volle Karte.
-Im Reiter Inventar / Schiffe kannst du Gegenstaende und Gegenmassnahmen
-einsehen und unterstuetzte Stueckzahlen bearbeiten. 0 entfernt einen Eintrag.
+Im Reiter Inventar / Schiffe stehen die Gegenstaende und Schiffsfreigaben.
+Im Reiter Gegenmassnahmen lassen sich der Bestand und die aktive
+Gegenmassnahme einstellen. 0 entfernt einen bearbeitbaren Eintrag.
 Die Schiffshaekchen speichern Freigaben. "Nur Black Pyro erlauben"
 waehlt die anderen Schiffe ab. Ist der Black Pyro im Spielstand definiert,
 uebernimmt das Spiel ihn beim naechsten passenden Briefing automatisch.

@@ -27,7 +27,8 @@ Windows 98 verwendet hier ANSI-Dateipfade. Verwendet werden maximal 200 Zeichen 
 | Versorgung | Schild und Energie setzen oder jeweils auf 200 maximieren; Nachbrenner auf 5 Sekunden auffüllen |
 | Effekte | God-Mode und Cloaked-Mode aktivieren/deaktivieren und Restdauer erneuern |
 | Ausrüstung | Nachbrenner-Kühler, Energie-Schild-Konverter und Quad-Laser hinzufügen/entfernen |
-| Inventar / Schiffe | Gespeicherte Einträge ansehen, unterstützte Gegenstände und Gegenmaßnahmen bearbeiten, Schiffe freischalten und den Black Pyro für ein Briefing vormerken |
+| Gegenmaßnahmen | Bestand und aktive Gegenmaßnahme einstellen, vorhandene Gegenmaßnahmen bis zum Spiellimit auffüllen |
+| Inventar / Schiffe | Spielerinventar ansehen, unterstützte Gegenstände bearbeiten, Schiffe freischalten und den Black Pyro für ein Briefing vormerken |
 | Karte | Gespeicherte Kartensichtbarkeit vollständig aufdecken |
 | Weitere Werte | Leben und Punktestand ändern |
 | Dateiverwaltung | Ausgabe prüfen, Kopie schreiben, Original sichern, nachträglich geändertes Original erkennen |

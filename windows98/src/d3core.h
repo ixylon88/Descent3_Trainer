@@ -63,6 +63,8 @@ typedef struct {
     int god, cloak, cooler, converter, quad, reveal_map;
     /* -1 keeps the saved count, 0 removes the entry. */
     int cargo_counts[D3_CARGO_TYPES], countermeasure_counts[D3_COUNTERMEASURE_TYPES];
+    /* Weapon definition ID, or -1 to keep the saved selection. */
+    int active_countermeasure_weapon_id;
     D3U8 unlock_ships[D3_STANDARD_SHIPS];
     D3U8 unlock_black_pyro, prefer_black_pyro;
 } D3Options;

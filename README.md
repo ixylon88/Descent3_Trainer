@@ -32,12 +32,13 @@ verschiedene Eigenschaften. Die Editoren konvertieren keine Speicherformate.
 Die genauen Voraussetzungen, Grenzen und Bedienhinweise stehen in den jeweiligen
 README-Dateien. Proprietäre Spieldaten und echte Spielstände sind nicht enthalten.
 
-## Inventar und Schiffsfreigaben
+## Inventar, Gegenmaßnahmen und Schiffsfreigaben
 
-Im Reiter **Inventar / Schiffe** zeigt die Liste die gespeicherten Einträge
-beider Inventare an. Für die bearbeitbaren Einträge entfernt die Menge `0` den
-jeweiligen Eintrag. In der Standardausrüstung tragen Chaff, Bouncing Betty,
-Seeker Mine und Proximity Mine jeweils bis zu 12 Stück. Beim Gunboy sind es 4.
+Die Liste **Gespeicherte Einträge** im Reiter **Inventar / Schiffe** zeigt die
+Einträge des Spielerinventars. Im Reiter **Gegenmaßnahmen** lassen sich der
+Bestand und die aktive Gegenmaßnahme einstellen. Die Menge `0` entfernt einen
+bearbeitbaren Eintrag. **Vorhandene: Spiellimit** füllt Chaff, Bouncing Betty,
+Seeker Mine und Proximity Mine bis 12 Stück auf. Beim Gunboy sind es 4.
 Die Originalbeschreibungen, Symbole und Flags vorhandener Einträge bleiben bei
 Mengenänderungen erhalten. Neu angelegte Einträge erhalten einen Textnamen und
 ein leeres Symbolfeld.

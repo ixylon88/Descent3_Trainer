@@ -23,7 +23,7 @@ namespace D3SaveEditor.Gui
         private readonly WeaponGroup secondary = new WeaponGroup(10, true);
         private readonly HashSet<CheckBox> touchedEffects = new HashSet<CheckBox>();
         private SupplyRow[] cargoRows;
-        private SupplyRow[] countermeasureRows;
+        private CountermeasureGroup countermeasures;
         private ShipRow[] shipRows;
         private SaveGame game;
         private string openedPath;
@@ -183,7 +183,7 @@ namespace D3SaveEditor.Gui
                 Review.Text = FileReport() + "\r\nKeine geplanten Änderungen.\r\n";
 
                 SaveButton.IsEnabled = CopyButton.IsEnabled = ResetButton.IsEnabled = true;
-                PlayerEditor.IsEnabled = PrimaryTab.IsEnabled = SecondaryTab.IsEnabled = InventoryTab.IsEnabled = ReviewButton.IsEnabled = true;
+                PlayerEditor.IsEnabled = PrimaryTab.IsEnabled = SecondaryTab.IsEnabled = CountermeasureTab.IsEnabled = InventoryTab.IsEnabled = ReviewButton.IsEnabled = true;
                 dirty = false;
                 Title = EditorTitle;
             }
@@ -202,14 +202,14 @@ namespace D3SaveEditor.Gui
         private void LoadInventory()
         {
             cargoRows = SaveGame.CargoItems.Select(item => new SupplyRow(game, item)).ToArray();
-            countermeasureRows = SaveGame.CountermeasureTypes.Select(item => new SupplyRow(game, item)).ToArray();
+            countermeasures = new CountermeasureGroup(game);
             shipRows = SaveGame.StandardShips.Select(name => new ShipRow(game, name)).ToArray();
-            foreach (var row in cargoRows.Concat(countermeasureRows))
+            foreach (var row in cargoRows.Concat<SupplyRow>(countermeasures.Rows))
                 row.PropertyChanged += OnInventoryChanged;
             foreach (var row in shipRows)
                 row.PropertyChanged += OnInventoryChanged;
             CargoInputs.ItemsSource = cargoRows;
-            CountermeasureInputs.ItemsSource = countermeasureRows;
+            CountermeasureEditor.Content = countermeasures;
             ShipInputs.ItemsSource = shipRows;
             bool blackPyroDefined = game.IsShipDefined(SaveGame.BlackPyro);
             BlackPyroUnlockInput.Content = blackPyroDefined ? SaveGame.BlackPyro : SaveGame.BlackPyro + " (fehlt)";
@@ -218,15 +218,14 @@ namespace D3SaveEditor.Gui
             preferBlackPyro = false;
             RefreshBlackPyroButton();
 
-            var entries = game.InventoryItems.Select(item => InventoryLine("Inventar", item))
-                .Concat(game.CountermeasureItems.Select(item => InventoryLine("Gegenmaßnahme", item))).ToArray();
-            SavedInventory.ItemsSource = entries.Length == 0 ? new[] { "Inventar und Gegenmaßnahmen sind leer." } : entries;
+            var entries = game.InventoryItems.Select(InventoryLine).ToArray();
+            SavedInventory.ItemsSource = entries.Length == 0 ? new[] { "Das Inventar ist leer." } : entries;
         }
 
-        private static string InventoryLine(string group, InventoryItem item)
+        private static string InventoryLine(InventoryItem item)
         {
             string name = string.IsNullOrEmpty(item.Name) ? $"ID {(item.Id < 0 ? item.OriginalId : item.Id)}" : item.Name;
-            return $"{group} · {name} × {item.Count}";
+            return $"{name} × {item.Count}";
         }
 
         private void OnPreferBlackPyro(object sender, RoutedEventArgs e)
@@ -279,10 +278,14 @@ namespace D3SaveEditor.Gui
 
         private void OnInventoryChanged(object sender, PropertyChangedEventArgs e)
         {
+            if (loading)
+                return;
+
             if (sender is ShipRow && e.PropertyName == nameof(ShipRow.Allowed))
                 RefreshBlackPyroButton();
-            if (!loading)
-                MarkDirty();
+            if (sender is CountermeasureRow && e.PropertyName == nameof(CountermeasureRow.Owned))
+                countermeasures.SelectPresent();
+            MarkDirty();
         }
 
         private void OnEffectChanged(object sender, RoutedEventArgs e)
@@ -333,9 +336,22 @@ namespace D3SaveEditor.Gui
         private void OnActiveWeaponChanged(object sender, SelectionChangedEventArgs e)
         {
             var combo = (ComboBox)sender;
-            var group = combo.DataContext as WeaponGroup;
             int selection = combo.SelectedIndex;
-            if (loading || game == null || group == null || selection < 0 || selection == group.SelectedIndex)
+            if (loading || game == null || selection < 0)
+                return;
+
+            if (combo.DataContext is CountermeasureGroup measures)
+            {
+                if (selection == measures.SelectedIndex)
+                    return;
+                measures.Select(selection);
+                combo.SetCurrentValue(ComboBox.SelectedIndexProperty, measures.SelectedIndex);
+                MarkDirty();
+                return;
+            }
+
+            var group = combo.DataContext as WeaponGroup;
+            if (group == null || selection == group.SelectedIndex)
                 return;
 
             if (selection < group.FirstChoice)
@@ -347,8 +363,16 @@ namespace D3SaveEditor.Gui
             MarkDirty();
         }
 
-        private void OnSelectWeapons(object sender, RoutedEventArgs e) => SetWeapons((WeaponGroup)((Button)sender).DataContext, true);
-        private void OnClearWeapons(object sender, RoutedEventArgs e) => SetWeapons((WeaponGroup)((Button)sender).DataContext, false);
+        private void OnSelectWeapons(object sender, RoutedEventArgs e) => SetOwned(((Button)sender).DataContext, true);
+        private void OnClearWeapons(object sender, RoutedEventArgs e) => SetOwned(((Button)sender).DataContext, false);
+
+        private static void SetOwned(object group, bool owned)
+        {
+            if (group is CountermeasureGroup measures)
+                measures.SetOwned(owned);
+            else
+                SetWeapons((WeaponGroup)group, owned);
+        }
 
         private static void SetWeapons(WeaponGroup group, bool owned)
         {
@@ -358,12 +382,29 @@ namespace D3SaveEditor.Gui
 
         private void OnMaxWeapon(object sender, RoutedEventArgs e)
         {
-            var row = (WeaponRow)((Button)sender).DataContext;
+            var context = ((Button)sender).DataContext;
+            if (context is CountermeasureRow measure)
+            {
+                measure.Fill();
+                return;
+            }
+
+            var row = (WeaponRow)context;
             var caps = limits.ForShip(game.ShipName);
             row.Ammo = (caps == null ? ushort.MaxValue : caps[row.Index]).ToString();
         }
 
-        private void OnMaxShipWeapons(object sender, RoutedEventArgs e) => MaxWeapons((WeaponGroup)((Button)sender).DataContext, true);
+        private void OnMaxShipWeapons(object sender, RoutedEventArgs e)
+        {
+            var context = ((Button)sender).DataContext;
+            if (context is CountermeasureGroup measures)
+            {
+                foreach (var row in measures.Rows.Where(row => row.CanToggle && row.Owned))
+                    row.Fill();
+            }
+            else
+                MaxWeapons((WeaponGroup)context, true);
+        }
         private void OnMaxStorageWeapons(object sender, RoutedEventArgs e) => MaxWeapons((WeaponGroup)((Button)sender).DataContext, false);
 
         private void MaxWeapons(WeaponGroup group, bool useShipLimit)
@@ -464,7 +505,10 @@ namespace D3SaveEditor.Gui
             options.QuadLasers = ReadEffect(QuadInput);
             options.RevealMap = MapInput.IsChecked == true;
             ReadSupplies(cargoRows, options.CargoCounts);
-            ReadSupplies(countermeasureRows, options.CountermeasureCounts);
+            ReadSupplies(countermeasures.Rows, options.CountermeasureCounts);
+            int activeMeasure = countermeasures.ActiveWeaponId;
+            if (activeMeasure >= 0 && (game.ActiveCountermeasure?.Type != 5 || game.ActiveCountermeasure.Id != activeMeasure))
+                options.ActiveCountermeasureWeaponId = activeMeasure;
             options.PreferBlackPyro = preferBlackPyro;
             for (int i = 0; i < shipRows.Length; i++)
                 options.UnlockShips[i] = shipRows[i].CanUnlock && shipRows[i].Allowed;

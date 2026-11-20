@@ -43,13 +43,12 @@
                     <ColumnDefinition Width="154" />
                 </Grid.ColumnDefinitions>
                 <CheckBox HorizontalAlignment="Center" AutomationProperties.Name="{Binding Name}"
-                          IsChecked="{Binding Owned, Mode=TwoWay}" />
+                          IsChecked="{Binding Owned, Mode=TwoWay}" IsEnabled="{Binding CanToggle}" />
                 <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding Name}" />
                 <TextBox Grid.Column="2" Style="{StaticResource NumericInput}"
                          AutomationProperties.Name="{Binding AmmoLabel}"
                          IsEnabled="{Binding CanEditAmmo}" Text="{Binding Ammo, UpdateSourceTrigger=PropertyChanged}" />
-                <Button Grid.Column="3" Content="Max" IsEnabled="{Binding CanEditAmmo}" Click="OnMaxWeapon"
-                        ToolTip="Verwendet das Schiffslimit oder das Speichermaximum 65.535." />
+                <Button Grid.Column="3" Content="Max" IsEnabled="{Binding CanEditAmmo}" Click="OnMaxWeapon" />
                 <TextBlock Grid.Column="4" VerticalAlignment="Center" Margin="6,0" Text="{Binding Limit}" />
             </Grid>
         </DataTemplate>
@@ -57,7 +56,7 @@
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Margin="12">
                     <DockPanel Margin="0,0,0,10" LastChildFill="False">
-                        <Label Style="{StaticResource ValueLabel}" Content="Aktive Waffe"
+                        <Label Style="{StaticResource ValueLabel}" Content="{Binding ActiveLabel}"
                                Target="{Binding ElementName=ActiveWeapon}" />
                         <ComboBox x:Name="ActiveWeapon" MinWidth="230" ItemsSource="{Binding Choices}"
                                   SelectedIndex="{Binding SelectedIndex, Mode=OneWay}"
@@ -72,18 +71,19 @@
                             <ColumnDefinition Width="154" />
                         </Grid.ColumnDefinitions>
                         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="Vorhanden" />
-                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="Waffe" />
-                        <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="Munition" />
-                        <TextBlock Grid.Column="4" VerticalAlignment="Center" Margin="6,0" Text="Schiffslimit" />
+                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding NameHeading}" />
+                        <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="{Binding CountHeading}" />
+                        <TextBlock Grid.Column="4" VerticalAlignment="Center" Margin="6,0" Text="{Binding LimitHeading}" />
                     </Grid>
                     <ItemsControl ItemsSource="{Binding Rows}" ItemTemplate="{StaticResource WeaponRowTemplate}" />
                     <WrapPanel Margin="0,10,0,0">
                         <Button Content="Alle auswählen" Click="OnSelectWeapons" />
                         <Button Content="Alle abwählen" Click="OnClearWeapons" />
-                        <Button Content="Vorhandene: Schiffslimit" Click="OnMaxShipWeapons" />
-                        <Button Content="Vorhandene: 65.535" Click="OnMaxStorageWeapons" />
+                        <Button Content="{Binding MaxPresentLabel}" Click="OnMaxShipWeapons" />
+                        <Button Content="Vorhandene: 65.535" Click="OnMaxStorageWeapons" Visibility="{Binding StorageMaximumVisibility}" />
                     </WrapPanel>
                     <TextBlock Margin="0,4,0,0" TextWrapping="Wrap" Text="{Binding Hint}" />
+                    <ItemsControl Margin="0,8,0,0" ItemsSource="{Binding ExtraEntries}" />
                 </StackPanel>
             </ScrollViewer>
         </DataTemplate>
@@ -250,12 +250,14 @@
             <TabItem x:Name="SecondaryTab" Header="Sekundärwaffen" IsEnabled="False">
                 <ContentControl x:Name="SecondaryWeaponEditor" ContentTemplate="{StaticResource WeaponTabTemplate}" />
             </TabItem>
+            <TabItem x:Name="CountermeasureTab" Header="Gegenmaßnahmen" IsEnabled="False">
+                <ContentControl x:Name="CountermeasureEditor" ContentTemplate="{StaticResource WeaponTabTemplate}" />
+            </TabItem>
 
             <TabItem x:Name="InventoryTab" Header="Inventar / Schiffe" IsEnabled="False">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <Grid Margin="12">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
@@ -268,10 +270,7 @@
                         <GroupBox Header="Gegenstände">
                             <ItemsControl x:Name="CargoInputs" ItemTemplate="{StaticResource SupplyRowTemplate}" />
                         </GroupBox>
-                        <GroupBox Grid.Column="1" Header="Gegenmaßnahmen">
-                            <ItemsControl x:Name="CountermeasureInputs" ItemTemplate="{StaticResource SupplyRowTemplate}" />
-                        </GroupBox>
-                        <GroupBox Grid.Column="2" Header="Schiffsfreigaben">
+                        <GroupBox Grid.Column="1" Header="Schiffsfreigaben">
                             <StackPanel>
                                 <ItemsControl x:Name="ShipInputs" ItemTemplate="{StaticResource ShipRowTemplate}" />
                                 <CheckBox x:Name="BlackPyroUnlockInput" Checked="OnInputChanged" Unchecked="OnInputChanged"
@@ -281,10 +280,10 @@
                                 <TextBlock TextWrapping="Wrap" Text="Der Knopf wählt alle anderen Schiffe ab. Da der Black Pyro im Auswahlmenü fehlt, übernimmt ihn das Spiel als einziges erlaubtes Schiff beim nächsten passenden Briefing automatisch. Das funktioniert auch in der Hauptkampagne." />
                             </StackPanel>
                         </GroupBox>
-                        <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Margin="0,0,0,10"
+                        <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Margin="0,0,0,10"
                                    Text="0 entfernt den Eintrag. Kühler, Konverter und Quad-Laser stehen im Spieler-Tab."
                                    TextWrapping="Wrap" />
-                        <GroupBox Grid.Row="2" Grid.ColumnSpan="3" Header="Gespeicherte Einträge">
+                        <GroupBox Grid.Row="2" Grid.ColumnSpan="2" Header="Gespeicherte Einträge">
                             <ListBox x:Name="SavedInventory" MinHeight="110" MaxHeight="220"
                                      ScrollViewer.HorizontalScrollBarVisibility="Auto" />
                         </GroupBox>

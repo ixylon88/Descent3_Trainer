@@ -212,6 +212,7 @@ void d3_current(const D3Game *g,D3Options *o){
     o->god=o->cloak=o->cooler=o->converter=o->quad=-1;
     for(i=0;i<D3_CARGO_TYPES;i++)o->cargo_counts[i]=-1;
     for(i=0;i<D3_COUNTERMEASURE_TYPES;i++)o->countermeasure_counts[i]=-1;
+    o->active_countermeasure_weapon_id=-1;
 }
 
 typedef struct {D3U32 start,length,size;const D3U8 *bytes;} Patch;
@@ -340,6 +341,11 @@ int d3_edit(D3Game *g,const D3Options *o,D3Buffer *out){
         if (error) goto cleanup;
         error=set_supplies(g,o,&lists[1],1,removing);
         if (error) goto cleanup;
+    }
+    if (o->active_countermeasure_weapon_id>=0) {
+        int selected=find_item(&lists[1],OBJ_WEAPON,o->active_countermeasure_weapon_id);
+        if (selected<0) {error="Die gewaehlte Gegenmassnahme muss im Bestand vorhanden sein.";goto cleanup;}
+        lists[1].selected=selected;
     }
     if(o->quad>=0){
         flags=d3_u32(g->data+g->object.battery+104)&~16u;if(o->quad)flags|=16;d3_put32(quad0,flags);add_patch(patches,&n,g->object.battery+104,4,quad0,4);

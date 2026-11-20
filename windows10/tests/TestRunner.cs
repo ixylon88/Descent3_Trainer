@@ -131,6 +131,12 @@ namespace D3SaveEditor.Tests
                 SaveGame.I32(result.Bytes, saved.PlayerOffset + saved.Layout.Size) == 0x1001,
                 name + ": opaque tail and optional guided projectile handle preserved");
             Check(saved.Edit(saved.CurrentOptions()).Bytes.SequenceEqual(result.Bytes), name + ": edited file reopens and round-trips");
+            edit.ActiveCountermeasureWeaponId = original.CountermeasureWeaponId(2);
+            Check(original.Edit(edit).Parsed.ActiveCountermeasure.Id == edit.ActiveCountermeasureWeaponId,
+                name + ": selection targets a newly added countermeasure after reindexing");
+            edit.ActiveCountermeasureWeaponId = original.CountermeasureWeaponId(1);
+            Reject(() => original.Edit(edit), name + ": removed countermeasure cannot be selected");
+            edit.ActiveCountermeasureWeaponId = null;
 
             edit.CountermeasureCounts[3] = 5;
             Reject(() => original.Edit(edit), name + ": Gunboy maximum enforced");

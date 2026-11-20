@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using D3SaveEditor.Core;
 
 namespace D3SaveEditor.Gui
@@ -44,6 +45,7 @@ namespace D3SaveEditor.Gui
         public int Index { get; }
         public string Name => SaveGame.WeaponNames[Index];
         public string AmmoLabel => "Munition " + Name;
+        public bool CanToggle => true;
         public bool UsesAmmo => SaveGame.UsesAmmo(Index);
         public bool CanEditAmmo => Owned && UsesAmmo;
 
@@ -86,6 +88,13 @@ namespace D3SaveEditor.Gui
         public int FirstChoice { get; }
         public WeaponRow[] Rows { get; }
         public string[] Choices { get; }
+        public string ActiveLabel => "Aktive Waffe";
+        public string NameHeading => "Waffe";
+        public string CountHeading => "Munition";
+        public string LimitHeading => "Schiffslimit";
+        public string MaxPresentLabel => "Vorhandene: Schiffslimit";
+        public Visibility StorageMaximumVisibility => Visibility.Visible;
+        public string[] ExtraEntries => Array.Empty<string>();
 
         public int SelectedIndex
         {
@@ -110,7 +119,7 @@ namespace D3SaveEditor.Gui
         }
     }
 
-    internal sealed class SupplyRow : BindableItem
+    internal class SupplyRow : BindableItem
     {
         private string countText;
 
