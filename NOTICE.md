@@ -1,44 +1,42 @@
-# Lizenz, Herkunft und Paketänderungen
+# License, provenance, and package changes
 
-Stand: 24.10.2026.
+[Deutsch](NOTICE-Deutsch.md)
 
-Die beiden Editorvarianten sind in ihren Quelltexten und ursprünglichen
-README-Dateien mit GPL-3.0-or-later gekennzeichnet. Die GPL v3 liegt unter
-`LICENSE` im Stammverzeichnis und in beiden Variantenordnern bei.
+This notice documents the original source package dated October 24, 2026.
 
-Formatgrundlage und übernommene C++-Deklarationen:
+Both editions are marked GPL-3.0-or-later in their source files and original
+READMEs. The GPL v3 text is included as `LICENSE` in the repository root and
+in both edition directories.
+
+The save format reference and reused C++ declarations are from Descent 3,
 Copyright (C) 2024 Parallax Software.
 
-- Modern: https://github.com/DescentDevelopers/Descent3
-  Revision 76049bb32d0a391ab35aedcd0716073c1e64d72a.
-- Historisch: https://github.com/DescentDevelopers/Descent3/tree/d3-historical
-  Revision 84e25b0b411284bad57b34f50fd976f1a8a2367f.
+- Modern source revision `76049bb32d0a391ab35aedcd0716073c1e64d72a` in [DescentDevelopers/Descent3](https://github.com/DescentDevelopers/Descent3).
+- Historical source revision `84e25b0b411284bad57b34f50fd976f1a8a2367f` on the [`d3-historical` branch](https://github.com/DescentDevelopers/Descent3/tree/d3-historical).
 
-Der MIT-Lizenztext aus dem bisherigen Win98-Archiv nennt
-Copyright (c) 2024 Kevin Bentley. Er ist unverändert in
-`docs/LICENSE-MIT-from-old-Win98-package.txt` erhalten.
-Diese Datei dokumentiert den vorgefundenen Lizenzwiderspruch. Sie ersetzt
-weder die GPL-Kennzeichnungen des Editors noch erteilt sie pauschal Rechte
-an anderem Material. Vorhandene Hinweise in den Quellen bleiben unverändert.
+The MIT license text from the earlier Win98 archive bears the notice
+Copyright (c) 2024 Kevin Bentley. The repository preserves the file verbatim
+at `docs/origin/LICENSE-MIT-from-old-Win98-package.txt`. It documents the
+license discrepancy found in that archive. The editor's GPL notices still
+apply. Rights to other material depend on the terms that cover it. The
+original notices in the source files were retained.
 
-## Änderungen bei der Quelltextbereitstellung
+## Changes in the original source distribution
 
-- Beide Varianten in `windows98` und `windows10` zusammengeführt.
-- Fertige EXE-Dateien und das verschachtelte Vorgänger-ZIP ausgelassen.
-- GPL-v3-Lizenztext passend zur vorhandenen Kennzeichnung für Win98 ergänzt.
-- Anleitungen an die Quelltextausgabe und ihre neue Ordnerstruktur angepasst;
-  die ursprünglichen Anleitungen zur Nachvollziehbarkeit unter `docs/origin` erhalten.
-- Gemeinsame README, Herkunftsmanifest, Git-Ignore-Regeln und diese Notiz ergänzt.
-- Keine Programmquellen, Tests, Buildskripte oder Laufzeitkonfiguration verändert.
+- Combined both editions in `windows98` and `windows10`.
+- Omitted the prebuilt EXEs and the nested ZIP of the previous release.
+- Added the GPL v3 text for Win98 to match its existing license notices.
+- Adapted the manuals to the source distribution and its folder structure.
+  Preserved the original manuals in `docs/origin` for reference.
+- Added the shared README, provenance manifest, Git ignore rules, and this notice.
+- Carried over the program source, tests, build scripts, and runtime configuration as provided.
 
-Das Paket enthält keine proprietären Spieldaten. Die ursprünglichen Archive
-werden durch diese Ausgabe nicht ersetzt. Der Teststand entspricht weiterhin
-dem dokumentierten Entwicklungsstand; echte Spielstände und reale Windows-
-Starts sind noch nicht geprüft.
+The source package contains no proprietary game data. The original archives
+remain separate. At the time of packaging, tests using real save files and
+startup on Windows systems were still pending. The manuals for each edition
+describe the current test coverage.
 
-OpenAI-Veröffentlichungshinweise, abgerufen am 24.10.2026:
-https://openai.com/policies/eu-terms-of-use/
-https://openai.com/brand/
+OpenAI references accessed on October 24, 2026. [Europe Terms of Use](https://openai.com/policies/eu-terms-of-use/) · [Brand guidelines](https://openai.com/brand/)
 
-Diese Hinweise beschreiben die Lizenzgrundlage und die Herkunft dieses Pakets;
-sie ersetzen keine individuelle rechtliche Prüfung.
+These notices document the licensing and provenance of the package.
+Legal review for individual uses is separate.

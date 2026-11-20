@@ -143,7 +143,7 @@ Im früheren Win98-Paket enthielt `LICENSE` einen MIT-Text, obwohl README und
 Quelltexte GPL-3.0-or-later ausweisen. Dieses Paket enthält den dazu passenden
 GPL-v3-Lizenztext. Die frühere MIT-Datei bleibt zur Herkunftsdokumentation unter
 `docs/origin` erhalten; daraus wird keine zusätzliche MIT-Lizenz für den
-gesamten Editor abgeleitet. Einzelheiten in [`NOTICE.md`](NOTICE.md).
+gesamten Editor abgeleitet. Einzelheiten in [`NOTICE-Deutsch.md`](NOTICE-Deutsch.md).
 
 Bei GitHub-Veröffentlichung die Lizenztexte und vorhandenen Copyright- und
 Herkunftshinweise beibehalten. Werden auch EXE-Dateien veröffentlicht, den dazu
