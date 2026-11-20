@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Truncated" xml:space="preserve">
+    <value>The file is truncated or contains an invalid block length.</value>
+  </data>
+  <data name="UnterminatedString" xml:space="preserve">
+    <value>A string is missing its terminator.</value>
+  </data>
+  <data name="InvalidBoolean" xml:space="preserve">
+    <value>Invalid flag in the save format.</value>
+  </data>
+  <data name="InvalidStructure" xml:space="preserve">
+    <value>Invalid structure size.</value>
+  </data>
+  <data name="InventoryLength" xml:space="preserve">
+    <value>The inventory contains an unsupported number of entries.</value>
+  </data>
+  <data name="InventoryCount" xml:space="preserve">
+    <value>Invalid inventory item count.</value>
+  </data>
+  <data name="InventorySelection" xml:space="preserve">
+    <value>Invalid inventory selection.</value>
+  </data>
+  <data name="ObjectMarker" xml:space="preserve">
+    <value>An object marker is missing.</value>
+  </data>
+  <data name="ObjectType" xml:space="preserve">
+    <value>Unknown object type.</value>
+  </data>
+  <data name="ObjectShields" xml:space="preserve">
+    <value>Invalid shield value.</value>
+  </data>
+  <data name="AttachmentCount" xml:space="preserve">
+    <value>Unsupported number of attachment points.</value>
+  </data>
+  <data name="AttachmentStructure" xml:space="preserve">
+    <value>Invalid object attachment structure.</value>
+  </data>
+  <data name="WeaponBatteries" xml:space="preserve">
+    <value>Unsupported weapon battery layout.</value>
+  </data>
+  <data name="EffectStructure" xml:space="preserve">
+    <value>Unknown effect layout. This game build is unsupported.</value>
+  </data>
+  <data name="LittleEndian" xml:space="preserve">
+    <value>The editor requires a little-endian system.</value>
+  </data>
+  <data name="SaveSize" xml:space="preserve">
+    <value>Unsupported Descent 3 save size (expected 600 bytes to 256 MiB).</value>
+  </data>
+  <data name="AmbiguousObjects" xml:space="preserve">
+    <value>The save contains several possible player objects.</value>
+  </data>
+  <data name="ObjectSequence" xml:space="preserve">
+    <value>Invalid object sequence.</value>
+  </data>
+  <data name="NoPlayer" xml:space="preserve">
+    <value>No matching player block was found. Supported saves use format 0–2 and Windows layouts of 496 or 536 bytes.</value>
+  </data>
+  <data name="AmbiguousPlayer" xml:space="preserve">
+    <value>The save contains several plausible player blocks.</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>The save description is invalid.</value>
+  </data>
+  <data name="TranslationTable" xml:space="preserve">
+    <value>Unknown translation table.</value>
+  </data>
+  <data name="BitmapEnd" xml:space="preserve">
+    <value>The bitmap table is missing its terminator.</value>
+  </data>
+  <data name="TableEnd" xml:space="preserve">
+    <value>Invalid table terminator.</value>
+  </data>
+  <data name="BitmapIndex" xml:space="preserve">
+    <value>Invalid bitmap index.</value>
+  </data>
+  <data name="Mission" xml:space="preserve">
+    <value>Invalid mission information.</value>
+  </data>
+  <data name="GameTime" xml:space="preserve">
+    <value>Invalid game time.</value>
+  </data>
+  <data name="WeatherBlock" xml:space="preserve">
+    <value>Invalid weather block.</value>
+  </data>
+  <data name="DoorBlock" xml:space="preserve">
+    <value>Invalid door block.</value>
+  </data>
+  <data name="MapBlock" xml:space="preserve">
+    <value>Invalid map block.</value>
+  </data>
+  <data name="MapFormat" xml:space="preserve">
+    <value>Unknown map format.</value>
+  </data>
+  <data name="PreviewFormat" xml:space="preserve">
+    <value>Unknown preview image format.</value>
+  </data>
+  <data name="PreviewImage" xml:space="preserve">
+    <value>Invalid preview image.</value>
+  </data>
+  <data name="ImageCompression" xml:space="preserve">
+    <value>Invalid image compression.</value>
+  </data>
+  <data name="ImageSize" xml:space="preserve">
+    <value>The preview image exceeds its declared size.</value>
+  </data>
+  <data name="Callsign" xml:space="preserve">
+    <value>Invalid callsign.</value>
+  </data>
+  <data name="PlayerValues" xml:space="preserve">
+    <value>Invalid player values.</value>
+  </data>
+  <data name="PlayerObject" xml:space="preserve">
+    <value>The player record and player object do not match.</value>
+  </data>
+  <data name="MissingPlayerShip" xml:space="preserve">
+    <value>The player's ship definition is missing.</value>
+  </data>
+  <data name="InvalidWeapon" xml:space="preserve">
+    <value>Invalid active weapon.</value>
+  </data>
+  <data name="PlayerLayout" xml:space="preserve">
+    <value>Unknown player layout.</value>
+  </data>
+  <data name="InventoryMismatch" xml:space="preserve">
+    <value>The player record and inventory counts disagree.</value>
+  </data>
+  <data name="TrailingBlock" xml:space="preserve">
+    <value>Invalid block after the inventory.</value>
+  </data>
+  <data name="MissingOptions" xml:space="preserve">
+    <value>Incomplete edit options.</value>
+  </data>
+  <data name="PlayerNumberRange" xml:space="preserve">
+    <value>Energy, shields and afterburner must be finite and nonnegative within the allowed range.</value>
+  </data>
+  <data name="PrimaryRequired" xml:space="preserve">
+    <value>At least one primary weapon is required.</value>
+  </data>
+  <data name="GuideBotUnavailable" xml:space="preserve">
+    <value>The save has no recognized Guide-Bot state to edit.</value>
+  </data>
+  <data name="GuideBotName" xml:space="preserve">
+    <value>The Guide-Bot name must contain 1 to 7 ANSI characters.</value>
+  </data>
+  <data name="GuideBotCounts" xml:space="preserve">
+    <value>Incomplete Guide-Bot supply counts.</value>
+  </data>
+  <data name="GuideBotCountRange" xml:space="preserve">
+    <value>Guide-Bot supply counts must be between 0 and 127.</value>
+  </data>
+  <data name="GuideBotEdited" xml:space="preserve">
+    <value>Edit Guide-Bot</value>
+  </data>
+  <data name="BlackPyroMissing" xml:space="preserve">
+    <value>The Black Pyro definition is missing from the save.</value>
+  </data>
+  <data name="ShipPermissionsRemoved" xml:space="preserve">
+    <value>Remove other ship permissions</value>
+  </data>
+  <data name="GodModeOn" xml:space="preserve">
+    <value>Enable long-duration god mode</value>
+  </data>
+  <data name="GodModeOff" xml:space="preserve">
+    <value>Disable invulnerability</value>
+  </data>
+  <data name="QuadUnavailable" xml:space="preserve">
+    <value>This save's weapon batteries do not support quad laser editing.</value>
+  </data>
+  <data name="CountermeasureNotOwned" xml:space="preserve">
+    <value>The selected countermeasure must be in the loadout.</value>
+  </data>
+  <data name="CloakOn" xml:space="preserve">
+    <value>Enable long-duration cloaking</value>
+  </data>
+  <data name="CloakOff" xml:space="preserve">
+    <value>Disable cloaking</value>
+  </data>
+  <data name="MapRevealed" xml:space="preserve">
+    <value>Reveal the entire map</value>
+  </data>
+  <data name="AfterburnerEdited" xml:space="preserve">
+    <value>Change afterburner charge</value>
+  </data>
+  <data name="LivesOrScoreEdited" xml:space="preserve">
+    <value>Change lives or score</value>
+  </data>
+  <data name="WeaponsEdited" xml:space="preserve">
+    <value>Change weapons, ammo or active weapon</value>
+  </data>
+  <data name="InventoryFull" xml:space="preserve">
+    <value>The inventory is full (up to 10 types per list).</value>
+  </data>
+  <data name="InvalidChanges" xml:space="preserve">
+    <value>Overlapping or invalid changes.</value>
+  </data>
+  <data name="FileTooLarge" xml:space="preserve">
+    <value>The file is larger than 256 MiB.</value>
+  </data>
+  <data name="SourceChanged" xml:space="preserve">
+    <value>The save has changed on disk. Reopen it before saving.</value>
+  </data>
+  <data name="DataTooShort" xml:space="preserve">
+    <value>The game data file is too short.</value>
+  </data>
+  <data name="DataTooLarge" xml:space="preserve">
+    <value>The game data table is larger than 64 MiB.</value>
+  </data>
+  <data name="NoLimits" xml:space="preserve">
+    <value>No supported ship definitions found (table versions 1–6).</value>
+  </data>
+  <data name="TruncatedData" xml:space="preserve">
+    <value>The game data file is truncated.</value>
+  </data>
+  <data name="ArchiveFormat" xml:space="preserve">
+    <value>Unknown HOG2 archive format.</value>
+  </data>
+  <data name="ArchiveEntry" xml:space="preserve">
+    <value>An archive entry exceeds the file size.</value>
+  </data>
+  <data name="DataPageLength" xml:space="preserve">
+    <value>A game data page has an invalid length.</value>
+  </data>
+  <data name="AmmoLimit" xml:space="preserve">
+    <value>The ship uses an unsupported ammo capacity.</value>
+  </data>
+  <data name="ShipExtraData" xml:space="preserve">
+    <value>The ship definition contains unsupported extra data.</value>
+  </data>
+  <data name="UnknownShip" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="Layout32" xml:space="preserve">
+    <value>32-bit / 496 bytes</value>
+  </data>
+  <data name="Layout64" xml:space="preserve">
+    <value>64-bit / 536 bytes</value>
+  </data>
+  <data name="SaveVersion" xml:space="preserve">
+    <value>Unsupported save version {0}. Expected 0 through 2.</value>
+  </data>
+  <data name="ShipVersion" xml:space="preserve">
+    <value>Unsupported ship definition version {0}.</value>
+  </data>
+  <data name="ShipMissing" xml:space="preserve">
+    <value>The {0} ship definition is missing from the save.</value>
+  </data>
+  <data name="ObjectMissing" xml:space="preserve">
+    <value>The {0} item definition is missing from the save.</value>
+  </data>
+  <data name="SupplyMissing" xml:space="preserve">
+    <value>The {0} definition is missing from the save.</value>
+  </data>
+  <data name="SupplyBounds" xml:space="preserve">
+    <value>{0} allows a count from 0 to {1}.</value>
+  </data>
+  <data name="PickupMissing" xml:space="preserve">
+    <value>The {0} pickup definition is missing from the save.</value>
+  </data>
+  <data name="UnlockShip" xml:space="preserve">
+    <value>Unlock {0}</value>
+  </data>
+  <data name="ActiveCountermeasure" xml:space="preserve">
+    <value>Active countermeasure: {0}</value>
+  </data>
+  <data name="EnergyEdited" xml:space="preserve">
+    <value>Energy: {0} → {1}</value>
+  </data>
+  <data name="ShieldsEdited" xml:space="preserve">
+    <value>Shields: {0} → {1}</value>
+  </data>
+  <data name="EquipmentAdded" xml:space="preserve">
+    <value>Add {0}</value>
+  </data>
+  <data name="EquipmentRemoved" xml:space="preserve">
+    <value>Remove {0}</value>
+  </data>
+</root>

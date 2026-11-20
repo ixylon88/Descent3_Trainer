@@ -1,0 +1,418 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Present" xml:space="preserve">
+    <value>Vorhanden</value>
+  </data>
+  <data name="SelectAll" xml:space="preserve">
+    <value>Alle auswählen</value>
+  </data>
+  <data name="ClearAll" xml:space="preserve">
+    <value>Alle abwählen</value>
+  </data>
+  <data name="FillStorage" xml:space="preserve">
+    <value>Vorhandene: 65.535</value>
+  </data>
+  <data name="OpenSave" xml:space="preserve">
+    <value>Spielstand öffnen…</value>
+  </data>
+  <data name="SaveAndBackup" xml:space="preserve">
+    <value>Speichern + Backup</value>
+  </data>
+  <data name="SaveCopy" xml:space="preserve">
+    <value>Kopie speichern…</value>
+  </data>
+  <data name="ResetValues" xml:space="preserve">
+    <value>Originalwerte</value>
+  </data>
+  <data name="LoadShipLimits" xml:space="preserve">
+    <value>Schiffslimits laden…</value>
+  </data>
+  <data name="LoadShipLimitsTip" xml:space="preserve">
+    <value>Liest die normalen Munitionsgrenzen für die Waffenreiter aus Table.gam, d3.hog oder einem Missionsarchiv.</value>
+  </data>
+  <data name="NoSave" xml:space="preserve">
+    <value>Noch kein Spielstand geöffnet</value>
+  </data>
+  <data name="OpenHint" xml:space="preserve">
+    <value>Im Spiel speichern, dann eine Datei wie saveg000 aus dem Ordner savegame öffnen.</value>
+  </data>
+  <data name="PlayerTab" xml:space="preserve">
+    <value>Spieler / Ausrüstung</value>
+  </data>
+  <data name="PlayerSupplies" xml:space="preserve">
+    <value>Versorgung</value>
+  </data>
+  <data name="Energy" xml:space="preserve">
+    <value>Energie</value>
+  </data>
+  <data name="Shields" xml:space="preserve">
+    <value>Schild</value>
+  </data>
+  <data name="AfterburnerSeconds" xml:space="preserve">
+    <value>Nachbrenner (s)</value>
+  </data>
+  <data name="FillAfterburner" xml:space="preserve">
+    <value>Voll (5 s)</value>
+  </data>
+  <data name="Lives" xml:space="preserve">
+    <value>Leben</value>
+  </data>
+  <data name="Score" xml:space="preserve">
+    <value>Punktestand</value>
+  </data>
+  <data name="Effects" xml:space="preserve">
+    <value>Effekte</value>
+  </data>
+  <data name="ExtendEffect" xml:space="preserve">
+    <value>Verlängern</value>
+  </data>
+  <data name="ExtendEffectTip" xml:space="preserve">
+    <value>Setzt die Restdauer des aktiven Effekts beim Speichern auf 1.000.000.000 s.</value>
+  </data>
+  <data name="Invulnerability" xml:space="preserve">
+    <value>God-Mode / unverwundbar</value>
+  </data>
+  <data name="InvulnerabilityTip" xml:space="preserve">
+    <value>Schaltet die Unverwundbarkeit ein oder aus.</value>
+  </data>
+  <data name="Cloak" xml:space="preserve">
+    <value>Cloaked-Mode / getarnt</value>
+  </data>
+  <data name="CloakTip" xml:space="preserve">
+    <value>Tarnung wird am Spielerobjekt gesetzt. Fade-Übergänge werden beim Ändern beendet.</value>
+  </data>
+  <data name="Equipment" xml:space="preserve">
+    <value>Ausrüstung</value>
+  </data>
+  <data name="Cooler" xml:space="preserve">
+    <value>Nachbrenner-Kühler</value>
+  </data>
+  <data name="Converter" xml:space="preserve">
+    <value>Energie → Schild-Konverter</value>
+  </data>
+  <data name="QuadLasers" xml:space="preserve">
+    <value>Quad-Laser</value>
+  </data>
+  <data name="Map" xml:space="preserve">
+    <value>Karte</value>
+  </data>
+  <data name="RevealMap" xml:space="preserve">
+    <value>Gesamte Karte aufdecken</value>
+  </data>
+  <data name="MapTip" xml:space="preserve">
+    <value>Ohne Häkchen bleibt die gespeicherte Erkundung erhalten.</value>
+  </data>
+  <data name="PrimaryTab" xml:space="preserve">
+    <value>Primärwaffen</value>
+  </data>
+  <data name="SecondaryTab" xml:space="preserve">
+    <value>Sekundärwaffen</value>
+  </data>
+  <data name="CountermeasureTab" xml:space="preserve">
+    <value>Gegenmaßnahmen</value>
+  </data>
+  <data name="InventoryTab" xml:space="preserve">
+    <value>Inventar / Schiffe</value>
+  </data>
+  <data name="Items" xml:space="preserve">
+    <value>Gegenstände</value>
+  </data>
+  <data name="ShipPermissions" xml:space="preserve">
+    <value>Schiffsfreigaben</value>
+  </data>
+  <data name="ShipPermissionTip" xml:space="preserve">
+    <value>Speichert die Freigabe im Spielstand.</value>
+  </data>
+  <data name="BlackPyroOnly" xml:space="preserve">
+    <value>Nur Black Pyro erlauben</value>
+  </data>
+  <data name="BlackPyroHint" xml:space="preserve">
+    <value>Der Knopf wählt alle anderen Schiffe ab. Da der Black Pyro im Auswahlmenü fehlt, übernimmt ihn das Spiel als einziges erlaubtes Schiff beim nächsten passenden Briefing automatisch. Das funktioniert auch in der Hauptkampagne.</value>
+  </data>
+  <data name="CargoHint" xml:space="preserve">
+    <value>0 entfernt den Eintrag. Kühler, Konverter und Quad-Laser stehen im Spieler-Tab.</value>
+  </data>
+  <data name="SavedEntries" xml:space="preserve">
+    <value>Gespeicherte Einträge</value>
+  </data>
+  <data name="Properties" xml:space="preserve">
+    <value>Eigenschaften</value>
+  </data>
+  <data name="BotChatter" xml:space="preserve">
+    <value>Regelmäßige Funkmeldungen</value>
+  </data>
+  <data name="BotSupplies" xml:space="preserve">
+    <value>Vorräte</value>
+  </data>
+  <data name="ChangesTab" xml:space="preserve">
+    <value>Datei / Änderungen</value>
+  </data>
+  <data name="CheckChanges" xml:space="preserve">
+    <value>Änderungen prüfen</value>
+  </data>
+  <data name="ReviewHint" xml:space="preserve">
+    <value>Hier erscheinen die Dateianalyse und die geplanten Änderungen.</value>
+  </data>
+  <data name="HelpTab" xml:space="preserve">
+    <value>Hilfe</value>
+  </data>
+  <data name="HelpSaves" xml:space="preserve">
+    <value>Spielstände öffnen und speichern</value>
+  </data>
+  <data name="HelpOpen" xml:space="preserve">
+    <value>Im Spiel speichern und das Spiel beenden. Danach eine Datei wie saveg000 aus dem Ordner savegame öffnen, Werte bearbeiten und den geänderten Spielstand im Spiel laden.</value>
+  </data>
+  <data name="HelpBackups" xml:space="preserve">
+    <value>Beim Überschreiben erstellt der Editor eine datierte Sicherung. Eine Kopie mit der Endung .edited zum Laden in einen passenden savegNNN-Slot umbenennen.</value>
+  </data>
+  <data name="HelpLoadout" xml:space="preserve">
+    <value>Waffen und Gegenmaßnahmen</value>
+  </data>
+  <data name="HelpLimits" xml:space="preserve">
+    <value>Schiffslimits laden liest normale Munitionsgrenzen aus Table.gam, d3.hog oder einem Missionsarchiv. Vorhandene: Schiffslimit nutzt diese Werte für die Waffen. Bei Gegenmaßnahmen gelten die angezeigten Spiellimits für alle Schiffe.</value>
+  </data>
+  <data name="HelpEffects" xml:space="preserve">
+    <value>Unverwundbarkeit und Tarnung</value>
+  </data>
+  <data name="HelpTimers" xml:space="preserve">
+    <value>Das Häkchen schaltet den Effekt ein oder aus. Verlängern setzt die Restdauer eines bereits aktiven Effekts beim Speichern auf 1.000.000.000 Sekunden.</value>
+  </data>
+  <data name="HelpShipsAndBot" xml:space="preserve">
+    <value>Black Pyro und Guide-Bot</value>
+  </data>
+  <data name="HelpPyroAndBot" xml:space="preserve">
+    <value>Nur Black Pyro erlauben wählt alle anderen Schiffe ab, damit das Spiel beim nächsten passenden Briefing den Black Pyro übernimmt. Der Reiter Guide-Bot bearbeitet Name, Funkmeldungen und Vorräte des gespeicherten Roboters, wenn der Skriptzustand eindeutig erkannt wurde.</value>
+  </data>
+  <data name="Ready" xml:space="preserve">
+    <value>Bereit · Dateien können auch in das Fenster gezogen werden.</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>A 文 · Deutsch ▾</value>
+  </data>
+  <data name="LanguageTip" xml:space="preserve">
+    <value>Oberflächensprache</value>
+  </data>
+  <data name="Loaded" xml:space="preserve">
+    <value>Spielstand geladen.</value>
+  </data>
+  <data name="OpenTitle" xml:space="preserve">
+    <value>Descent-3-Spielstand öffnen (z. B. saveg000)</value>
+  </data>
+  <data name="OpenFilter" xml:space="preserve">
+    <value>Spielstände (saveg*)</value>
+  </data>
+  <data name="AllFiles" xml:space="preserve">
+    <value>Alle Dateien (*.*)</value>
+  </data>
+  <data name="DiscardQuestion" xml:space="preserve">
+    <value>Die Änderungen sind noch nicht gespeichert. Verwerfen?</value>
+  </data>
+  <data name="UnsavedChanges" xml:space="preserve">
+    <value>Ungespeicherte Änderungen</value>
+  </data>
+  <data name="ValuesReset" xml:space="preserve">
+    <value>Originalwerte geladen.</value>
+  </data>
+  <data name="CoolerTip" xml:space="preserve">
+    <value>Passiver Nachbrenner-Kühler im Inventar.</value>
+  </data>
+  <data name="ConverterTip" xml:space="preserve">
+    <value>Auswählbarer Energie-Schild-Konverter im Inventar.</value>
+  </data>
+  <data name="QuadTip" xml:space="preserve">
+    <value>Setzt Inventargegenstand und beide Laser-Waffenbatterien.</value>
+  </data>
+  <data name="CoolerMissing" xml:space="preserve">
+    <value>Die Definition „Afterburner“ fehlt im Spielstand.</value>
+  </data>
+  <data name="ConverterMissing" xml:space="preserve">
+    <value>Die Definition „Converter“ fehlt im Spielstand.</value>
+  </data>
+  <data name="QuadMissing" xml:space="preserve">
+    <value>Gegenstandsdefinition oder Waffenbatterien fehlen.</value>
+  </data>
+  <data name="RoomsVisible" xml:space="preserve">
+    <value>Gespeichert sichtbar: {0} von {1} Raumplätzen.</value>
+  </data>
+  <data name="NoPlannedChanges" xml:space="preserve">
+    <value>Keine geplanten Änderungen.</value>
+  </data>
+  <data name="Missing" xml:space="preserve">
+    <value>{0} (fehlt)</value>
+  </data>
+  <data name="InventoryEmpty" xml:space="preserve">
+    <value>Das Inventar ist leer.</value>
+  </data>
+  <data name="BotUnavailable" xml:space="preserve">
+    <value>Dieser Spielstand enthält keinen eindeutig erkannten Guide-Bot-Zustand.</value>
+  </data>
+  <data name="BotHelp" xml:space="preserve">
+    <value>Name, Funkmeldungen und verbrauchbare Vorräte im gespeicherten Level. Mengen von 0 bis 127.</value>
+  </data>
+  <data name="BotShields" xml:space="preserve">
+    <value>Gespeicherter Schildwert: {0:N1}</value>
+  </data>
+  <data name="BotExtinguisher" xml:space="preserve">
+    <value>Feuerlöscher</value>
+  </data>
+  <data name="BotWingnut" xml:space="preserve">
+    <value>Go Wingnut</value>
+  </data>
+  <data name="BotControl" xml:space="preserve">
+    <value>Fernsteuerung</value>
+  </data>
+  <data name="BotGuardian" xml:space="preserve">
+    <value>Begleitschutz</value>
+  </data>
+  <data name="BotAntivirus" xml:space="preserve">
+    <value>Antivirus</value>
+  </data>
+  <data name="TimerOnSave" xml:space="preserve">
+    <value>Beim Speichern: 1.000.000.000 s Restdauer</value>
+  </data>
+  <data name="InactiveOnSave" xml:space="preserve">
+    <value>Beim Speichern: inaktiv</value>
+  </data>
+  <data name="SavedInactive" xml:space="preserve">
+    <value>Gespeichert: inaktiv</value>
+  </data>
+  <data name="SavedLong" xml:space="preserve">
+    <value>Gespeichert: lange Restdauer</value>
+  </data>
+  <data name="SavedTime" xml:space="preserve">
+    <value>Gespeichert: aktiv, Restdauer {0:N1} s</value>
+  </data>
+  <data name="Pending" xml:space="preserve">
+    <value>Änderungen noch nicht gespeichert.</value>
+  </data>
+  <data name="LoadLimitsFirst" xml:space="preserve">
+    <value>Bitte über „Schiffslimits laden“ eine Spieldatendatei mit einer Definition für das aktuelle Schiff öffnen.</value>
+  </data>
+  <data name="NoShipLimits" xml:space="preserve">
+    <value>Schiffslimits fehlen</value>
+  </data>
+  <data name="LimitsTitle" xml:space="preserve">
+    <value>Spieldaten mit Schiffsdefinitionen laden</value>
+  </data>
+  <data name="DataFilter" xml:space="preserve">
+    <value>Spieldaten (*.hog;*.mn3;*.gam)</value>
+  </data>
+  <data name="LimitsLoaded" xml:space="preserve">
+    <value>{0} Schiffsdefinitionen geladen aus {1}.</value>
+  </data>
+  <data name="EnergyWeapon" xml:space="preserve">
+    <value>Energiewaffe</value>
+  </data>
+  <data name="LimitUnavailable" xml:space="preserve">
+    <value>nicht geladen</value>
+  </data>
+  <data name="LimitsMissingHint" xml:space="preserve">
+    <value>„Vorhandene: Schiffslimit“ braucht die Munitionsgrenzen des aktuellen Schiffs. Öffne dafür „Schiffslimits laden“. „Max“ pro Zeile setzt bis dahin 65.535.</value>
+  </data>
+  <data name="LimitsLoadedHint" xml:space="preserve">
+    <value>„Vorhandene: Schiffslimit“ füllt alle vorhandenen Munitionswaffen bis zur angezeigten Kapazität für {0} auf. „Max“ füllt jeweils eine Zeile.</value>
+  </data>
+  <data name="FloatRange" xml:space="preserve">
+    <value>{0} muss eine Zahl von 0 bis {1:N0} sein.</value>
+  </data>
+  <data name="IntegerRange" xml:space="preserve">
+    <value>{0} muss eine ganze Zahl von {1:N0} bis {2:N0} sein.</value>
+  </data>
+  <data name="Afterburner" xml:space="preserve">
+    <value>Nachbrenner</value>
+  </data>
+  <data name="Identical" xml:space="preserve">
+    <value>Keine Änderungen. Bytefolge identisch.</value>
+  </data>
+  <data name="VerifiedHeading" xml:space="preserve">
+    <value>GEPRÜFTE ÄNDERUNGEN</value>
+  </data>
+  <data name="VerifiedSize" xml:space="preserve">
+    <value>Ausgabe erneut erfolgreich eingelesen.&#13;&#10;Größe: {0} → {1} Byte&#13;&#10;</value>
+  </data>
+  <data name="VerifiedNoChanges" xml:space="preserve">
+    <value>Prüfung bestanden: keine Änderung.</value>
+  </data>
+  <data name="VerifiedChanges" xml:space="preserve">
+    <value>Prüfung bestanden: {0} Änderungsgruppen.</value>
+  </data>
+  <data name="CheckFailed" xml:space="preserve">
+    <value>PRÜFUNG FEHLGESCHLAGEN</value>
+  </data>
+  <data name="SaveCopyTitle" xml:space="preserve">
+    <value>Bearbeiteten Spielstand als Kopie speichern</value>
+  </data>
+  <data name="Saved" xml:space="preserve">
+    <value>Gespeichert: {0}</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>Fehler: {0}</value>
+  </data>
+  <data name="FileReport" xml:space="preserve">
+    <value>DATEI&#13;&#10;{0}&#13;&#10;SHA-256: {1}&#13;&#10;&#13;&#10;FORMAT&#13;&#10;Version {2} · {3}&#13;&#10;Spielerblock: 0x{4:X}&#13;&#10;Karte: {5} Einträge · Inventar: {6} Arten · Gegenmaßnahmen: {7} Arten&#13;&#10;&#13;&#10;</value>
+  </data>
+  <data name="AmmoLabel" xml:space="preserve">
+    <value>Munition {0}</value>
+  </data>
+  <data name="NoSecondary" xml:space="preserve">
+    <value>Keine Sekundärwaffe</value>
+  </data>
+  <data name="ActiveWeapon" xml:space="preserve">
+    <value>Aktive Waffe</value>
+  </data>
+  <data name="Weapon" xml:space="preserve">
+    <value>Waffe</value>
+  </data>
+  <data name="Ammo" xml:space="preserve">
+    <value>Munition</value>
+  </data>
+  <data name="ShipLimit" xml:space="preserve">
+    <value>Schiffslimit</value>
+  </data>
+  <data name="FillShipLimit" xml:space="preserve">
+    <value>Vorhandene: Schiffslimit</value>
+  </data>
+  <data name="SupplyRange" xml:space="preserve">
+    <value>Menge von 0 bis {0:N0}</value>
+  </data>
+  <data name="SupplyMissing" xml:space="preserve">
+    <value>Die passende Definition fehlt in diesem Spielstand.</value>
+  </data>
+  <data name="CountLabel" xml:space="preserve">
+    <value>Menge {0}</value>
+  </data>
+  <data name="NoCountermeasure" xml:space="preserve">
+    <value>Keine Gegenmaßnahme</value>
+  </data>
+  <data name="ActiveCountermeasure" xml:space="preserve">
+    <value>Aktive Gegenmaßnahme</value>
+  </data>
+  <data name="Countermeasure" xml:space="preserve">
+    <value>Gegenmaßnahme</value>
+  </data>
+  <data name="Count" xml:space="preserve">
+    <value>Menge</value>
+  </data>
+  <data name="GameLimit" xml:space="preserve">
+    <value>Spiellimit</value>
+  </data>
+  <data name="FillGameLimit" xml:space="preserve">
+    <value>Vorhandene: Spiellimit</value>
+  </data>
+  <data name="CountermeasureHint" xml:space="preserve">
+    <value>Die Limits gelten für alle Schiffe. Weitere gespeicherte Gegenmaßnahmen bleiben im Bestand.</value>
+  </data>
+</root>

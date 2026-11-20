@@ -91,14 +91,15 @@ namespace D3SaveEditor.Tests
             var original = CultureInfo.CurrentUICulture;
             try
             {
-                foreach (var language in new[] { "de", "en" })
+                foreach (var language in new[] { "de", "de-DE", "en", "en-US", "fr-FR" })
                 {
                     CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(language);
                     string message = null;
                     try { SaveGame.Parse(new byte[1]); }
                     catch (FormatProblem ex) { message = ex.Message; }
-                    Check(message?.StartsWith(language == "de" ? "Keine unterstützte" : "Unsupported", StringComparison.Ordinal) == true,
-                        "Parser errors follow the selected interface language");
+                    string prefix = language.StartsWith("en", StringComparison.Ordinal) ? "Unsupported" : "Keine unterstützte";
+                    Check(message?.StartsWith(prefix, StringComparison.Ordinal) == true,
+                        "Parser errors resolve resources for " + language);
                 }
             }
             finally { CultureInfo.CurrentUICulture = original; }

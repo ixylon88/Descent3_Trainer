@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows;
 using D3SaveEditor.Core;
-using static D3SaveEditor.Gui.UiText;
+using static D3SaveEditor.Gui.LocalizationService;
 
 namespace D3SaveEditor.Gui
 {

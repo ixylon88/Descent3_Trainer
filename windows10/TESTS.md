@@ -67,10 +67,12 @@ In Visual Studio `windows10/D3SaveEditor.sln` öffnen und im **Test-Explorer**
 .\test-windows10.cmd
 ```
 
-Das Projekt `D3SaveEditor.Tests` enthält die neun von `make_fixtures.cpp` erzeugten
+Das Projekt `D3SaveEditor.Tests` enthält die elf von `make_fixtures.cpp` erzeugten
 synthetischen Testdateien in `tests/fixtures.zip`. Beide Tests entpacken ihre Daten
 beim Start in eigene temporäre Ordner. Unter Linux erzeugt `sh test-windows10.sh`
 die Testdateien mit einem C++17-Compiler neu und führt die Datentests mit Mono aus.
+Die Mono-Entwicklungswerkzeuge `resgen` und `al` bauen die Textressourcen für
+beide Sprachen mit.
 
 Wenn sich der Generator ändert, lässt sich das Archiv im Repo-Hauptordner mit
 den folgenden Befehlen neu erzeugen.

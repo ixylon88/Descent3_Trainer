@@ -13,7 +13,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
-using static D3SaveEditor.Gui.UiText;
+using static D3SaveEditor.Gui.LocalizationService;
 
 namespace D3SaveEditor.Gui
 {
@@ -34,11 +34,12 @@ namespace D3SaveEditor.Gui
         private bool dirty;
         private bool preferBlackPyro;
 
+        private LocalizationService Localization => (LocalizationService)Resources["Localization"];
+
         public MainView()
         {
             CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("de");
             InitializeComponent();
-            UiText.Apply(Resources);
             //LoadIconWithFallback("d3_orb__2006+2.ico");
             PrimaryWeaponEditor.Content = primary;
             SecondaryWeaponEditor.Content = secondary;
@@ -672,8 +673,7 @@ namespace D3SaveEditor.Gui
             loading = true;
             try
             {
-                CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(code);
-                UiText.Apply(Resources);
+                Localization.ChangeLanguage(code);
                 primary.RefreshText();
                 secondary.RefreshText();
                 Status.Text = dirty ? T("Pending") : game == null ? T("Ready") : T("Loaded");

@@ -88,7 +88,7 @@ sich auch manuell über **Run workflow** starten.
 | Workflow | Prüfungen und Build | ZIP unter **Artifacts** |
 | --- | --- | --- |
 | Windows 98 | MinGW-w64-Build auf Ubuntu, native Datentests mit ASan/UBSan und Prüfung der Win98-Importe | `Descent3_Trainer-Win98` mit `D3EDIT98.EXE` |
-| Windows 10 and 11 | Datentests mit Mono auf Ubuntu, WPF-Build und Oberflächentest unter Windows | `Descent3_Trainer-Win10-Win11` mit `D3SaveEditor.exe`, `D3SaveEditor.exe.config` und `D3SaveEditor.Core.dll` |
+| Windows 10 and 11 | Datentests mit Mono auf Ubuntu, WPF-Build und Oberflächentest unter Windows | `Descent3_Trainer-Win10-Win11` mit Programmdateien und dem Ordner `en` für die englische Übersetzung |
 
 Nach einem erfolgreichen Lauf findest du das Programm-ZIP auf der Seite des
 Laufs. Es enthält die Programmdateien, eine Kurzanleitung und die Lizenzhinweise.
@@ -103,7 +103,7 @@ Die Skripte liegen im Repo-Hauptordner und werden auch von GitHub Actions verwen
 | Ziel | Umgebung | Bauen | Testen |
 | --- | --- | --- | --- |
 | Windows 10/11 | Windows mit .NET SDK und .NET Framework 4.8-Zielpaket | `build-windows10.cmd` | `test-windows10.cmd` |
-| Windows 10/11 | Linux mit C++17 und Mono | | `sh test-windows10.sh` für die Datentests |
+| Windows 10/11 | Linux mit C++17 und Mono-Entwicklungswerkzeugen | | `sh test-windows10.sh` für die Datentests |
 | Windows 98 | Linux mit i686-MinGW-w64, GCC/G++ und Python 3 | `sh build-windows98.sh` | `sh test-windows98.sh` nach dem Build |
 | Windows 98 | Windows mit i686-MinGW-w64 | `build-windows98.cmd` | |
 

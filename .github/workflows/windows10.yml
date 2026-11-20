@@ -26,7 +26,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            g++ mono-mcs mono-runtime libmono-i18n-west4.0-cil
+            g++ mono-devel libmono-i18n-west4.0-cil
 
       - name: Run data tests
         run: sh test-windows10.sh
@@ -58,14 +58,26 @@ jobs:
           $package = Join-Path $env:RUNNER_TEMP 'Descent3_Trainer-Win10-Win11'
           New-Item -Path $package -ItemType Directory -Force | Out-Null
           $output = 'D3SaveEditor.Gui/bin/Release/net48'
-          $programFiles = 'D3SaveEditor.exe', 'D3SaveEditor.exe.config', 'D3SaveEditor.Core.dll'
-          $programPaths = $programFiles | ForEach-Object { Join-Path $output $_ }
-          Copy-Item -LiteralPath $programPaths -Destination $package
+          $programFiles = @(
+            'D3SaveEditor.exe'
+            'D3SaveEditor.exe.config'
+            'D3SaveEditor.Core.dll'
+            'en/D3SaveEditor.resources.dll'
+            'en/D3SaveEditor.Core.resources.dll'
+          )
+          $checksums = foreach ($file in $programFiles) {
+            $source = Join-Path $output $file
+            $destination = Join-Path $package $file
+            New-Item -Path (Split-Path -Parent $destination) -ItemType Directory -Force | Out-Null
+            Copy-Item -LiteralPath $source -Destination $destination
+            $hash = Get-FileHash -LiteralPath $destination -Algorithm SHA256
+            '{0}  {1}' -f $hash.Hash.ToLowerInvariant(), $file
+          }
           Copy-Item -LiteralPath LICENSE, ../NOTICE.md -Destination $package
           $repository = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY"
           @(
             'Descent 3 Savegame Editor for Windows 10 and 11'
-            'Extract the ZIP and keep D3SaveEditor.Core.dll and D3SaveEditor.exe.config next to D3SaveEditor.exe.'
+            'Extract the entire ZIP. Keep the en folder for the English translation.'
             'Run D3SaveEditor.exe and open a Descent 3 save file.'
             "Manual: $repository/blob/$env:GITHUB_SHA/windows10/README.md"
           ) | Set-Content -LiteralPath (Join-Path $package 'README.txt') -Encoding ascii
@@ -73,9 +85,7 @@ jobs:
             'Corresponding source (including build scripts):'
             "$repository/archive/$env:GITHUB_SHA.zip"
           ) | Set-Content -LiteralPath (Join-Path $package 'SOURCE.txt') -Encoding ascii
-          Get-FileHash -LiteralPath $programPaths -Algorithm SHA256 |
-            ForEach-Object { '{0}  {1}' -f $_.Hash.ToLowerInvariant(), (Split-Path -Leaf $_.Path) } |
-            Set-Content -LiteralPath (Join-Path $package 'SHA256SUMS.txt') -Encoding ascii
+          $checksums | Set-Content -LiteralPath (Join-Path $package 'SHA256SUMS.txt') -Encoding ascii
 
       - name: Upload Windows 10 and 11 artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
