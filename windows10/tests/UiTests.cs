@@ -37,7 +37,9 @@ namespace D3SaveEditor.Tests
                 var save = Field<Button>(view, "SaveButton");
                 var energy = Field<TextBox>(view, "EnergyInput");
                 var rapidFire = Field<CheckBox>(view, "RapidFireInput");
+                var map = Field<CheckBox>(view, "MapInput");
                 Check(save.IsEnabled && energy.Text.StartsWith("100", StringComparison.Ordinal), "Loaded player values are displayed");
+                Check(map.IsEnabled && map.IsChecked == false, "A partially revealed map can be edited");
                 Check(rapidFire.IsEnabled && rapidFire.IsChecked == false && Equals(rapidFire.Content, "Schnellfeuer"),
                     "Rapid fire displays its saved state in German");
                 var tabs = Field<TabControl>(view, "EditorTabs");
@@ -138,6 +140,8 @@ namespace D3SaveEditor.Tests
                 Check(saved.Invulnerable && saved.IsCloaked && saved.HasEquipment("Afterburner") && saved.HasQuad && !saved.HasEquipment("Converter"),
                     "WPF save writes effects and equipment");
                 Check(saved.HasRapidFire && rapidFire.IsChecked == true, "WPF saves and displays enabled rapid fire");
+                Check(saved.RevealedRooms == saved.HighestRoom + 1 && map.IsChecked == true && !map.IsEnabled,
+                    "Saving a revealed map leaves the map checkbox checked and disabled");
                 Check(saved.InventoryItems.Any(item => item.Name == "Force Wall" && item.Count == 4)
                     && saved.CountermeasureItems.Any(item => item.Name == "Saved Chaff" && item.Count == 12)
                     && saved.CountermeasureItems.All(item => item.Name != "Saved Betty"), "WPF save writes inventory edits");
@@ -167,6 +171,7 @@ namespace D3SaveEditor.Tests
                 rapidFire.IsChecked = false;
                 Click(save);
                 Check(!SaveFiles.Open(source).HasRapidFire && rapidFire.IsChecked == false, "WPF can turn rapid fire off again");
+                CheckFullyRevealedMap(view, fixture);
                 CheckGuideBotMaximums(view, tabs, root);
                 Console.WriteLine(passed + " WPF assertions passed.");
             }
@@ -180,6 +185,23 @@ namespace D3SaveEditor.Tests
             }
         }
 
+        private void CheckFullyRevealedMap(MainView view, string fixture)
+        {
+            var original = SaveFiles.Open(fixture);
+            byte[] bytes = (byte[])original.Bytes.Clone();
+            // Reveal the level's room slots and keep the rest of the stored map as-is.
+            for (int i = 0; i <= original.HighestRoom; i++)
+                bytes[original.MapOffset + i] = 1;
+
+            string path = Path.Combine(Path.GetDirectoryName(fixture), "full-map-save");
+            File.WriteAllBytes(path, bytes);
+            Check(view.OpenPath(path), "WPF opens a map with every room slot revealed");
+            var map = Field<CheckBox>(view, "MapInput");
+            Check(map.IsChecked == true && !map.IsEnabled, "A fully revealed map loads checked and disabled");
+            Click(Field<Button>(view, "SaveButton"));
+            Check(File.ReadAllBytes(path).SequenceEqual(bytes), "The disabled map checkbox preserves the saved map bytes");
+        }
+
         private void CheckGuideBotMaximums(MainView view, TabControl tabs, string fixtureFolder)
         {
             string source = Path.Combine(fixtureFolder, "guidebot-save");
@@ -191,6 +213,7 @@ namespace D3SaveEditor.Tests
             var supplies = Field<ItemsControl>(view, "GuideBotSupplies");
             var inputs = Descendants(supplies).OfType<TextBox>().Where(box => box.Name == "GuideBotCount").ToArray();
             Check(inputs.Length == GuideBotData.PowerupCount, "All five Guide-Bot supply fields are displayed");
+            string maximum = GuideBotData.MaximumCount.ToString(CultureInfo.CurrentCulture);
             string[] expected = inputs.Select(box => box.Text).ToArray();
             for (int i = 0; i < inputs.Length; i++)
             {
@@ -199,10 +222,27 @@ namespace D3SaveEditor.Tests
                 Check(max.IsEnabled, "The Guide-Bot Max button is available for the saved supply");
                 Click(max);
                 Update(view);
-                expected[i] = GuideBotData.MaximumCount.ToString(CultureInfo.CurrentCulture);
+                expected[i] = maximum;
                 Check(inputs.Select(box => box.Text).SequenceEqual(expected), "Guide-Bot Max changes only its own supply");
             }
 
+            Click(Field<Button>(view, "GuideBotClearAll"));
+            Update(view);
+            Check(inputs.All(box => box.Text == "0"), "Guide-Bot Clear all empties every supply");
+
+            Text(inputs[0], "3");
+            Text(inputs[2], "5");
+            var fillOwned = Field<Button>(view, "GuideBotFillOwned");
+            Click(fillOwned);
+            Update(view);
+            Check(inputs.Select(box => box.Text).SequenceEqual(new[] { maximum, "0", maximum, "0", "0" }),
+                "Guide-Bot Owned: 127 fills only stocked rows");
+
+            Click(Field<Button>(view, "GuideBotSelectAll"));
+            Update(view);
+            Check(inputs.Select(box => box.Text).SequenceEqual(new[] { maximum, "1", maximum, "1", "1" }),
+                "Guide-Bot Select all stocks empty rows without changing existing counts");
+            Click(fillOwned);
             Click(Field<Button>(view, "SaveButton"));
             var bot = SaveFiles.Open(source).GuideBot;
             Check(bot != null && bot.Counts.SequenceEqual(Enumerable.Repeat(GuideBotData.MaximumCount, GuideBotData.PowerupCount)),

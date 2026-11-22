@@ -77,7 +77,10 @@ The **Guide-Bot** tab edits the robot's name in the saved level, regular radio
 messages, and supplies of Fire Extinguisher, Go Wingnut, Remote Control,
 Guardian, and Antivirus. The name can contain up to seven ANSI characters, and
 each supply can have a count from 0 to 127. The **Max** button next to a
-supply sets its count to 127. The tab displays the saved shield value.
+supply sets its count to 127. **Clear all** empties all five supplies.
+**Select all** gives each empty supply one charge and keeps existing counts.
+**Owned: 127** fills supplies with a positive count to 127.
+The tab displays the saved shield value.
 The fields are available when the editor can identify the player's
 Guide-Bot object and its OSIRIS script block and recognizes the saved layout.
 The tests use synthetic saves for both ABI variants.

@@ -5,6 +5,7 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <commdlg.h>
+#include <limits.h>
 #include "d3core.h"
 #include "d3text.h"
 #include "d3files.h"
@@ -18,7 +19,8 @@ ID_ALL_PRI=170,ID_NONE_PRI,ID_CAP_PRI,ID_STORE_PRI,ID_ALL_SEC,ID_NONE_SEC,ID_CAP
 ID_OWN=200,ID_AMMO=240,ID_MAX=280,
 ID_CARGO_COUNT=320,ID_COUNTERMEASURE_COUNT=330,ID_SHIP_UNLOCK=340,ID_BLACK_PYRO_UNLOCK=350,ID_BLACK_PYRO_PREFER,
 ID_COUNTERMEASURE_OWN=360,ID_COUNTERMEASURE_MAX=370,ID_COUNTERMEASURE_ACTIVE=380,ID_ALL_COUNTERMEASURES,ID_NONE_COUNTERMEASURES,ID_CAP_COUNTERMEASURES,
-ID_GUIDEBOT_NAME=390,ID_GUIDEBOT_CHATTER,ID_GUIDEBOT_SUPPLY=400,ID_GUIDEBOT_MAX=410};
+ID_GUIDEBOT_NAME=390,ID_GUIDEBOT_CHATTER,ID_GUIDEBOT_SUPPLY=400,ID_GUIDEBOT_MAX=410,
+ID_GUIDEBOT_CLEAR=420,ID_GUIDEBOT_SELECT_ALL,ID_GUIDEBOT_FILL_OWNED};
 enum {PLAYER_PAGE,PRIMARY_PAGE,SECONDARY_PAGE,COUNTERMEASURE_PAGE,INVENTORY_PAGE,GUIDEBOT_PAGE,REVIEW_PAGE,HELP_PAGE};
 typedef struct {HWND hwnd;int page,needs_file;D3Text caption;} Widget;
 static HINSTANCE instance;
@@ -37,6 +39,7 @@ static HWND unlock_black_pyro,prefer_black_pyro_button;
 static int prefer_black_pyro;
 static HWND guidebot_info,guidebot_name,guidebot_chatter,guidebot_shield,guidebot_supplies[D3_GUIDEBOT_POWERUPS];
 static HWND guidebot_max[D3_GUIDEBOT_POWERUPS];
+static HWND guidebot_clear,guidebot_select_all,guidebot_fill_owned;
 static D3Game *game;
 static D3Buffer opened;
 static D3U8 original_hash[32];
@@ -347,17 +350,50 @@ static void load_guidebot_values(void) {
         EnableWindow(guidebot_supplies[i],available);
         EnableWindow(guidebot_max[i],available);
     }
+    EnableWindow(guidebot_clear,available);
+    EnableWindow(guidebot_select_all,available);
+    EnableWindow(guidebot_fill_owned,available);
 }
-static void refresh_map_text(void) {
-    char line[192];
+static void change_guidebot_supplies(int command) {
+    char input[24], value[24];
+    int i,modified=0;
+    if (!game->guidebot.offset) return;
+    d3_format_u32(value,command==ID_GUIDEBOT_CLEAR ? 0 :
+        command==ID_GUIDEBOT_SELECT_ALL ? 1 : D3_GUIDEBOT_MAX_COUNT);
+    loading=1;
+    for (i=0; i<D3_GUIDEBOT_POWERUPS; i++) {
+        get_text(guidebot_supplies[i],input,sizeof(input));
+        if (d3_string_equal(input,value)) continue;
+        if (command!=ID_GUIDEBOT_CLEAR) {
+            D3I32 count;
+            int has_stock=d3_integer(input,1,INT_MAX,&count);
+            if (command==ID_GUIDEBOT_SELECT_ALL ? has_stock : !has_stock) continue;
+        }
+        text(guidebot_supplies[i],value);
+        modified=1;
+    }
+    loading=0;
+    if (modified) changed();
+}
+static int visible_rooms(void) {
     int i,visible=0;
     for (i=0; i<=game->highest_room; i++) if (game->data[game->map+i]) visible++;
+    return visible;
+}
+static void refresh_map(int load_state) {
+    char line[192];
+    int visible=visible_rooms(),total=game->highest_room+1;
     d3_string(line,sizeof(line),T(MAP_PREFIX));
     append_number(line,sizeof(line),(D3U32)visible);
     d3_append(line,sizeof(line),T(OF));
-    append_number(line,sizeof(line),(D3U32)(game->highest_room+1));
+    append_number(line,sizeof(line),(D3U32)total);
     d3_append(line,sizeof(line),T(ROOM_SUFFIX));
+    if (visible<total) d3_append(line,sizeof(line),T(MAP_CHECK_HINT));
     text(map_info,line);
+    if (load_state) {
+        check(full_map,visible==total);
+        EnableWindow(full_map,visible<total);
+    }
 }
 static void refresh_review_text(void) {
     char report[1400];
@@ -371,7 +407,7 @@ static void load_values(void){
     if(!game)return;loading=1;enable_controls();d3_current(game,&o);
     d3_format_float(energy_text,o.energy);d3_format_float(shield_text,o.shields);d3_format_float(ab_text,o.afterburner);text(energy,energy_text);text(shields,shield_text);text(afterburner,ab_text);
     d3_format_u32(n,(D3U32)o.lives);text(lives,n);d3_format_i32(n,o.score);text(score,n);
-    check(god,d3_god(game));check(cloak,d3_cloak(game));check(cooler,d3_has_item(game,game->cooler_id));check(converter,d3_has_item(game,game->converter_id));check(quad,d3_quad(game));check(full_map,0);
+    check(god,d3_god(game));check(cloak,d3_cloak(game));check(cooler,d3_has_item(game,game->cooler_id));check(converter,d3_has_item(game,game->converter_id));check(quad,d3_quad(game));
     check(rapid_fire,d3_rapid_fire(game));
     EnableWindow(cooler,game->cooler_id>=0);EnableWindow(converter,game->converter_id>=0);EnableWindow(quad,game->quad_id>=0 && game->object.batteries==21);
     load_inventory_values();
@@ -380,7 +416,7 @@ static void load_values(void){
     SendMessageA(primary,CB_SETCURSEL,o.primary,0);SendMessageA(secondary,CB_SETCURSEL,has_second?(WPARAM)(o.secondary-9):0,0);
     god_request=cloak_request=rapid_fire_request=cooler_request=converter_request=quad_request=-1;
     refresh_effect_timers();
-    refresh_map_text();
+    refresh_map(1);
     d3_string(s,1400,opened_path);d3_append(s,1400,"\r\n");d3_append(s,1400,game->callsign);d3_append(s,1400," | ");d3_append(s,1400,d3_ship(game));d3_append(s,1400," | ");d3_append(s,1400,game->mission);d3_append(s,1400," / Level ");append_number(s,1400,(D3U32)game->level);text(info,s);
     dirty=0;refresh_review_text();SetWindowTextA(main_window,"Descent 3 Savegame Editor - Windows 98");refresh_weapons(0);loading=0;
 }
@@ -446,7 +482,9 @@ static int read_options(D3Options *o){
     }
     o->primary=(int)SendMessageA(primary,CB_GETCURSEL,0,0);i=(int)SendMessageA(secondary,CB_GETCURSEL,0,0);if(i>0)o->secondary=i+9;
     o->rapid_fire=rapid_fire_request;
-    o->god=god_request;o->cloak=cloak_request;o->cooler=cooler_request;o->converter=converter_request;o->quad=quad_request;o->reveal_map=checked(full_map);return 1;
+    o->god=god_request;o->cloak=cloak_request;o->cooler=cooler_request;o->converter=converter_request;o->quad=quad_request;
+    o->reveal_map=checked(full_map) && visible_rooms()<game->highest_room+1;
+    return 1;
 }
 static void report_supply_counts(char *report,D3U32 size,const int *counts,int countermeasures) {
     int i,length=countermeasures ? D3_COUNTERMEASURE_TYPES : D3_CARGO_TYPES;
@@ -557,7 +595,7 @@ static void apply_language(int english) {
         }
         refresh_ship_labels();
         refresh_guidebot_text();
-        refresh_map_text();
+        refresh_map(0);
         refresh_effect_timers();
         refresh_weapons(0);
         refresh_review_text();
@@ -714,8 +752,11 @@ static void guidebot_page(void) {
         SendMessageA(guidebot_supplies[i],EM_LIMITTEXT,3,0);
         guidebot_max[i]=button("Max",674,y-1,43,ID_GUIDEBOT_MAX+i,page,1);
     }
+    guidebot_clear=local_button(D3_TEXT_CLEAR_ALL,392,343,104,ID_GUIDEBOT_CLEAR,page,1);
+    guidebot_select_all=local_button(D3_TEXT_SELECT_ALL,502,343,104,ID_GUIDEBOT_SELECT_ALL,page,1);
+    guidebot_fill_owned=local_button(D3_TEXT_BOT_FILL_OWNED,612,343,105,ID_GUIDEBOT_FILL_OWNED,page,1);
     local_group(D3_TEXT_PROPERTIES,24,186,338,161,page);
-    local_group(D3_TEXT_BOT_SUPPLIES,378,186,356,161,page);
+    local_group(D3_TEXT_BOT_SUPPLIES,378,186,356,193,page);
 }
 static void make_ui(void){
     HWND heading;
@@ -792,6 +833,9 @@ static LRESULT CALLBACK window_proc(HWND hwnd,UINT message,WPARAM w,LPARAM l){
         case ID_NONE_COUNTERMEASURES:change_all_countermeasures(0);break;
         case ID_CAP_COUNTERMEASURES:change_all_countermeasures(2);break;
         case ID_GUIDEBOT_CHATTER:changed();break;
+        case ID_GUIDEBOT_CLEAR:
+        case ID_GUIDEBOT_SELECT_ALL:
+        case ID_GUIDEBOT_FILL_OWNED:change_guidebot_supplies(id);break;
         }return 0;
     case WM_CLOSE:if(discard())DestroyWindow(hwnd);return 0;
     case WM_DESTROY:if(title_font)DeleteObject(title_font);PostQuitMessage(0);return 0;

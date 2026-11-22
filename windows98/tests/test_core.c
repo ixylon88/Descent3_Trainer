@@ -23,7 +23,11 @@ static void localization_test(void) {
     d3_set_english(0);
     check(!strcmp(T(WEAPON_CONCUSSION),"Ersch\xFCtterungsgescho\xDF") && !strcmp(T(COUNTERMEASURE_PROX_MINE),"Ann\xE4herungsmine"),
           "German loadout names match the WPF editor using ANSI bytes");
-    check(!d3_parse(game,0,0) && strstr(game->error,"Keine unterstuetzte Datei")==game->error,
+    check(!strcmp(T(OPEN),"\xD6" "ffnen...") && !strcmp(T(CLEAR_ALL),"Alle abw\xE4hlen") &&
+          !strcmp(T(BOT_SUPPLIES),"Vorr\xE4te") && !strcmp(T(NO_COUNTERMEASURE),"Keine Gegenma\xDFnahme") &&
+          !strcmp(T(CHECK_CHANGES),"\xC4nderungen pr\xFC" "fen"),
+          "German interface captions use Windows-1252 umlauts and sharp S");
+    check(!d3_parse(game,0,0) && strstr(game->error,"Keine unterst\xFCtzte Datei")==game->error,
           "German parser errors follow the interface language");
     d3_free(game);
 }

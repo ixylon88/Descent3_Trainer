@@ -64,7 +64,7 @@ sh build-windows98.sh
 sh test-windows98.sh
 ```
 
-Das ergibt 361 Assertions. Der enthaltene `tests/Golden.cs` erzeugt den
+Das ergibt 362 Assertions. Der enthaltene `tests/Golden.cs` erzeugt den
 ursprünglichen Vergleichsfall mit dem C#-Editor. Wird dessen Ausgabepfad dem
 C-Testprogramm als zweites Argument übergeben, kommt die Byteprüfung der beiden
 Ausgaben hinzu. Die Fortsetzungsnotiz beschreibt die Vergleichsoptionen.

@@ -182,7 +182,6 @@ namespace D3SaveEditor.Gui
                 CoolerInput.IsChecked = game.HasEquipment("Afterburner");
                 ConverterInput.IsChecked = game.HasEquipment("Converter");
                 QuadInput.IsChecked = game.HasQuad;
-                MapInput.IsChecked = false;
 
                 RefreshEquipmentAvailability();
 
@@ -199,7 +198,7 @@ namespace D3SaveEditor.Gui
 
                 touchedEffects.Clear();
                 RefreshEffectTimers();
-                MapInfo.Text = T("RoomsVisible", game.RevealedRooms, game.HighestRoom + 1);
+                RefreshMap(loadState: true);
                 SaveTitle.Text = $"{Path.GetFileName(openedPath)}  ·  {game.Description}";
                 RefreshSaveDetails();
                 Review.Text = FileReport() + "\r\n" + T("NoPlannedChanges") + "\r\n";
@@ -213,6 +212,18 @@ namespace D3SaveEditor.Gui
             finally
             {
                 loading = false;
+            }
+        }
+
+        private void RefreshMap(bool loadState)
+        {
+            int visible = game.RevealedRooms;
+            int total = game.HighestRoom + 1;
+            MapInfo.Text = T("RoomsVisible", visible, total);
+            if (loadState)
+            {
+                MapInput.IsChecked = visible == total;
+                MapInput.IsEnabled = visible < total;
             }
         }
 
@@ -374,7 +385,25 @@ namespace D3SaveEditor.Gui
         private void OnMaxGuideBotSupply(object sender, RoutedEventArgs e)
         {
             var row = (GuideBotSupplyRow)((Button)sender).DataContext;
-            row.CountText = GuideBotData.MaximumCount.ToString(CultureInfo.CurrentCulture);
+            row.SetCount(GuideBotData.MaximumCount);
+        }
+
+        private void OnClearGuideBotSupplies(object sender, RoutedEventArgs e)
+        {
+            foreach (var row in guideBotSupplies)
+                row.SetCount(0);
+        }
+
+        private void OnSelectGuideBotSupplies(object sender, RoutedEventArgs e)
+        {
+            foreach (var row in guideBotSupplies.Where(row => !row.HasStock))
+                row.SetCount(1);
+        }
+
+        private void OnFillOwnedGuideBotSupplies(object sender, RoutedEventArgs e)
+        {
+            foreach (var row in guideBotSupplies.Where(row => row.HasStock))
+                row.SetCount(GuideBotData.MaximumCount);
         }
 
         private void OnWeaponChanged(object sender, PropertyChangedEventArgs e)
@@ -570,7 +599,7 @@ namespace D3SaveEditor.Gui
             options.Cooler = ReadEffect(CoolerInput);
             options.Converter = ReadEffect(ConverterInput);
             options.QuadLasers = ReadEffect(QuadInput);
-            options.RevealMap = MapInput.IsChecked == true;
+            options.RevealMap = MapInput.IsEnabled && MapInput.IsChecked == true;
             ReadSupplies(cargoRows, options.CargoCounts);
             ReadSupplies(countermeasures.Rows, options.CountermeasureCounts);
             int activeMeasure = countermeasures.ActiveWeaponId;
@@ -734,7 +763,7 @@ namespace D3SaveEditor.Gui
                 RefreshWeaponLimits();
                 RefreshEquipmentAvailability();
                 RefreshEffectTimers();
-                MapInfo.Text = T("RoomsVisible", game.RevealedRooms, game.HighestRoom + 1);
+                RefreshMap(loadState: false);
                 RefreshSaveDetails();
                 Review.Text = FileReport() + (dirty ? T("Pending") : T("NoPlannedChanges"));
             }

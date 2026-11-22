@@ -261,6 +261,9 @@
   <data name="BotSupplies" xml:space="preserve">
     <value>Vorräte</value>
   </data>
+  <data name="BotFillOwned" xml:space="preserve">
+    <value>Vorhandene: 127</value>
+  </data>
   <data name="ChangesTab" xml:space="preserve">
     <value>Datei / Änderungen</value>
   </data>

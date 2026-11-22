@@ -351,23 +351,30 @@
                                 </StackPanel>
                             </GroupBox>
                             <GroupBox Grid.Column="1" Header="{Binding [BotSupplies], Source={StaticResource Localization}, Mode=OneWay}">
-                                <ItemsControl x:Name="GuideBotSupplies">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid Margin="0,1">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="74" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
-                                                <Label Style="{StaticResource ValueLabel}" Content="{Binding Name}" Target="{Binding ElementName=GuideBotCount}" />
-                                                <TextBox x:Name="GuideBotCount" Grid.Column="1" Style="{StaticResource NumericInput}"
-                                                         Text="{Binding CountText, UpdateSourceTrigger=PropertyChanged}" />
-                                                <Button x:Name="GuideBotMax" Grid.Column="2" Content="Max" Click="OnMaxGuideBotSupply" />
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                                <StackPanel>
+                                    <ItemsControl x:Name="GuideBotSupplies">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,1">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="74" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Label Style="{StaticResource ValueLabel}" Content="{Binding Name}" Target="{Binding ElementName=GuideBotCount}" />
+                                                    <TextBox x:Name="GuideBotCount" Grid.Column="1" Style="{StaticResource NumericInput}"
+                                                             Text="{Binding CountText, UpdateSourceTrigger=PropertyChanged}" />
+                                                    <Button x:Name="GuideBotMax" Grid.Column="2" Content="Max" Click="OnMaxGuideBotSupply" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <WrapPanel Margin="0,8,0,0">
+                                        <Button x:Name="GuideBotClearAll" Content="{Binding [ClearAll], Source={StaticResource Localization}, Mode=OneWay}" Click="OnClearGuideBotSupplies" />
+                                        <Button x:Name="GuideBotSelectAll" Content="{Binding [SelectAll], Source={StaticResource Localization}, Mode=OneWay}" Click="OnSelectGuideBotSupplies" />
+                                        <Button x:Name="GuideBotFillOwned" Content="{Binding [BotFillOwned], Source={StaticResource Localization}, Mode=OneWay}" Click="OnFillOwnedGuideBotSupplies" />
+                                    </WrapPanel>
+                                </StackPanel>
                             </GroupBox>
                         </Grid>
                     </StackPanel>

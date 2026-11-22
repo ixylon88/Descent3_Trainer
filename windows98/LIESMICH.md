@@ -12,8 +12,8 @@ Die EXE wurde gezielt für den klassischen Windows-Loader gebaut. Sie nutzt PE32
 
 1. Auf einem modernen Entwicklungsrechner mit `build.cmd` oder `sh build.sh` kompilieren und die erzeugte `D3EDIT98.EXE` auf den Windows-98-Rechner kopieren. Für das Starten genügt diese EXE; [`LIESMICH.TXT`](LIESMICH.TXT) enthält die Kurzanleitung für den alten Editor.
 2. In Descent 3 einen Spielstand anlegen und das Spiel beenden.
-3. **Oeffnen…** wählen und eine Datei wie `saveg000` bis `saveg007` im Ordner `savegame` öffnen. Diese Dateien haben normalerweise keine Endung.
-4. Werte und Häkchen einstellen. **Datei / Pruefung → Aenderungen pruefen** zeigt die geplante Ausgabe. Dabei wird sie erneut eingelesen und geprüft.
+3. **Öffnen...** wählen und eine Datei wie `saveg000` bis `saveg007` im Ordner `savegame` öffnen. Diese Dateien haben normalerweise keine Endung.
+4. Werte und Häkchen einstellen. **Datei / Prüfung → Änderungen prüfen** zeigt die geplante Ausgabe. Dabei wird sie erneut eingelesen und geprüft.
 5. **Speichern + Backup** wählen und anschließend den Spielstand im Spiel neu laden.
 
 **Kopie speichern…** erzeugt stattdessen eine weitere Datei, vorgeschlagen mit der Endung `.edited`. Damit Descent 3 sie als Slot anzeigt, muss sie im Spielstandsordner unter einem passenden Slotnamen wie `saveg001` liegen. Die `.cnt`-Begleitdateien werden nicht geändert.
@@ -36,9 +36,9 @@ Windows 98 verwendet hier ANSI-Dateipfade. Verwendet werden maximal 200 Zeichen 
 | Weitere Werte | Leben und Punktestand ändern |
 | Dateiverwaltung | Ausgabe prüfen, Kopie schreiben, Original sichern, nachträglich geändertes Original erkennen |
 
-Eine vorhandene letzte Primärwaffe kann nicht entfernt werden. **Keine Sekundaerwaffe** entfernt sämtliche Sekundärwaffen samt Munition. Abgewählte Waffen erhalten in der Oberfläche Munition 0. Aktive Waffen werden bei Bedarf auf vorhandene Waffen zurückgesetzt. Flare, zusätzliche Besitzbits und die sonstigen Daten bleiben erhalten.
+Eine vorhandene letzte Primärwaffe kann nicht entfernt werden. **Keine Sekundärwaffe** entfernt sämtliche Sekundärwaffen samt Munition. Abgewählte Waffen erhalten in der Oberfläche Munition 0. Aktive Waffen werden bei Bedarf auf vorhandene Waffen zurückgesetzt. Flare, zusätzliche Besitzbits und die sonstigen Daten bleiben erhalten.
 
-**Keine Gegenmassnahme** leert den bearbeitbaren Bestand. Bei leerem Inventar
+**Keine Gegenmaßnahme** leert den bearbeitbaren Bestand. Bei leerem Inventar
 zeigt die Auswahlliste diesen Eintrag an. Zusätzliche Gegenmaßnahmen im
 Spielstand bleiben erhalten. Der Editor wählt bei Bedarf einen verbliebenen
 Eintrag aus.

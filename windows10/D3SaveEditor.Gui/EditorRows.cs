@@ -205,6 +205,8 @@ namespace D3SaveEditor.Gui
         }
 
         public string Name => T(labelKey);
+        internal bool HasStock => int.TryParse(CountText, out int count) && count > 0;
+        internal void SetCount(int count) => CountText = count.ToString(CultureInfo.CurrentCulture);
         internal void RefreshText() => Notify(nameof(Name));
         public string CountText
         {

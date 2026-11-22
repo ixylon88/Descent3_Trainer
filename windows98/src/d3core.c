@@ -627,7 +627,7 @@ static void format_large_float(char *dest,double number) {
 }
 void d3_format_float(char *dest,float f){
     D3U32 whole,fraction;char *p;int i;
-    if(!d3_finite(f)){d3_string(dest,32,"ungueltig");return;}
+    if(!d3_finite(f)){d3_string(dest,32,T(INVALID_FLOAT));return;}
     if(f<0){*dest++='-';f=-f;}
     if(f>1e9f){format_large_float(dest,f);return;}
     whole=(D3U32)f;fraction=(D3U32)(((double)f-whole)*1000+0.5);if(fraction==1000){whole++;fraction=0;}
