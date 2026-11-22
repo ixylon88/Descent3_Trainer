@@ -11,6 +11,8 @@ test-output/make-fixtures test-output/fixture98-snapshot 2 1 0 1
 test-output/make-fixtures test-output/fixture98-v1 1
 test-output/make-fixtures test-output/fixture98-v0 0
 test-output/make-fixtures test-output/fixture98-loadout 2 1 1 1 1
+# Loadout mode 2 contains only the standard countermeasures.
+test-output/make-fixtures test-output/fixture98-standard-loadout 2 1 0 0 2
 test-output/make-fixtures test-output/fixture98-guidebot 2 1 0 0 0 1
 cc -std=c99 -D_POSIX_C_SOURCE=200809L -DD3_TESTING -O1 -g \
   -Wall -Wextra -Wno-misleading-indentation -Wno-format-truncation \

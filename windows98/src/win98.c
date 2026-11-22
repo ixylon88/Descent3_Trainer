@@ -24,7 +24,7 @@ typedef struct {HWND hwnd;int page,needs_file;D3Text caption;} Widget;
 static HINSTANCE instance;
 static HWND main_window,tab,info,status,hint,review,language_button;
 static HFONT font,title_font;
-static Widget widgets[256];static int widget_count,selected_page,loading,dirty;
+static Widget widgets[256];static int widget_count,loading,dirty;
 static HWND energy,shields,afterburner,lives,score,god,cloak,cooler,converter,quad,full_map,god_time,cloak_time,map_info;
 static HWND god_renew,cloak_renew,rapid_fire;
 static HWND owned[20],ammo[20],max_buttons[20],cap_labels[20],primary,secondary;
@@ -64,7 +64,9 @@ static void error_box(const char *s){set_status(s);MessageBoxA(main_window,s,T(E
 static void changed(void){if(!loading && game){dirty=1;SetWindowTextA(main_window,"* Descent 3 Savegame Editor - Windows 98");set_status(T(DIRTY));}}
 static int discard(void){return !dirty || MessageBoxA(main_window,T(DISCARD_QUESTION),T(CHANGES),MB_YESNO|MB_ICONQUESTION)==IDYES;}
 static HWND control(const char *cls,const char *label,DWORD style,int x,int y,int w,int h,int id,int page,int needs_file){
-    HWND hwnd=CreateWindowExA(d3_string_equal(cls,"EDIT")?WS_EX_CLIENTEDGE:0,cls,label,WS_CHILD|WS_VISIBLE|style,x,y,w,h,main_window,(HMENU)(INT_PTR)id,instance,0);
+    if (page<0) style|=WS_VISIBLE;
+    HWND hwnd=CreateWindowExA(d3_string_equal(cls,"EDIT")?WS_EX_CLIENTEDGE:0,cls,label,
+        WS_CHILD|WS_CLIPSIBLINGS|style,x,y,w,h,main_window,(HMENU)(INT_PTR)id,instance,0);
     SendMessageA(hwnd,WM_SETFONT,(WPARAM)font,TRUE);
     widgets[widget_count].hwnd=hwnd;widgets[widget_count].page=page;widgets[widget_count].needs_file=needs_file;widget_count++;
     return hwnd;
@@ -89,11 +91,20 @@ static HWND local_button(D3Text caption,int x,int y,int w,int id,int page,int ne
 static HWND local_checkbox(D3Text caption,int x,int y,int w,int id,int page) {
     return remember_caption(checkbox(d3_text(caption),x,y,w,id,page),caption);
 }
+/* Child windows are created at the bottom of the sibling Z order.
+   Create group frames after their contents so they paint behind them. */
 static void local_group(D3Text caption,int x,int y,int w,int h,int page) {
     group(d3_text(caption),x,y,w,h,page);
     widgets[widget_count-1].caption=caption;
 }
-static void apply_visibility(void){int i;for(i=0;i<widget_count;i++)if(widgets[i].page>=0)ShowWindow(widgets[i].hwnd,widgets[i].page==selected_page?SW_SHOW:SW_HIDE);ShowWindow(hint,selected_page==PRIMARY_PAGE || selected_page==SECONDARY_PAGE?SW_SHOW:SW_HIDE);}
+static void show_page(int page) {
+    int i;
+    for (i=0; i<widget_count; i++)
+        if (widgets[i].page>=0 && widgets[i].page!=page) ShowWindow(widgets[i].hwnd,SW_HIDE);
+    for (i=0; i<widget_count; i++)
+        if (widgets[i].page==page) ShowWindow(widgets[i].hwnd,SW_SHOWNA);
+    ShowWindow(hint,page==PRIMARY_PAGE || page==SECONDARY_PAGE ? SW_SHOWNA : SW_HIDE);
+}
 static void enable_controls(void){int i;for(i=0;i<widget_count;i++)if(widgets[i].needs_file)EnableWindow(widgets[i].hwnd,game!=0);}
 static int use_caps(void){return game && caps_loaded && d3_string_iequal(caps_ship,d3_ship(game));}
 static int uses_ammo(int i){return i>=10 || i==1 || i==6 || i==7;}
@@ -569,31 +580,60 @@ static void open_language_menu(void) {
     if (chosen) apply_language(chosen==2);
 }
 static void help_page(void) {
-    local_group(D3_TEXT_HELP_SAVES,24,146,710,83,HELP_PAGE);
     local_label(D3_TEXT_HELP_OPEN,
           38,167,681,54,HELP_PAGE);
-    local_group(D3_TEXT_HELP_LOADOUT,24,232,710,70,HELP_PAGE);
     local_label(D3_TEXT_HELP_LIMITS,38,253,681,42,HELP_PAGE);
-    local_group(D3_TEXT_HELP_EFFECTS,24,305,710,65,HELP_PAGE);
     local_label(D3_TEXT_HELP_TIMERS,38,326,681,37,HELP_PAGE);
-    local_group(D3_TEXT_HELP_SHIPS_AND_BOT,24,373,710,83,HELP_PAGE);
     local_label(D3_TEXT_HELP_PYRO_AND_BOT,38,394,681,53,HELP_PAGE);
+
+    local_group(D3_TEXT_HELP_SAVES,24,146,710,83,HELP_PAGE);
+    local_group(D3_TEXT_HELP_LOADOUT,24,232,710,70,HELP_PAGE);
+    local_group(D3_TEXT_HELP_EFFECTS,24,305,710,65,HELP_PAGE);
+    local_group(D3_TEXT_HELP_SHIPS_AND_BOT,24,373,710,83,HELP_PAGE);
 }
-static void player_page(void){
-    local_group(D3_TEXT_SUPPLIES,24,146,338,181,0);
-    local_label(D3_TEXT_ENERGY,38,170,78,18,0);energy=edit(122,166,102,ID_ENERGY,0,0);button("Max 200",231,165,56,ID_ENERGY_MAX,0,1);
-    local_button(D3_TEXT_PLAYER_HIGH_VALUE,293,165,63,ID_ENERGY_HIGH,0,1);
-    local_label(D3_TEXT_SHIELDS,38,198,78,18,0);shields=edit(122,194,102,ID_SHIELDS,0,0);button("Max 200",231,193,56,ID_SHIELD_MAX,0,1);
-    local_button(D3_TEXT_PLAYER_HIGH_VALUE,293,193,63,ID_SHIELD_HIGH,0,1);
-    local_label(D3_TEXT_AFTERBURNER,38,226,94,18,0);afterburner=edit(134,222,90,ID_AB,0,0);local_button(D3_TEXT_FILL_AFTERBURNER,231,221,56,ID_AB_MAX,0,1);
-    local_button(D3_TEXT_PLAYER_HIGH_VALUE,293,221,63,ID_AB_HIGH,0,1);
-    local_label(D3_TEXT_LIVES,38,254,100,18,0);lives=edit(145,250,100,ID_LIVES,0,1);
-    local_label(D3_TEXT_SCORE,38,282,100,18,0);score=edit(145,278,155,ID_SCORE,0,0);
-    local_group(D3_TEXT_EQUIPMENT,24,335,338,119,0);cooler=local_checkbox(D3_TEXT_COOLER,38,356,300,ID_COOLER,0);converter=local_checkbox(D3_TEXT_CONVERTER,38,384,300,ID_CONVERTER,0);quad=local_checkbox(D3_TEXT_QUAD_LASERS,38,412,300,ID_QUAD,0);
-    local_group(D3_TEXT_EFFECTS,378,146,356,151,0);god=local_checkbox(D3_TEXT_INVULNERABILITY,392,167,213,ID_GOD,0);god_renew=local_button(D3_TEXT_EXTEND_EFFECT,610,165,109,ID_GOD_RENEW,0,1);god_time=label("",392,191,327,18,0);
-    cloak=local_checkbox(D3_TEXT_CLOAK,392,226,213,ID_CLOAK,0);cloak_renew=local_button(D3_TEXT_EXTEND_EFFECT,610,224,109,ID_CLOAK_RENEW,0,1);cloak_time=label("",392,250,327,18,0);
-    rapid_fire=local_checkbox(D3_TEXT_RAPID_FIRE,392,274,327,ID_RAPID_FIRE,0);
-    local_group(D3_TEXT_MAP,378,308,356,146,0);full_map=local_checkbox(D3_TEXT_REVEAL_MAP,392,331,325,ID_MAP,0);map_info=label("",392,365,326,55,0);
+static void player_page(void) {
+    const int page=PLAYER_PAGE, value_x=138, value_width=96;
+    const int label_width=96, normal_x=240, high_x=302;
+
+    local_label(D3_TEXT_ENERGY,38,170,label_width,18,page);
+    energy=edit(value_x,166,value_width,ID_ENERGY,page,0);
+    button("Max 200",normal_x,165,56,ID_ENERGY_MAX,page,1);
+    local_button(D3_TEXT_PLAYER_HIGH_VALUE,high_x,165,63,ID_ENERGY_HIGH,page,1);
+
+    local_label(D3_TEXT_SHIELDS,38,198,label_width,18,page);
+    shields=edit(value_x,194,value_width,ID_SHIELDS,page,0);
+    button("Max 200",normal_x,193,56,ID_SHIELD_MAX,page,1);
+    local_button(D3_TEXT_PLAYER_HIGH_VALUE,high_x,193,63,ID_SHIELD_HIGH,page,1);
+
+    local_label(D3_TEXT_AFTERBURNER,38,226,label_width,18,page);
+    afterburner=edit(value_x,222,value_width,ID_AB,page,0);
+    local_button(D3_TEXT_FILL_AFTERBURNER,normal_x,221,56,ID_AB_MAX,page,1);
+    local_button(D3_TEXT_PLAYER_HIGH_VALUE,high_x,221,63,ID_AB_HIGH,page,1);
+
+    local_label(D3_TEXT_LIVES,38,254,label_width,18,page);
+    lives=edit(value_x,250,value_width,ID_LIVES,page,1);
+    local_label(D3_TEXT_SCORE,38,282,label_width,18,page);
+    score=edit(value_x,278,value_width,ID_SCORE,page,0);
+
+    cooler=local_checkbox(D3_TEXT_COOLER,38,356,300,ID_COOLER,page);
+    converter=local_checkbox(D3_TEXT_CONVERTER,38,384,300,ID_CONVERTER,page);
+    quad=local_checkbox(D3_TEXT_QUAD_LASERS,38,412,300,ID_QUAD,page);
+
+    god=local_checkbox(D3_TEXT_INVULNERABILITY,392,167,213,ID_GOD,page);
+    god_renew=local_button(D3_TEXT_EXTEND_EFFECT,610,165,109,ID_GOD_RENEW,page,1);
+    god_time=label("",392,191,327,18,page);
+    cloak=local_checkbox(D3_TEXT_CLOAK,392,226,213,ID_CLOAK,page);
+    cloak_renew=local_button(D3_TEXT_EXTEND_EFFECT,610,224,109,ID_CLOAK_RENEW,page,1);
+    cloak_time=label("",392,250,327,18,page);
+    rapid_fire=local_checkbox(D3_TEXT_RAPID_FIRE,392,274,327,ID_RAPID_FIRE,page);
+
+    full_map=local_checkbox(D3_TEXT_REVEAL_MAP,392,331,325,ID_MAP,page);
+    map_info=label("",392,365,326,55,page);
+
+    local_group(D3_TEXT_SUPPLIES,24,146,347,181,page);
+    local_group(D3_TEXT_EQUIPMENT,24,335,347,119,page);
+    local_group(D3_TEXT_EFFECTS,378,146,356,151,page);
+    local_group(D3_TEXT_MAP,378,308,356,146,page);
 }
 static void weapon_page(int first,int page){
     int i,y;HWND combo;local_label(D3_TEXT_ACTIVE_WEAPON,28,151,100,18,page);
@@ -637,7 +677,6 @@ static void countermeasure_page(void) {
 }
 static void inventory_page(int page) {
     int i,y;
-    local_group(D3_TEXT_ITEMS,24,146,338,181,page);
     for (i=0; i<D3_CARGO_TYPES; i++) {
         y=172+i*25;
         label(d3_cargo_items[i].name,38,y+2,172,18,page);
@@ -645,7 +684,6 @@ static void inventory_page(int page) {
         SendMessageA(cargo_counts[i],EM_LIMITTEXT,7,0);
     }
     local_label(D3_TEXT_CARGO_HINT,38,232,309,40,page);
-    local_group(D3_TEXT_SHIP_PERMISSIONS,378,146,356,190,page);
     for (i=0; i<D3_STANDARD_SHIPS; i++)
         unlock_ships[i]=checkbox(d3_standard_ships[i],392,166+i*17,325,ID_SHIP_UNLOCK+i,page);
     unlock_black_pyro=checkbox(D3_BLACK_PYRO,392,217,325,ID_BLACK_PYRO_UNLOCK,page);
@@ -654,25 +692,27 @@ static void inventory_page(int page) {
     local_label(D3_TEXT_SAVED_ENTRIES,28,344,697,18,page);
     saved_inventory=control("LISTBOX","",LBS_NOINTEGRALHEIGHT|WS_BORDER|WS_VSCROLL|WS_HSCROLL|WS_TABSTOP,28,362,701,94,0,page,1);
     SendMessageA(saved_inventory,LB_SETHORIZONTALEXTENT,2800,0);
+    local_group(D3_TEXT_ITEMS,24,146,338,181,page);
+    local_group(D3_TEXT_SHIP_PERMISSIONS,378,146,356,190,page);
 }
 static void guidebot_page(void) {
     const D3Text supplies[]={D3_TEXT_BOT_EXTINGUISHER,D3_TEXT_BOT_WINGNUT,D3_TEXT_BOT_CONTROL,
         D3_TEXT_BOT_GUARDIAN,D3_TEXT_BOT_ANTIVIRUS};
     int i,y,page=GUIDEBOT_PAGE;
     guidebot_info=label("",28,150,701,31,page);
-    local_group(D3_TEXT_PROPERTIES,24,186,338,161,page);
     label("Name",38,214,124,18,page);
     guidebot_name=edit(171,210,172,ID_GUIDEBOT_NAME,page,0);
     SendMessageA(guidebot_name,EM_LIMITTEXT,7,0);
     guidebot_chatter=local_checkbox(D3_TEXT_BOT_CHATTER,38,243,303,ID_GUIDEBOT_CHATTER,page);
     guidebot_shield=label("",38,271,303,34,page);
-    local_group(D3_TEXT_BOT_SUPPLIES,378,186,356,161,page);
     for (i=0; i<D3_GUIDEBOT_POWERUPS; i++) {
         y=210+i*25;
         local_label(supplies[i],392,y+4,198,18,page);
         guidebot_supplies[i]=edit(606,y,111,ID_GUIDEBOT_SUPPLY+i,page,1);
         SendMessageA(guidebot_supplies[i],EM_LIMITTEXT,3,0);
     }
+    local_group(D3_TEXT_PROPERTIES,24,186,338,161,page);
+    local_group(D3_TEXT_BOT_SUPPLIES,378,186,356,161,page);
 }
 static void make_ui(void){
     HWND heading;
@@ -683,19 +723,25 @@ static void make_ui(void){
     language_button=local_button(D3_TEXT_LANGUAGE,579,10,112,ID_LANGUAGE,-1,0);
     control("STATIC","v" D3_VERSION_TEXT,SS_RIGHT|WS_DISABLED,697,15,51,18,0,-1,0);
     info=label(T(NO_SAVE),12,76,736,34,-1);
-    tab=control(WC_TABCONTROLA,"",WS_TABSTOP|WS_CLIPSIBLINGS,12,114,736,355,ID_TAB,-1,0);
-    label_tabs(TCM_INSERTITEMA);
     player_page();weapon_page(0,PRIMARY_PAGE);weapon_page(10,SECONDARY_PAGE);countermeasure_page();inventory_page(INVENTORY_PAGE);guidebot_page();help_page();
     local_button(D3_TEXT_CHECK_CHANGES,28,147,178,ID_CHECK,REVIEW_PAGE,1);
     review=control("EDIT",T(REVIEW_HINT),ES_MULTILINE|ES_READONLY|ES_AUTOVSCROLL|WS_VSCROLL|WS_HSCROLL,28,180,701,276,0,REVIEW_PAGE,0);
     hint=label("",12,475,736,16,-1);status=local_label(D3_TEXT_READY,12,495,736,32,-1);
-    enable_controls();selected_page=0;apply_visibility();
+
+    /* The tab background sits behind every page control. */
+    tab=control(WC_TABCONTROLA,"",WS_TABSTOP,12,114,736,355,ID_TAB,-1,0);
+    label_tabs(TCM_INSERTITEMA);
+    enable_controls();show_page(PLAYER_PAGE);
 }
 static LRESULT CALLBACK window_proc(HWND hwnd,UINT message,WPARAM w,LPARAM l){
     int id,code,i,selected;D3Buffer out;NMHDR *notify;
     switch(message){
     case WM_CREATE:main_window=hwnd;make_ui();return 0;
-    case WM_NOTIFY:notify=(NMHDR*)l;if(notify->idFrom==ID_TAB && notify->code==TCN_SELCHANGE){selected_page=(int)SendMessageA(tab,TCM_GETCURSEL,0,0);apply_visibility();}return 0;
+    case WM_NOTIFY:
+        notify=(NMHDR*)l;
+        if (notify->hwndFrom==tab && notify->code==TCN_SELCHANGE)
+            show_page((int)SendMessageA(tab,TCM_GETCURSEL,0,0));
+        return 0;
     case WM_COMMAND:
         id=LOWORD(w);code=HIWORD(w);if(loading)return 0;
         if(id==ID_OPEN){choose_open();return 0;}if(id==ID_LANGUAGE){open_language_menu();return 0;}if(!game)return 0;

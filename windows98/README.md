@@ -52,6 +52,11 @@ secondary weapons and their ammo. Clearing a weapon's checkbox sets its displaye
 ammo count to zero. The editor sets the active weapon to one you still have when
 needed. It preserves the flare, additional ownership bits, and other data.
 
+**No countermeasure** clears the editable countermeasure stock. The dropdown
+shows this choice as active when the inventory is empty. If the save contains
+additional countermeasure entries, the editor keeps them and selects a
+remaining entry as needed.
+
 See the [main guide](../README.md#inventory-countermeasures-and-ship-permissions)
 for instructions on the **Inventory / ships** tab.
 
@@ -115,7 +120,7 @@ blocks and preserves the supported save's original layout.
 
 The project owner tested the original editor with real saves on Windows 98.
 The current build was checked with synthetic files and audited for PE headers
-and all 49 imported functions. The new features still need in-game testing.
+and imported functions. The new features still need in-game testing.
 See [`TESTS.md`](TESTS.md).
 
 ## Source code and building

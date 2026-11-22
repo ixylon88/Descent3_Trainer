@@ -38,6 +38,11 @@ Windows 98 verwendet hier ANSI-Dateipfade. Verwendet werden maximal 200 Zeichen 
 
 Eine vorhandene letzte Primärwaffe kann nicht entfernt werden. **Keine Sekundaerwaffe** entfernt sämtliche Sekundärwaffen samt Munition. Abgewählte Waffen erhalten in der Oberfläche Munition 0. Aktive Waffen werden bei Bedarf auf vorhandene Waffen zurückgesetzt. Flare, zusätzliche Besitzbits und die sonstigen Daten bleiben erhalten.
 
+**Keine Gegenmassnahme** leert den bearbeitbaren Bestand. Bei leerem Inventar
+zeigt die Auswahlliste diesen Eintrag an. Zusätzliche Gegenmaßnahmen im
+Spielstand bleiben erhalten. Der Editor wählt bei Bedarf einen verbliebenen
+Eintrag aus.
+
 Die Bedienung des Reiters **Inventar / Schiffe** steht in der
 [gemeinsamen Anleitung](../LIESMICH.md#inventar-gegenmaßnahmen-und-schiffsfreigaben).
 
@@ -75,7 +80,7 @@ Grundlage ist der gewünschte [Branch `d3-historical`](https://github.com/Descen
 
 Unterstützt werden das dortige Little-Endian-Speicherformat 0–2 und der **historische 32-Bit-Spielerblock mit 496 Byte**. Moderne 64-Bit-Spielerblöcke werden absichtlich abgelehnt. Das Speicherlayout wird nicht in andere Spielversionen konvertiert.
 
-Der ursprüngliche Editor wurde vom Projektinhaber mit echten Spielständen unter Windows 98 erprobt. Der aktuelle Build wurde mit synthetischen Dateien und auf PE-Header sowie alle 49 importierten Funktionen geprüft. Der Ingame-Test der neuen Funktionen steht noch aus. Details stehen in `TESTS.md`.
+Der ursprüngliche Editor wurde vom Projektinhaber mit echten Spielständen unter Windows 98 erprobt. Die automatisierten Tests verwenden synthetische Dateien und prüfen den PE-Header sowie die Importe. Der Ingame-Test der neuen Funktionen steht noch aus. Details stehen in `TESTS.md`.
 
 ## Weiterarbeiten und Neubau
 

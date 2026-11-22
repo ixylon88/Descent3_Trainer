@@ -331,7 +331,10 @@ int main(int argc,char**argv) {
   bool effect=argc<=3 || std::atoi(argv[3])!=0;
   bool guided=argc>4 && std::atoi(argv[4])!=0;
   bool snapshot=argc>5 && std::atoi(argv[5])!=0;
-  bool loadout=argc>6 && std::atoi(argv[6])!=0;
+  // Mode 2 omits the additional countermeasure so the list can become empty.
+  int loadout_mode=argc>6?std::atoi(argv[6]):0;
+  bool loadout=loadout_mode!=0;
+  bool custom_countermeasure=loadout_mode!=2;
   bool guidebot=argc>7 && std::atoi(argv[7])!=0;
   char description[32]="Synthetic parser fixture";for(auto c:description)u8(c);i16(version);u8(snapshot?1:0);
   if(snapshot){u8(0);u8(0);u8(122);z("test.ogf");u8(1);zeros(9);i16(2);i16(2);u8(32);u8(40);u8(4);i16(0x7fff);}
@@ -364,7 +367,7 @@ int main(int argc,char**argv) {
   if(loadout) {
     pl.ship_permissions=0x40000003;
     pl.inventory.count=3;
-    pl.counter_measures.count=3;
+    pl.counter_measures.count=custom_countermeasure?3:2;
     pl.counter_measures.root=5678;
     pl.counter_measures.pos=5678;
   }
@@ -380,7 +383,7 @@ int main(int argc,char**argv) {
   if(loadout) {
     inventory_item(5,7,2,6,2,"Saved Chaff","chaff.ogf",0x187);
     inventory_item(5,7,1,7,3,"Saved Betty","betty.ogf",0x87);
-    inventory_item(5,7,0,10,1,"Custom countermeasure","",0x87);
+    if(custom_countermeasure) inventory_item(5,7,0,10,1,"Custom countermeasure","",0x87);
   }
   i32(loadout?1:0);
   i32(0); // matcens

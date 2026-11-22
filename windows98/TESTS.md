@@ -7,6 +7,10 @@ fehlende Aufsammeldefinitionen und Schiffserlaubnisse bei Lücken in der
 Schiffstabelle. GCC/MinGW-w64 14.2 hat den Win98-Build erstellt. Die PE-Prüfung
 bestätigte alle 49 Importe. Der Ingame-Test der neuen Funktionen steht aus.
 
+**Leere Bestände.** Die Tests speichern und öffnen einen Spielstand mit
+abgewählten Sekundärwaffen und Gegenmaßnahmen erneut. Eine zusätzliche
+Gegenmaßnahme bleibt beim Leeren der Standardbestände erhalten.
+
 ## Ursprünglicher Prüfstand vom 24.10.2026
 
 **299 Assertions** in den nativen C-Daten-/Dateitests, ausgeführt auf dem Linux-Testhost mit AddressSanitizer und UndefinedBehaviorSanitizer. LeakSanitizer wurde deaktiviert, weil ihm in dieser isolierten Umgebung der erforderliche Zugriff auf `/proc` fehlt; es wird deshalb kein bestandener Lecktest behauptet.
@@ -39,7 +43,7 @@ Für dieselbe historische Eingabedatei und dieselben Optionen wurde zusätzlich 
 - Kein CLR-, TLS- oder moderner Load-Configuration-Initialisierungsblock.
 - Keine CRT-, .NET-, MFC-, UCRT- oder KernelEx-Abhängigkeit.
 - Ausschließlich `KERNEL32`, `USER32`, `GDI32`, `COMDLG32` und `COMCTL32`.
-- Alle 49 importierten Funktionen stehen auf der expliziten Liste klassischer APIs; keine ordinalen Importe.
+- Alle importierten Funktionen stehen auf der expliziten Liste klassischer APIs. Die EXE verwendet keine ordinalen Importe.
 
 Der Compiler war GCC/MinGW-w64 13.2.0, Ziel i386 mit x87, ohne SSE. Die EXE verwendet einen eigenen `WinMainCRTStartup`-Einstieg und ist ungefähr 37 KiB groß. Die Versionsangaben allein wären kein ausreichender Kompatibilitätsnachweis; deshalb werden auch Abhängigkeiten und Initialisierungsverzeichnisse geprüft.
 
@@ -60,7 +64,7 @@ sh build-windows98.sh
 sh test-windows98.sh
 ```
 
-Das ergibt 315 Assertions. Der enthaltene `tests/Golden.cs` erzeugt den
+Das ergibt 361 Assertions. Der enthaltene `tests/Golden.cs` erzeugt den
 ursprünglichen Vergleichsfall mit dem C#-Editor. Wird dessen Ausgabepfad dem
 C-Testprogramm als zweites Argument übergeben, kommt die Byteprüfung der beiden
 Ausgaben hinzu. Die Fortsetzungsnotiz beschreibt die Vergleichsoptionen.

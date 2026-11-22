@@ -159,6 +159,20 @@ static void loadout_tests(const char *path){
     }
     edit.active_countermeasure_weapon_id=original->countermeasure_ids[1];
     check(!d3_edit(original,&edit,&again),"removed countermeasure cannot be selected");
+    {
+        D3Options cleared;
+        D3Game *verified;
+        int i;
+        d3_current(original,&cleared);
+        for (i=0; i<D3_COUNTERMEASURE_TYPES; i++) cleared.countermeasure_counts[i]=0;
+        check(d3_edit(original,&cleared,&again),"all editable countermeasures can be cleared with a custom entry present");
+        verified=parse(&again);
+        check(verified->countermeasures.count==1 && verified->countermeasures.selected==0 &&
+              verified->countermeasures.items[0].id==original->countermeasures.items[2].id,
+              "clearing editable countermeasures preserves and selects the custom entry");
+        d3_free(verified);
+        d3_free(again.data);
+    }
     edit.active_countermeasure_weapon_id=-1;
     edit.countermeasure_counts[3]=5;
     check(!d3_edit(original,&edit,&again),"Gunboy maximum enforced");
@@ -175,6 +189,38 @@ static void loadout_tests(const char *path){
     edit.countermeasure_counts[2]=1;
     check(!d3_edit(original,&edit,&again),"missing pickup ID is never guessed");
     d3_free(original);d3_free(saved);d3_free(input.data);d3_free(out.data);
+}
+static void clear_loadout_test(const char *path) {
+    D3Buffer bytes=read_file(path),out,again;
+    D3Game *original=parse(&bytes),*saved;
+    D3Options edit;
+    int i;
+
+    d3_current(original,&edit);
+    check(edit.owned[10] && edit.ammo[10]>0 && original->countermeasures.count==2,
+          "clear-all fixture starts with secondary ammo and standard countermeasures");
+    for (i=10; i<20; i++) {
+        edit.owned[i]=0;
+        edit.ammo[i]=0;
+    }
+    for (i=0; i<D3_COUNTERMEASURE_TYPES; i++) edit.countermeasure_counts[i]=0;
+
+    check(d3_edit(original,&edit,&out),"empty secondary and countermeasure loadouts can be saved");
+    saved=parse(&out);
+    d3_current(saved,&edit);
+    for (i=10; i<20 && !edit.owned[i] && edit.ammo[i]==0; i++) {}
+    check(i==20 && edit.secondary>=10 && edit.secondary<20,
+          "no owned secondaries or ammo reopen with a valid secondary slot");
+    check(saved->countermeasures.count==0 && saved->countermeasures.selected==0,
+          "an empty countermeasure inventory reopens with the engine's default selection index");
+    check(d3_edit(saved,&edit,&again) && again.size==out.size && d3_equal(again.data,out.data,out.size),
+          "both empty loadouts survive an unchanged resave");
+
+    d3_free(again.data);
+    d3_free(saved);
+    d3_free(out.data);
+    d3_free(original);
+    d3_free(bytes.data);
 }
 static void guidebot_tests(const char *path) {
     D3Buffer bytes=read_file(path),out;
@@ -282,6 +328,7 @@ int main(int argc,char **argv){
     if(argc<2)return 2;hash_test();number_tests();
     for(i=0;i<6;i++){snprintf(path,260,"%s/%s",argv[1],names[i]);fixture(path,i==0 && argc>2?argv[2]:0);}
     snprintf(path,260,"%s/fixture98-loadout",argv[1]);loadout_tests(path);
+    snprintf(path,260,"%s/fixture98-standard-loadout",argv[1]);clear_loadout_test(path);
     snprintf(path,260,"%s/fixture98-guidebot",argv[1]);guidebot_tests(path);
     localization_test();
     snprintf(work,260,"%s/io-%ld",argv[1],(long)getpid());if(mkdir(work,0700))return 2;
