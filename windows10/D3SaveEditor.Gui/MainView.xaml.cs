@@ -371,6 +371,12 @@ namespace D3SaveEditor.Gui
         private void OnMaxAfterburner(object sender, RoutedEventArgs e) => AfterburnerInput.Text = "5";
         private void OnHighAfterburner(object sender, RoutedEventArgs e) => AfterburnerInput.Text = HighPlayerValue;
 
+        private void OnMaxGuideBotSupply(object sender, RoutedEventArgs e)
+        {
+            var row = (GuideBotSupplyRow)((Button)sender).DataContext;
+            row.CountText = GuideBotData.MaximumCount.ToString(CultureInfo.CurrentCulture);
+        }
+
         private void OnWeaponChanged(object sender, PropertyChangedEventArgs e)
         {
             if (loading || game == null)

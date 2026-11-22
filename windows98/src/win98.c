@@ -18,7 +18,7 @@ ID_ALL_PRI=170,ID_NONE_PRI,ID_CAP_PRI,ID_STORE_PRI,ID_ALL_SEC,ID_NONE_SEC,ID_CAP
 ID_OWN=200,ID_AMMO=240,ID_MAX=280,
 ID_CARGO_COUNT=320,ID_COUNTERMEASURE_COUNT=330,ID_SHIP_UNLOCK=340,ID_BLACK_PYRO_UNLOCK=350,ID_BLACK_PYRO_PREFER,
 ID_COUNTERMEASURE_OWN=360,ID_COUNTERMEASURE_MAX=370,ID_COUNTERMEASURE_ACTIVE=380,ID_ALL_COUNTERMEASURES,ID_NONE_COUNTERMEASURES,ID_CAP_COUNTERMEASURES,
-ID_GUIDEBOT_NAME=390,ID_GUIDEBOT_CHATTER,ID_GUIDEBOT_SUPPLY=400};
+ID_GUIDEBOT_NAME=390,ID_GUIDEBOT_CHATTER,ID_GUIDEBOT_SUPPLY=400,ID_GUIDEBOT_MAX=410};
 enum {PLAYER_PAGE,PRIMARY_PAGE,SECONDARY_PAGE,COUNTERMEASURE_PAGE,INVENTORY_PAGE,GUIDEBOT_PAGE,REVIEW_PAGE,HELP_PAGE};
 typedef struct {HWND hwnd;int page,needs_file;D3Text caption;} Widget;
 static HINSTANCE instance;
@@ -36,6 +36,7 @@ static HWND unlock_ships[D3_STANDARD_SHIPS],saved_inventory;
 static HWND unlock_black_pyro,prefer_black_pyro_button;
 static int prefer_black_pyro;
 static HWND guidebot_info,guidebot_name,guidebot_chatter,guidebot_shield,guidebot_supplies[D3_GUIDEBOT_POWERUPS];
+static HWND guidebot_max[D3_GUIDEBOT_POWERUPS];
 static D3Game *game;
 static D3Buffer opened;
 static D3U8 original_hash[32];
@@ -344,6 +345,7 @@ static void load_guidebot_values(void) {
         d3_format_u32(value,bot->counts[i]);
         text(guidebot_supplies[i],available ? value : "-");
         EnableWindow(guidebot_supplies[i],available);
+        EnableWindow(guidebot_max[i],available);
     }
 }
 static void refresh_map_text(void) {
@@ -708,8 +710,9 @@ static void guidebot_page(void) {
     for (i=0; i<D3_GUIDEBOT_POWERUPS; i++) {
         y=210+i*25;
         local_label(supplies[i],392,y+4,198,18,page);
-        guidebot_supplies[i]=edit(606,y,111,ID_GUIDEBOT_SUPPLY+i,page,1);
+        guidebot_supplies[i]=edit(606,y,62,ID_GUIDEBOT_SUPPLY+i,page,1);
         SendMessageA(guidebot_supplies[i],EM_LIMITTEXT,3,0);
+        guidebot_max[i]=button("Max",674,y-1,43,ID_GUIDEBOT_MAX+i,page,1);
     }
     local_group(D3_TEXT_PROPERTIES,24,186,338,161,page);
     local_group(D3_TEXT_BOT_SUPPLIES,378,186,356,161,page);
@@ -758,6 +761,15 @@ static LRESULT CALLBACK window_proc(HWND hwnd,UINT message,WPARAM w,LPARAM l){
         if(code!=BN_CLICKED)return 0;
         if(id>=ID_COUNTERMEASURE_OWN && id<ID_COUNTERMEASURE_OWN+D3_COUNTERMEASURE_TYPES){i=id-ID_COUNTERMEASURE_OWN;set_countermeasure_count(i,checked(countermeasure_owned[i]));return 0;}
         if(id>=ID_COUNTERMEASURE_MAX && id<ID_COUNTERMEASURE_MAX+D3_COUNTERMEASURE_TYPES){i=id-ID_COUNTERMEASURE_MAX;set_countermeasure_count(i,d3_countermeasure_types[i].maximum);return 0;}
+        if (id>=ID_GUIDEBOT_MAX && id<ID_GUIDEBOT_MAX+D3_GUIDEBOT_POWERUPS) {
+            if (game->guidebot.offset) {
+                char value[24];
+                d3_format_u32(value,D3_GUIDEBOT_MAX_COUNT);
+                text(guidebot_supplies[id-ID_GUIDEBOT_MAX],value);
+                changed();
+            }
+            return 0;
+        }
         if(id>=ID_SHIP_UNLOCK && id<ID_SHIP_UNLOCK+D3_STANDARD_SHIPS){refresh_ship_controls();changed();return 0;}
         if(id==ID_BLACK_PYRO_PREFER){select_black_pyro();return 0;}
         if(id==ID_BLACK_PYRO_UNLOCK){changed();return 0;}

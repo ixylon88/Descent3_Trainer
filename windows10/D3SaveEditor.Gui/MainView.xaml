@@ -354,11 +354,17 @@
                                 <ItemsControl x:Name="GuideBotSupplies">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <DockPanel Margin="0,1">
-                                                <TextBox x:Name="GuideBotCount" DockPanel.Dock="Right" Width="74" Style="{StaticResource NumericInput}"
-                                                         Text="{Binding CountText, UpdateSourceTrigger=PropertyChanged}" />
+                                            <Grid Margin="0,1">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="74" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
                                                 <Label Style="{StaticResource ValueLabel}" Content="{Binding Name}" Target="{Binding ElementName=GuideBotCount}" />
-                                            </DockPanel>
+                                                <TextBox x:Name="GuideBotCount" Grid.Column="1" Style="{StaticResource NumericInput}"
+                                                         Text="{Binding CountText, UpdateSourceTrigger=PropertyChanged}" />
+                                                <Button x:Name="GuideBotMax" Grid.Column="2" Content="Max" Click="OnMaxGuideBotSupply" />
+                                            </Grid>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>

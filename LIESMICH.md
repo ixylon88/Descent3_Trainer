@@ -83,7 +83,8 @@ Quelltextstellen für das Format und die Spielregeln
 Der Reiter **Guide-Bot** bearbeitet den Namen im gespeicherten Level, die
 regelmäßigen Funkmeldungen sowie Feuerlöscher, Go Wingnut, Fernsteuerung,
 Begleitschutz und Antivirus. Der Name darf bis zu sieben ANSI-Zeichen und jeder
-Vorrat 0 bis 127 Stück umfassen. Der gespeicherte Schildwert dient zur Anzeige.
+Vorrat 0 bis 127 Stück umfassen. **Max** setzt den jeweiligen Vorrat auf 127.
+Der gespeicherte Schildwert dient zur Anzeige.
 Die Felder sind verfügbar, wenn das Objekt und sein OSIRIS-Skriptblock eindeutig
 dem Spieler zugeordnet werden können und das gespeicherte Layout bekannt ist.
 Die Tests verwenden synthetische Spielstände für beide ABI-Varianten.

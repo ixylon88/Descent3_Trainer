@@ -227,18 +227,23 @@ static void guidebot_tests(const char *path) {
     D3Game *original=parse(&bytes),*saved;
     D3U32 body=original->guidebot.offset;
     D3Options edit;
+    int i;
     check(body && !strcmp(original->guidebot.name,"Buddy") && original->guidebot.shields==20.0f &&
           original->guidebot.chatter && original->guidebot.counts[0]==3,"GuideBot memory and owning robot are decoded");
     d3_current(original,&edit);
     check(d3_edit(original,&edit,&out) && out.size==bytes.size && d3_equal(out.data,bytes.data,bytes.size),"untouched GuideBot is byte-identical");
     d3_free(out.data);
     edit.rename_guidebot=1;d3_string(edit.guidebot_name,8,"Buddy 2");
-    edit.guidebot_chatter=0;edit.guidebot_counts[1]=127;
+    edit.guidebot_chatter=0;
+    for (i=0; i<D3_GUIDEBOT_POWERUPS; i++) edit.guidebot_counts[i]=D3_GUIDEBOT_MAX_COUNT;
     check(d3_edit(original,&edit,&out),"GuideBot name, chatter and supplies can be edited");
     saved=parse(&out);
-    check(!strcmp(saved->guidebot.name,"Buddy 2") && !saved->guidebot.chatter && saved->guidebot.counts[1]==127,
-          "GuideBot edits round-trip");
-    d3_copy(bytes.data+body,"Buddy 2",8);bytes.data[body+9]=127;d3_put32(bytes.data+body+96,0x28u);
+    for (i=0; i<D3_GUIDEBOT_POWERUPS && saved->guidebot.counts[i]==D3_GUIDEBOT_MAX_COUNT; i++) {}
+    check(!strcmp(saved->guidebot.name,"Buddy 2") && !saved->guidebot.chatter && i==D3_GUIDEBOT_POWERUPS,
+          "GuideBot name, chatter and all maximum supply counts round-trip");
+    d3_copy(bytes.data+body,"Buddy 2",8);
+    for (i=0; i<D3_GUIDEBOT_POWERUPS; i++) bytes.data[body+8+i]=D3_GUIDEBOT_MAX_COUNT;
+    d3_put32(bytes.data+body+96,0x28u);
     check(out.size==bytes.size && d3_equal(out.data,bytes.data,bytes.size),"GuideBot edit preserves the rest of the script state and the save");
     d3_free(saved);d3_free(out.data);
     edit.guidebot_counts[1]=128;

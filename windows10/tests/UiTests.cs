@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -166,6 +167,7 @@ namespace D3SaveEditor.Tests
                 rapidFire.IsChecked = false;
                 Click(save);
                 Check(!SaveFiles.Open(source).HasRapidFire && rapidFire.IsChecked == false, "WPF can turn rapid fire off again");
+                CheckGuideBotMaximums(view, tabs, root);
                 Console.WriteLine(passed + " WPF assertions passed.");
             }
             finally
@@ -176,6 +178,35 @@ namespace D3SaveEditor.Tests
                     Click(reset);
                 view.Close();
             }
+        }
+
+        private void CheckGuideBotMaximums(MainView view, TabControl tabs, string fixtureFolder)
+        {
+            string source = Path.Combine(fixtureFolder, "guidebot-save");
+            File.Copy(Path.Combine(fixtureFolder, "fixture32-guidebot"), source);
+            Check(view.OpenPath(source), "WPF opens the Guide-Bot fixture");
+            tabs.SelectedItem = Field<TabItem>(view, "GuideBotTab");
+            Update(view);
+
+            var supplies = Field<ItemsControl>(view, "GuideBotSupplies");
+            var inputs = Descendants(supplies).OfType<TextBox>().Where(box => box.Name == "GuideBotCount").ToArray();
+            Check(inputs.Length == GuideBotData.PowerupCount, "All five Guide-Bot supply fields are displayed");
+            string[] expected = inputs.Select(box => box.Text).ToArray();
+            for (int i = 0; i < inputs.Length; i++)
+            {
+                var row = supplies.ItemContainerGenerator.ContainerFromIndex(i);
+                var max = Find<Button>(row, button => button.Name == "GuideBotMax");
+                Check(max.IsEnabled, "The Guide-Bot Max button is available for the saved supply");
+                Click(max);
+                Update(view);
+                expected[i] = GuideBotData.MaximumCount.ToString(CultureInfo.CurrentCulture);
+                Check(inputs.Select(box => box.Text).SequenceEqual(expected), "Guide-Bot Max changes only its own supply");
+            }
+
+            Click(Field<Button>(view, "SaveButton"));
+            var bot = SaveFiles.Open(source).GuideBot;
+            Check(bot != null && bot.Counts.SequenceEqual(Enumerable.Repeat(GuideBotData.MaximumCount, GuideBotData.PowerupCount)),
+                "The Guide-Bot supply maximums survive save and reopen");
         }
 
         private static T Field<T>(MainView view, string name) where T : FrameworkElement => (T)view.FindName(name);
